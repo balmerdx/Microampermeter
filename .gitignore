@@ -1,0 +1,9 @@
+*\.sch-bak
+*\.kicad_pcb-bak
+
+kicad/*\.zip
+kicad/ampermeter/out
+kicad/isolated_usb2uart/out
+
+h7code/output
+
