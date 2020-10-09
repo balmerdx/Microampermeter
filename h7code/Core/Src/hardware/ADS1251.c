@@ -28,8 +28,7 @@ void ADS1251_Init()
     gpio.Pin       = ADS1251_DATA_PIN;
     HAL_GPIO_Init(ADS1251_DATA_PORT, &gpio);
 
-    /* Enable and set EXTI lines 15 to 10 Interrupt to the lowest priority */
-    HAL_NVIC_SetPriority(ADS1251_IRQ, 2, 0);
+    HAL_NVIC_SetPriority(ADS1251_IRQ, 2, 0); //Enable and set EXTI lines 15 to 10 Interrupt to the lowest priority
     HAL_NVIC_EnableIRQ(ADS1251_IRQ);
 }
 
@@ -56,8 +55,6 @@ inline uint32_t Receive1Bit()
     return data;
 }
 
-
-
 uint32_t SoftwareSPI24()
 {
     uint32_t data = 0;
@@ -74,6 +71,7 @@ uint32_t SoftwareSPI24()
         for(volatile int i=0; i<10; i++);
     }
     */
+
 
     for(int bit=0; bit<24; bit++)
     {
@@ -93,7 +91,6 @@ uint32_t HardwareSPI24()
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
-    uint16_t start = Time10Ns();
     uint16_t cur_us = TimeUs();
     uint16_t delta_us = cur_us-last_data_us;
     last_data_us = cur_us;
@@ -101,14 +98,15 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
     if(delta_us<5)
     {
         HAL_NVIC_DisableIRQ(ADS1251_IRQ);
+        uint16_t start = Time10Ns();
 #ifdef USE_HARD_SPI
         last_data = HardwareSPI24();
 #else
         last_data = SoftwareSPI24();
 #endif
-        HAL_NVIC_EnableIRQ(ADS1251_IRQ);
         uint16_t end = Time10Ns();
         data_10ns = end-start;
+        HAL_NVIC_EnableIRQ(ADS1251_IRQ);
     }
 }
 

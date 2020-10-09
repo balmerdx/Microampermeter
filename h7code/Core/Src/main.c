@@ -105,6 +105,8 @@ int main(void)
   int res = 0;
   int idx = 0;
 
+  SetResistor(RESISTOR_1_Kom);
+
   while (1)
   {
       /*
@@ -116,15 +118,23 @@ int main(void)
 
       UTF_printNumI(ADS1251_Get(), 100, 100, 100, UTF_RIGHT);
 
+      /*
       UTF_printNumI(res, 100, 130, 100, UTF_RIGHT);
       if((++idx%5)==0)
         res = (res+1)%4;
       SetResistor(res);
+      */
 
-      UTF_printNumI(ADS1251_TestSPI_10Ns(), 100, 160, 100, UTF_RIGHT);
+      //UTF_printNumI(ADS1251_TestSPI_10Ns(), 100, 160, 100, UTF_RIGHT);
+
+      HAL_ADC_Start(&hadc1);
+      HAL_ADC_PollForConversion(&hadc1, 10);
+      uint32_t adc_value = HAL_ADC_GetValue(&hadc1);
+      HAL_ADC_Stop(&hadc1);
+      UTF_printNumI(adc_value, 100, 160, 100, UTF_RIGHT);
 
 
-      DelayMs(1000);
+      DelayMs(500);
 
       /*
       UTF_printNumI(num++, 100, 100, 100, UTF_RIGHT);
@@ -217,6 +227,9 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
+
+  //RCC_MCODIV_1 - 8 МГц на ADC CLK
+  //RCC_MCODIV_2 - 4 МГц на ADC CLK
   HAL_RCC_MCOConfig(RCC_MCO1, RCC_MCO1SOURCE_HSE, RCC_MCODIV_1);
   /** Enable USB Voltage detector
   */
@@ -232,6 +245,13 @@ static void MX_ADC1_Init(void)
 {
 
   /* USER CODE BEGIN ADC1_Init 0 */
+  //Потом видимо припаять проводок к внешнему 2.048 V
+  __HAL_RCC_VREF_CLK_ENABLE();
+  HAL_SYSCFG_EnableVREFBUF();
+  HAL_SYSCFG_VREFBUF_HighImpedanceConfig(SYSCFG_VREFBUF_HIGH_IMPEDANCE_DISABLE);
+  HAL_SYSCFG_VREFBUF_VoltageScalingConfig(SYSCFG_VREFBUF_VOLTAGE_SCALE1); //2.5V
+
+  DelayMs(50);
 
   /* USER CODE END ADC1_Init 0 */
 
@@ -244,7 +264,7 @@ static void MX_ADC1_Init(void)
   /** Common config
   */
   hadc1.Instance = ADC1;
-  hadc1.Init.ClockPrescaler = ADC_CLOCK_ASYNC_DIV1;
+  hadc1.Init.ClockPrescaler = ADC_CLOCK_ASYNC_DIV6;
   hadc1.Init.Resolution = ADC_RESOLUTION_16B;
   hadc1.Init.ScanConvMode = ADC_SCAN_DISABLE;
   hadc1.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
@@ -271,9 +291,9 @@ static void MX_ADC1_Init(void)
   }
   /** Configure Regular Channel
   */
-  sConfig.Channel = ADC_CHANNEL_4;
+  sConfig.Channel = ADC_CHANNEL_3;
   sConfig.Rank = ADC_REGULAR_RANK_1;
-  sConfig.SamplingTime = ADC_SAMPLETIME_1CYCLE_5;
+  sConfig.SamplingTime = ADC_SAMPLETIME_64CYCLES_5;
   sConfig.SingleDiff = ADC_SINGLE_ENDED;
   sConfig.OffsetNumber = ADC_OFFSET_NONE;
   sConfig.Offset = 0;
@@ -282,9 +302,12 @@ static void MX_ADC1_Init(void)
   {
     Error_Handler();
   }
-  /* USER CODE BEGIN ADC1_Init 2 */
 
-  /* USER CODE END ADC1_Init 2 */
+  if (HAL_ADCEx_Calibration_Start(&hadc1, ADC_CALIB_OFFSET, ADC_SINGLE_ENDED) != HAL_OK)
+  {
+    /* Calibration Error */
+    Error_Handler();
+  }
 
 }
 
