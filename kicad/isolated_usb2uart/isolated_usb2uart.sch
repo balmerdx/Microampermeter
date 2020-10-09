@@ -14,7 +14,7 @@ Comment3 ""
 Comment4 ""
 $EndDescr
 $Comp
-L Connector:USB_B_Micro J2
+L isolated_usb2uart-rescue:USB_B_Micro-Connector J2
 U 1 1 5D907AF4
 P 2850 2750
 F 0 "J2" H 2907 3217 50  0000 C CNN
