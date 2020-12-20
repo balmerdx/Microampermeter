@@ -21,6 +21,7 @@ sources = [
 		"Core/Src/hardware",
 		"Core/Src/ili",
 		"Core/Src/interface",
+		"Core/Src/measure",
 		"USB_DEVICE/App",
 		"USB_DEVICE/Target"
 		],

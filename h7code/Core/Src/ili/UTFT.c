@@ -77,7 +77,6 @@ enum ENUM_ILI9481
 static int disp_x_size=320-1, disp_y_size=480-1;
 
 #else
-#define DISPLAY_ILI9341
 #include "hardware/hw_ili9341.h"
 
 enum ENUM_ILI9341
@@ -349,7 +348,9 @@ void UTFT_InitLCD(uint8_t orientation)
     WRITE_DATA(COLOURS_64K);
 
     sendCMD(SET_ADDRESS_MODE);
-    if (orient==UTFT_LANDSCAPE)
+    if(orient==UTFT_LANDSCAPE2)
+        WRITE_DATA(PAGECOL_SELECTION | BGR); //landscape2
+    else if (orient==UTFT_LANDSCAPE)
         WRITE_DATA(PAGECOL_SELECTION | HORIZONTAL_FLIP |VERTICAL_FLIP | BGR); //landscape
     else
         WRITE_DATA(HORIZONTAL_FLIP | BGR);    //portrait BGR

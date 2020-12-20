@@ -24,13 +24,18 @@
 #include "hardware/delay.h"
 #include "hardware/ADS1251.h"
 #include "hardware/gpios.h"
+#include "hardware/voltage.h"
+#include "hardware/quadrature_encoder.h"
 #include "ili/UTFT.h"
 #include "ili/utf_font.h"
 #include "ili/DefaultFonts.h"
 #include "interface/font_condensed30.h"
+#include "interface/font_condensed59.h"
+#include "measure/calculate.h"
 
 /* Private variables ---------------------------------------------------------*/
 ADC_HandleTypeDef hadc1;
+ADC_HandleTypeDef hadc2;
 
 SPI_HandleTypeDef hspi4;
 
@@ -56,20 +61,17 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 */
 
 /* Private function prototypes -----------------------------------------------*/
-void SystemClock_Config(void);
+void SystemClock_Config400MHz(void);
+void SystemClock_Config100MHz(void);
+static void CPU_CACHE_Enable(void);
 static void MX_GPIO_Init(void);
 static void MX_ADC1_Init(void);
+static void MX_ADC2_Init(void);
 static void MX_SPI4_Init(void);
 static void MX_USART2_UART_Init(void);
-/* USER CODE BEGIN PFP */
+static void VREF_Init();
 
-/* USER CODE END PFP */
-
-/* Private user code ---------------------------------------------------------*/
-/* USER CODE BEGIN 0 */
-
-/* USER CODE END 0 */
-
+static bool test_usb = true;
 /**
   * @brief  The application entry point.
   * @retval int
@@ -82,9 +84,68 @@ int main(void)
   HAL_Init();
 
   /* Configure the system clock */
-  SystemClock_Config();
+  SystemClock_Config400MHz();
 
   DelayInit();
+  //VREF_Init();
+
+  if(test_usb)
+  {
+      MX_USB_DEVICE_Init();
+
+      UTFT_InitLCD(UTFT_LANDSCAPE);
+      QuadEncInit();
+
+      if(1)
+      { //Test LCD speed
+          uint32_t start_ms = TimeMs();
+          int count = 256;
+          for(int i=0; i<count; i++)
+            UTFT_fillScrW(i);
+
+          uint32_t delta_ms = TimeMs()-start_ms;
+
+          UTFT_fillScrW(VGA_BLUE);
+          UTFT_setColorW(VGA_GREEN);
+          UTFT_fillRect(10,10, 20,20);
+          UTF_SetFont(font_condensed59);
+
+          int x = 0, y = 100;
+          x = UTF_printNumF(count*1000.f/delta_ms, x, y, 3, 100, UTF_RIGHT);
+          UTF_SetFont(font_condensed30);
+          UTF_DrawString(x, y, " FPS");
+
+          while(1)
+          {
+
+          }
+      }
+
+      UTFT_fillScrW(VGA_BLUE);
+      UTFT_setColorW(VGA_GREEN);
+      UTFT_fillRect(10,10, 20,20);
+      UTF_SetFont(font_condensed30);
+
+      while(1)
+      {
+          int16_t value = QuadEncValue();
+          int xstart = 0;
+          int x = xstart, y = 100;
+          x = UTF_printNumI(value, x, y, 100, UTF_RIGHT);
+          UTF_SetFont(font_condensed30);
+          UTF_DrawString(x, y, " ENC");
+
+          y += UTF_Height();
+
+          x = xstart;
+          UTF_DrawString(x, y, QuadEncButton()?"P":"X");
+
+          HAL_Delay(30);
+      }
+
+  }
+
+
   UTFT_InitLCD(UTFT_LANDSCAPE2);
   UTFT_fillScrW(VGA_BLACK);
   UTFT_setColorW(VGA_GREEN);
@@ -93,62 +154,221 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
-  MX_ADC1_Init();
   MX_SPI4_Init();
   MX_USART2_UART_Init();
   MX_USB_DEVICE_Init();
+  MX_ADC1_Init();
+  MX_ADC2_Init();
 
   GpiosInit();
   ADS1251_Init();
 
   UTF_SetFont(font_condensed30);
-  int res = 0;
-  int idx = 0;
 
   SetResistor(RESISTOR_1_Kom);
+  //SetResistor(RESISTOR_100_Om);
+  //SetResistor(RESISTOR_10_Om);
+  VoltageInit();
+
+  int index = 0;
 
   while (1)
   {
+      float Vout, Vbat;
+      VoltageGet(&Vout, &Vbat);
+      int32_t measureASD1251 = ADS1251_Get();
+
+      CalcResult calc_result;
+      calculate(measureASD1251, Vout, GetResistorValue(), &calc_result);
+
+      if(index++%5==0)
+      {
+          float vmax = 0.1;
+          float vmin = 0.005;
+          //Переключаем пределы по халявному.
+          if(calc_result.Vcurrent > vmax)
+          {
+              if(GetResistor()==RESISTOR_1_Kom)
+              {
+                  SetResistor(RESISTOR_100_Om);
+              } else
+              if(GetResistor()==RESISTOR_100_Om)
+              {
+                  SetResistor(RESISTOR_10_Om);
+              }
+
+          } else
+          if(calc_result.Vcurrent < vmin)
+          {
+              if(GetResistor()==RESISTOR_10_Om)
+              {
+                  SetResistor(RESISTOR_100_Om);
+              } else
+              if(GetResistor()==RESISTOR_100_Om)
+              {
+                  SetResistor(RESISTOR_1_Kom);
+              }
+          }
+
+      }
+
+      int x, y;
+      int xstart = 50;
+      int yoffset = 30;
+      y = 0;
+
       /*
-      UTF_printNumI(min_data_us, 100, 100, 100, UTF_RIGHT);
-      UTF_printNumI(max_data_us, 100, 130, 100, UTF_RIGHT);
-      min_data_us = 0xFFFF;
-      max_data_us = 0;
+      x = UTF_printNumI(measureASD1251, xstart, y, 100, UTF_RIGHT);
+      UTF_DrawString(x, y, " ADS");
+      y += yoffset;
       */
 
-      UTF_printNumI(ADS1251_Get(), 100, 100, 100, UTF_RIGHT);
+      x = UTF_printNumF(calc_result.Vcurrent*1e3, xstart, y, 3, 100, UTF_RIGHT);
+      UTF_DrawString(x, y, " mVcurrent");
+      y += yoffset;
 
-      /*
-      UTF_printNumI(res, 100, 130, 100, UTF_RIGHT);
-      if((++idx%5)==0)
-        res = (res+1)%4;
-      SetResistor(res);
-      */
 
-      //UTF_printNumI(ADS1251_TestSPI_10Ns(), 100, 160, 100, UTF_RIGHT);
+      x = UTF_printNumF(Vout, xstart, y, 3, 100, UTF_RIGHT);
+      UTF_DrawString(x, y, " Vout");
+      y += yoffset;
 
-      HAL_ADC_Start(&hadc1);
-      HAL_ADC_PollForConversion(&hadc1, 10);
-      uint32_t adc_value = HAL_ADC_GetValue(&hadc1);
-      HAL_ADC_Stop(&hadc1);
-      UTF_printNumI(adc_value, 100, 160, 100, UTF_RIGHT);
+      x = UTF_printNumF(Vbat, xstart, y, 3, 100, UTF_RIGHT);
+      UTF_DrawString(x, y, " Vbat");
+      y += yoffset;
 
+      if(calc_result.resistance<0.8e6)
+      {
+          x = UTF_printNumF(calc_result.resistance*1e-3, xstart, y, 3, 100, UTF_RIGHT);
+          UTF_DrawString(x, y, " KOm");
+      } else
+      {
+          x = UTF_printNumF(calc_result.resistance*1e-6, xstart, y, 3, 100, UTF_RIGHT);
+          UTF_DrawString(x, y, " MOm");
+      }
+      y += yoffset;
+
+      x = UTF_printNumF(calc_result.current*1e6, xstart, y, 3, 100, UTF_RIGHT);
+      UTF_DrawString(x, y, " uA");
+      y += yoffset;
+
+      x = UTF_printNumF(GetResistorValue(), xstart, y, 3, 100, UTF_RIGHT);
+      UTF_DrawString(x, y, " Om S");
+      y += yoffset;
 
       DelayMs(500);
-
-      /*
-      UTF_printNumI(num++, 100, 100, 100, UTF_RIGHT);
-      for(int i=0; i<1000; i++)
-        DelayUs(1000);
-      */
   }
+}
+
+
+void SystemClock_Config400MHz(void)
+{
+  RCC_OscInitTypeDef RCC_OscInitStruct = {0};
+  RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
+  RCC_PeriphCLKInitTypeDef PeriphClkInitStruct = {0};
+
+  /** Supply configuration update enable
+  */
+  HAL_PWREx_ConfigSupply(PWR_LDO_SUPPLY);
+  /** Configure the main internal regulator output voltage
+  */
+  __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
+
+  while(!__HAL_PWR_GET_FLAG(PWR_FLAG_VOSRDY)) {}
+  /** Macro to configure the PLL clock source
+  */
+  __HAL_RCC_PLL_PLLSOURCE_CONFIG(RCC_PLLSOURCE_HSE);
+  /** Initializes the RCC Oscillators according to the specified parameters
+  * in the RCC_OscInitTypeDef structure.
+  */
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
+  RCC_OscInitStruct.HSEState = RCC_HSE_ON;
+  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
+  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
+  RCC_OscInitStruct.PLL.PLLM = 2;
+  RCC_OscInitStruct.PLL.PLLN = 200;
+  RCC_OscInitStruct.PLL.PLLP = 2;
+  RCC_OscInitStruct.PLL.PLLQ = 8;
+  RCC_OscInitStruct.PLL.PLLR = 2;
+  RCC_OscInitStruct.PLL.PLLRGE = RCC_PLL1VCIRANGE_2;
+  RCC_OscInitStruct.PLL.PLLVCOSEL = RCC_PLL1VCOWIDE;
+  RCC_OscInitStruct.PLL.PLLFRACN = 0;
+  if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /** Initializes the CPU, AHB and APB buses clocks
+  */
+  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
+                              |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2
+                              |RCC_CLOCKTYPE_D3PCLK1|RCC_CLOCKTYPE_D1PCLK1;
+  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
+  RCC_ClkInitStruct.SYSCLKDivider = RCC_SYSCLK_DIV1;
+
+
+
+  if(1)
+  {
+      //200 MHz periph
+      RCC_ClkInitStruct.AHBCLKDivider = RCC_HCLK_DIV2;
+      RCC_ClkInitStruct.APB3CLKDivider = RCC_APB3_DIV2;
+      RCC_ClkInitStruct.APB1CLKDivider = RCC_APB1_DIV2;
+      RCC_ClkInitStruct.APB2CLKDivider = RCC_APB2_DIV2;
+      RCC_ClkInitStruct.APB4CLKDivider = RCC_APB4_DIV2;
+  } else
+  {
+      //100 MHz
+      RCC_ClkInitStruct.AHBCLKDivider = RCC_HCLK_DIV4;
+      RCC_ClkInitStruct.APB3CLKDivider = RCC_APB3_DIV4;
+      RCC_ClkInitStruct.APB1CLKDivider = RCC_APB1_DIV4;
+      RCC_ClkInitStruct.APB2CLKDivider = RCC_APB2_DIV4;
+      RCC_ClkInitStruct.APB4CLKDivider = RCC_APB4_DIV4;
+  }
+
+
+
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_USART2|RCC_PERIPHCLK_SPI4
+                              |RCC_PERIPHCLK_ADC|RCC_PERIPHCLK_USB;
+  PeriphClkInitStruct.PLL2.PLL2M = 8;
+  PeriphClkInitStruct.PLL2.PLL2N = 192;
+  PeriphClkInitStruct.PLL2.PLL2P = 2;
+  PeriphClkInitStruct.PLL2.PLL2Q = 4;
+  PeriphClkInitStruct.PLL2.PLL2R = 2;
+  PeriphClkInitStruct.PLL2.PLL2RGE = RCC_PLL2VCIRANGE_0;
+  PeriphClkInitStruct.PLL2.PLL2VCOSEL = RCC_PLL2VCOWIDE;
+  PeriphClkInitStruct.PLL2.PLL2FRACN = 0;
+  PeriphClkInitStruct.PLL3.PLL3M = 8;
+  PeriphClkInitStruct.PLL3.PLL3N = 192;
+  PeriphClkInitStruct.PLL3.PLL3P = 2;
+  PeriphClkInitStruct.PLL3.PLL3Q = 4;
+  PeriphClkInitStruct.PLL3.PLL3R = 2;
+  PeriphClkInitStruct.PLL3.PLL3RGE = RCC_PLL3VCIRANGE_0;
+  PeriphClkInitStruct.PLL3.PLL3VCOSEL = RCC_PLL3VCOWIDE;
+  PeriphClkInitStruct.PLL3.PLL3FRACN = 0;
+  PeriphClkInitStruct.Spi45ClockSelection = RCC_SPI45CLKSOURCE_D2PCLK1;
+  PeriphClkInitStruct.Usart234578ClockSelection = RCC_USART234578CLKSOURCE_D2PCLK1;
+  PeriphClkInitStruct.UsbClockSelection = RCC_USBCLKSOURCE_PLL3;
+  PeriphClkInitStruct.AdcClockSelection = RCC_ADCCLKSOURCE_PLL2;
+  if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  HAL_RCC_MCOConfig(RCC_MCO1, RCC_MCO1SOURCE_HSE, RCC_MCODIV_1);
+  /** Enable USB Voltage detector
+  */
+  HAL_PWREx_EnableUSBVoltageDetector();
+
+  CPU_CACHE_Enable();
 }
 
 /**
   * @brief System Clock Configuration
   * @retval None
   */
-void SystemClock_Config(void)
+void SystemClock_Config100MHz(void)
 {
   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
@@ -236,6 +456,17 @@ void SystemClock_Config(void)
   HAL_PWREx_EnableUSBVoltageDetector();
 }
 
+static void VREF_Init()
+{
+    //Потом видимо припаять проводок к внешнему 2.048 V
+    __HAL_RCC_VREF_CLK_ENABLE();
+    HAL_SYSCFG_EnableVREFBUF();
+    HAL_SYSCFG_VREFBUF_HighImpedanceConfig(SYSCFG_VREFBUF_HIGH_IMPEDANCE_DISABLE);
+    HAL_SYSCFG_VREFBUF_VoltageScalingConfig(SYSCFG_VREFBUF_VOLTAGE_SCALE1); //2.5V
+
+    DelayMs(100);//Чтобы напряжение успело повыситься.
+}
+
 /**
   * @brief ADC1 Initialization Function
   * @param None
@@ -243,24 +474,9 @@ void SystemClock_Config(void)
   */
 static void MX_ADC1_Init(void)
 {
-
-  /* USER CODE BEGIN ADC1_Init 0 */
-  //Потом видимо припаять проводок к внешнему 2.048 V
-  __HAL_RCC_VREF_CLK_ENABLE();
-  HAL_SYSCFG_EnableVREFBUF();
-  HAL_SYSCFG_VREFBUF_HighImpedanceConfig(SYSCFG_VREFBUF_HIGH_IMPEDANCE_DISABLE);
-  HAL_SYSCFG_VREFBUF_VoltageScalingConfig(SYSCFG_VREFBUF_VOLTAGE_SCALE1); //2.5V
-
-  DelayMs(50);
-
-  /* USER CODE END ADC1_Init 0 */
-
   ADC_MultiModeTypeDef multimode = {0};
   ADC_ChannelConfTypeDef sConfig = {0};
 
-  /* USER CODE BEGIN ADC1_Init 1 */
-
-  /* USER CODE END ADC1_Init 1 */
   /** Common config
   */
   hadc1.Instance = ADC1;
@@ -308,7 +524,52 @@ static void MX_ADC1_Init(void)
     /* Calibration Error */
     Error_Handler();
   }
+}
 
+static void MX_ADC2_Init(void)
+{
+  ADC_ChannelConfTypeDef sConfig = {0};
+
+  /** Common config
+  */
+  hadc2.Instance = ADC2;
+  hadc2.Init.ClockPrescaler = ADC_CLOCK_ASYNC_DIV1;
+  hadc2.Init.Resolution = ADC_RESOLUTION_16B;
+  hadc2.Init.ScanConvMode = ADC_SCAN_DISABLE;
+  hadc2.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
+  hadc2.Init.LowPowerAutoWait = DISABLE;
+  hadc2.Init.ContinuousConvMode = DISABLE;
+  hadc2.Init.NbrOfConversion = 1;
+  hadc2.Init.DiscontinuousConvMode = DISABLE;
+  hadc2.Init.ExternalTrigConv = ADC_SOFTWARE_START;
+  hadc2.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
+  hadc2.Init.ConversionDataManagement = ADC_CONVERSIONDATA_DR;
+  hadc2.Init.Overrun = ADC_OVR_DATA_PRESERVED;
+  hadc2.Init.LeftBitShift = ADC_LEFTBITSHIFT_NONE;
+  hadc2.Init.OversamplingMode = DISABLE;
+  if (HAL_ADC_Init(&hadc2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /** Configure Regular Channel
+  */
+  sConfig.Channel = ADC_CHANNEL_5;
+  sConfig.Rank = ADC_REGULAR_RANK_1;
+  sConfig.SamplingTime = ADC_SAMPLETIME_1CYCLE_5;
+  sConfig.SingleDiff = ADC_SINGLE_ENDED;
+  sConfig.OffsetNumber = ADC_OFFSET_NONE;
+  sConfig.Offset = 0;
+  sConfig.OffsetSignedSaturation = DISABLE;
+  if (HAL_ADC_ConfigChannel(&hadc2, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  if (HAL_ADCEx_Calibration_Start(&hadc2, ADC_CALIB_OFFSET, ADC_SINGLE_ENDED) != HAL_OK)
+  {
+    /* Calibration Error */
+    Error_Handler();
+  }
 }
 
 /**
@@ -405,11 +666,12 @@ static void MX_GPIO_Init(void)
   GPIO_InitTypeDef GPIO_InitStruct = {0};
 
   /* GPIO Ports Clock Enable */
-  __HAL_RCC_GPIOH_CLK_ENABLE();
-  __HAL_RCC_GPIOC_CLK_ENABLE();
-  __HAL_RCC_GPIOE_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
+  __HAL_RCC_GPIOB_CLK_ENABLE();
+  __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOD_CLK_ENABLE();
+  __HAL_RCC_GPIOE_CLK_ENABLE();
+  __HAL_RCC_GPIOH_CLK_ENABLE();
 
   /*Configure GPIO pin : PA8 */
   GPIO_InitStruct.Pin = GPIO_PIN_8;
@@ -422,6 +684,19 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+/**
+* @brief  CPU L1-Cache enable.
+* @param  None
+* @retval None
+*/
+static void CPU_CACHE_Enable(void)
+{
+  /* Enable I-Cache */
+  SCB_EnableICache();
+
+  /* Enable D-Cache */
+  SCB_EnableDCache();
+}
 
 /* USER CODE END 4 */
 

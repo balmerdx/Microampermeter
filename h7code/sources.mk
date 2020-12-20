@@ -12,12 +12,16 @@ DEPS += \
 	output/base/Core/Src/hardware/delay.d \
 	output/base/Core/Src/hardware/gpios.d \
 	output/base/Core/Src/hardware/hw_ili9341.d \
+	output/base/Core/Src/hardware/hw_ili9481.d \
+	output/base/Core/Src/hardware/quadrature_encoder.d \
+	output/base/Core/Src/hardware/voltage.d \
 	output/base/Core/Src/ili/DefaultFonts.d \
 	output/base/Core/Src/ili/UTFT.d \
 	output/base/Core/Src/ili/float_to_string.d \
 	output/base/Core/Src/ili/utf_font.d \
 	output/base/Core/Src/interface/font_condensed30.d \
 	output/base/Core/Src/interface/font_condensed59.d \
+	output/base/Core/Src/measure/calculate.d \
 	output/base/USB_DEVICE/App/usb_device.d \
 	output/base/USB_DEVICE/App/usbd_cdc_if.d \
 	output/base/USB_DEVICE/App/usbd_desc.d \
@@ -64,12 +68,16 @@ OBJS += \
 	output/base/Core/Src/hardware/delay.o \
 	output/base/Core/Src/hardware/gpios.o \
 	output/base/Core/Src/hardware/hw_ili9341.o \
+	output/base/Core/Src/hardware/hw_ili9481.o \
+	output/base/Core/Src/hardware/quadrature_encoder.o \
+	output/base/Core/Src/hardware/voltage.o \
 	output/base/Core/Src/ili/DefaultFonts.o \
 	output/base/Core/Src/ili/UTFT.o \
 	output/base/Core/Src/ili/float_to_string.o \
 	output/base/Core/Src/ili/utf_font.o \
 	output/base/Core/Src/interface/font_condensed30.o \
 	output/base/Core/Src/interface/font_condensed59.o \
+	output/base/Core/Src/measure/calculate.o \
 	output/base/USB_DEVICE/App/usb_device.o \
 	output/base/USB_DEVICE/App/usbd_cdc_if.o \
 	output/base/USB_DEVICE/App/usbd_desc.o \
@@ -139,6 +147,18 @@ output/base/Core/Src/hardware/hw_ili9341.o: ./Core/Src/hardware/hw_ili9341.c
 	@echo 'Building target: hw_ili9341.c'
 	@$(CC) $(C_FLAGS) -o "$@" "$<"
 
+output/base/Core/Src/hardware/hw_ili9481.o: ./Core/Src/hardware/hw_ili9481.c
+	@echo 'Building target: hw_ili9481.c'
+	@$(CC) $(C_FLAGS) -o "$@" "$<"
+
+output/base/Core/Src/hardware/quadrature_encoder.o: ./Core/Src/hardware/quadrature_encoder.c
+	@echo 'Building target: quadrature_encoder.c'
+	@$(CC) $(C_FLAGS) -o "$@" "$<"
+
+output/base/Core/Src/hardware/voltage.o: ./Core/Src/hardware/voltage.c
+	@echo 'Building target: voltage.c'
+	@$(CC) $(C_FLAGS) -o "$@" "$<"
+
 output/base/Core/Src/ili/DefaultFonts.o: ./Core/Src/ili/DefaultFonts.c
 	@echo 'Building target: DefaultFonts.c'
 	@$(CC) $(C_FLAGS) -o "$@" "$<"
@@ -161,6 +181,10 @@ output/base/Core/Src/interface/font_condensed30.o: ./Core/Src/interface/font_con
 
 output/base/Core/Src/interface/font_condensed59.o: ./Core/Src/interface/font_condensed59.c
 	@echo 'Building target: font_condensed59.c'
+	@$(CC) $(C_FLAGS) -o "$@" "$<"
+
+output/base/Core/Src/measure/calculate.o: ./Core/Src/measure/calculate.c
+	@echo 'Building target: calculate.c'
 	@$(CC) $(C_FLAGS) -o "$@" "$<"
 
 output/base/USB_DEVICE/App/usb_device.o: ./USB_DEVICE/App/usb_device.c

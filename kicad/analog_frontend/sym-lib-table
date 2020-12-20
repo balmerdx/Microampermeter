@@ -1,0 +1,4 @@
+(sym_lib_table
+  (lib (name ampermeter-rescue)(type Legacy)(uri ${KIPRJMOD}/ampermeter-rescue.lib)(options "")(descr ""))
+  (lib (name analog_frontend-rescue)(type Legacy)(uri ${KIPRJMOD}/analog_frontend-rescue.lib)(options "")(descr ""))
+)

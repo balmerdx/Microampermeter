@@ -1,6 +1,8 @@
 #include "stm32h7xx_hal.h"
 #include "hw_ili9341.h"
 
+#ifdef DISPLAY_ILI9341
+
 void Error_Handler(void);
 
 #define TIMEOUT_MS 10
@@ -161,3 +163,5 @@ void HwLcdWait()
 
     spi_tx_buffer_count = 0;
 }
+
+#endif//DISPLAY_ILI9341

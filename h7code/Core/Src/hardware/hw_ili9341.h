@@ -1,4 +1,5 @@
 #pragma once
+#ifdef DISPLAY_ILI9341
 
 #define DISPLAY_SPI
 //LCD Hardware routines
@@ -17,3 +18,5 @@ uint8_t HwLcdSendReceive(uint8_t data); //send and receive spi data
 
 void HwLcdSend16NoWait(uint16_t data);
 void HwLcdWait();//Wait send complete
+
+#endif//DISPLAY_ILI9341
