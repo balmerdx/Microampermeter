@@ -5,6 +5,20 @@
 
 bool use_qspi = true;
 
+static volatile bool RxCplt = false;
+static volatile bool TxCplt = false;
+
+void HAL_QSPI_RxCpltCallback(QSPI_HandleTypeDef *hqspi)
+{
+    RxCplt = true;
+}
+
+void HAL_QSPI_TxCpltCallback(QSPI_HandleTypeDef *hqspi)
+{
+    TxCplt = true;
+}
+
+
 bool QspiMemInit(QSPI_HandleTypeDef* hqspi)
 {
 
@@ -80,10 +94,15 @@ bool QspiMemRead(QSPI_HandleTypeDef* hqspi, uint32_t address, uint32_t count, ui
         return false;
     }
 
-    if(HAL_QSPI_Receive(hqspi, buffer, QSPI_TIMEOUT_DEFAULT_VALUE) != HAL_OK)
+    //if(HAL_QSPI_Receive(hqspi, buffer, QSPI_TIMEOUT_DEFAULT_VALUE) != HAL_OK) return false;
+
+    RxCplt = false;
+    if(HAL_QSPI_Receive_DMA(hqspi, buffer) != HAL_OK)
     {
         return false;
     }
+
+    while(!RxCplt);
 
     return true;
 }
@@ -132,10 +151,16 @@ bool QspiMemWrite(QSPI_HandleTypeDef* hqspi, uint32_t address, uint32_t count, u
         return false;
     }
 
-    if(HAL_QSPI_Transmit(hqspi, buffer, QSPI_TIMEOUT_DEFAULT_VALUE) != HAL_OK)
+    //if(HAL_QSPI_Transmit_DMA(hqspi, buffer, QSPI_TIMEOUT_DEFAULT_VALUE) != HAL_OK) return false;
+
+    TxCplt = false;
+    if(HAL_QSPI_Transmit_DMA(hqspi, buffer) != HAL_OK)
     {
         return false;
     }
+
+
+    while(!TxCplt);
 
     return true;
 

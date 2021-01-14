@@ -27,7 +27,7 @@
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN TD */
-
+static MDMA_HandleTypeDef hmdma;
 /* USER CODE END TD */
 
 /* Private define ------------------------------------------------------------*/
@@ -96,6 +96,7 @@ void HAL_QSPI_MspInit(QSPI_HandleTypeDef* hqspi)
     __HAL_RCC_GPIOB_CLK_ENABLE();
     __HAL_RCC_GPIOE_CLK_ENABLE();
     __HAL_RCC_GPIOC_CLK_ENABLE();
+    __HAL_RCC_MDMA_CLK_ENABLE();
     /**QUADSPI GPIO Configuration
     PB2     ------> QUADSPI_CLK
     PE7     ------> QUADSPI_BK2_IO0
@@ -126,6 +127,45 @@ void HAL_QSPI_MspInit(QSPI_HandleTypeDef* hqspi)
     HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
   /* USER CODE BEGIN QUADSPI_MspInit 1 */
+    /*##-3- Configure the NVIC for QSPI #########################################*/
+    /* NVIC configuration for QSPI interrupt */
+    HAL_NVIC_SetPriority(QUADSPI_IRQn, 0x0F, 0);
+    HAL_NVIC_EnableIRQ(QUADSPI_IRQn);
+
+    /*##-4- Configure the DMA channel ###########################################*/
+    /* Enable MDMA clock */
+    /* Input MDMA */
+    /* Set the parameters to be configured */
+    hmdma.Init.Request = MDMA_REQUEST_QUADSPI_FIFO_TH;
+    hmdma.Init.TransferTriggerMode = MDMA_BUFFER_TRANSFER;
+    hmdma.Init.Priority = MDMA_PRIORITY_HIGH;
+    hmdma.Init.Endianness = MDMA_LITTLE_ENDIANNESS_PRESERVE;
+
+    hmdma.Init.SourceInc = MDMA_SRC_INC_BYTE;
+    hmdma.Init.DestinationInc = MDMA_DEST_INC_DISABLE;
+    hmdma.Init.SourceDataSize = MDMA_SRC_DATASIZE_BYTE;
+    hmdma.Init.DestDataSize = MDMA_DEST_DATASIZE_BYTE;
+    hmdma.Init.DataAlignment = MDMA_DATAALIGN_PACKENABLE;
+    hmdma.Init.BufferTransferLength = 4;
+    hmdma.Init.SourceBurst = MDMA_SOURCE_BURST_SINGLE;
+    hmdma.Init.DestBurst = MDMA_DEST_BURST_SINGLE;
+
+    hmdma.Init.SourceBlockAddressOffset = 0;
+    hmdma.Init.DestBlockAddressOffset = 0;
+
+    hmdma.Instance = MDMA_Channel1;
+
+    /* Associate the DMA handle */
+    __HAL_LINKDMA(hqspi, hmdma, hmdma);
+
+    /* DeInitialize the MDMA Stream */
+    HAL_MDMA_DeInit(&hmdma);
+    /* Initialize the MDMA stream */
+    HAL_MDMA_Init(&hmdma);
+
+    /* Enable and set QuadSPI interrupt to the lowest priority */
+    HAL_NVIC_SetPriority(MDMA_IRQn, 0x00, 0);
+    HAL_NVIC_EnableIRQ(MDMA_IRQn);
 
   /* USER CODE END QUADSPI_MspInit 1 */
   }
@@ -143,6 +183,8 @@ void HAL_QSPI_MspDeInit(QSPI_HandleTypeDef* hqspi)
   if(hqspi->Instance==QUADSPI)
   {
   /* USER CODE BEGIN QUADSPI_MspDeInit 0 */
+      HAL_NVIC_DisableIRQ(QUADSPI_IRQn);
+      HAL_MDMA_DeInit(&hmdma);
 
   /* USER CODE END QUADSPI_MspDeInit 0 */
     /* Peripheral clock disable */

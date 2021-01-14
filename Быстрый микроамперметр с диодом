@@ -362,5 +362,6 @@ https://pythonprogramming.net/displaying-images-pygame/
 
 	Чтож, PC11 нужно использовать.
 
-	QSPI скорость 1427 us на 10000 байтов 7 МБ/сек 
+	QSPI скорость 1427 us на 10000 байтов 7 МБ/сек  (это при чтении HAL_QSPI_Receive софтварно)
+	Используя HAL_QSPI_Receive_DMA получаем 352 us, т.е. 28 МБ/сек
 

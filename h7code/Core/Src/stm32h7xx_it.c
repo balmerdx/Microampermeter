@@ -25,6 +25,7 @@
 
 /* External variables --------------------------------------------------------*/
 extern PCD_HandleTypeDef hpcd_USB_OTG_FS;
+extern QSPI_HandleTypeDef hqspi;
 
 /******************************************************************************/
 /*           Cortex Processor Interruption and Exception Handlers          */
@@ -174,6 +175,28 @@ void OTG_FS_IRQHandler(void)
   /* USER CODE BEGIN OTG_FS_IRQn 1 */
 
   /* USER CODE END OTG_FS_IRQn 1 */
+}
+
+/**
+  * @brief  This function handles QUADSPI interrupt request.
+  * @param  None
+  * @retval None
+  */
+void QUADSPI_IRQHandler(void)
+{
+  HAL_QSPI_IRQHandler(&hqspi);
+}
+
+/**
+  * @brief  This function handles MDMA interrupt request.
+  * @param  None
+  * @retval None
+  */
+
+void MDMA_IRQHandler(void)
+{
+  /* Check the interrupt and clear flag */
+  HAL_MDMA_IRQHandler(hqspi.hmdma);
 }
 
 /* USER CODE BEGIN 1 */
