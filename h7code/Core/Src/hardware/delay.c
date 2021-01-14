@@ -3,14 +3,14 @@
 
 static TIM_HandleTypeDef    tim_init;
 
-static TIM_HandleTypeDef    tim_ns10_init;
-
 void DelayInit()
 {
     __HAL_RCC_TIM15_CLK_ENABLE();
+
     tim_init.Instance = TIM15;
     tim_init.Init.Period = 0xFFFF;
-    tim_init.Init.Prescaler = (HAL_RCC_GetPCLK1Freq())/1000000-1; //1 us per tick
+    //Предполагаем, что тут частота 200 МГц
+    tim_init.Init.Prescaler = (HAL_RCC_GetHCLKFreq())/1000000-1; //1 us per tick
     tim_init.Init.CounterMode = TIM_COUNTERMODE_UP;
     tim_init.Init.ClockDivision = 0;
     tim_init.Init.RepetitionCounter = 0;
@@ -19,20 +19,6 @@ void DelayInit()
         while(1);
 
     if (HAL_TIM_Base_Start(&tim_init) != HAL_OK)
-        while(1);
-
-    __HAL_RCC_TIM16_CLK_ENABLE();
-    tim_ns10_init.Instance = TIM16;
-    tim_ns10_init.Init.Period = 0xFFFF;
-    tim_ns10_init.Init.Prescaler = 0; //10 ns per tick (max speed)
-    tim_ns10_init.Init.CounterMode = TIM_COUNTERMODE_UP;
-    tim_ns10_init.Init.ClockDivision = 0;
-    tim_ns10_init.Init.RepetitionCounter = 0;
-
-    if (HAL_TIM_Base_Init(&tim_ns10_init) != HAL_OK)
-        while(1);
-
-    if (HAL_TIM_Base_Start(&tim_ns10_init) != HAL_OK)
         while(1);
 }
 
@@ -47,7 +33,6 @@ void DelayUs(uint16_t countUs)
     uint16_t start = (uint16_t)TIM15->CNT;
     while(((uint16_t)(TIM15->CNT-start)) < countUs)
     {
-
     }
 }
 

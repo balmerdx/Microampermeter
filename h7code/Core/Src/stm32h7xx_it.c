@@ -22,8 +22,6 @@
 #include "main.h"
 #include "stm32h7xx_it.h"
 
-#include "hardware/ADS1251.h"
-
 
 /* External variables --------------------------------------------------------*/
 extern PCD_HandleTypeDef hpcd_USB_OTG_FS;
@@ -182,7 +180,7 @@ void OTG_FS_IRQHandler(void)
 
 void EXTI15_10_IRQHandler()
 {
-    HAL_GPIO_EXTI_IRQHandler(ADS1251_DATA_PIN);
+
 }
 
 /* USER CODE END 1 */

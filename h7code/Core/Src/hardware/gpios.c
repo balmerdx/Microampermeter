@@ -1,6 +1,6 @@
 #include "stm32h7xx_hal.h"
 #include "gpios.h"
-
+/*
 #define RESISTOR_PORT GPIOE
 #define RESISTOR_PIN_100_Om GPIO_PIN_7
 #define RESISTOR_PIN_10_Om  GPIO_PIN_8
@@ -69,3 +69,4 @@ float GetResistorValue()
     case RESISTOR_1_Om: return PAR(R1K, R1);
     }
 }
+*/

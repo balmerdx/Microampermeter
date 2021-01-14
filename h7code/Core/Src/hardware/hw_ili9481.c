@@ -4,7 +4,6 @@
 
 #include "delay.h"
 
-#ifdef LCD_DISCOVERY
 #define TFT_PORT_RST  GPIOC
 #define PIN_RST    GPIO_PIN_6
 
@@ -14,27 +13,13 @@
 #define TFT_PORT_CS  GPIOC
 #define PIN_CS    GPIO_PIN_7
 
-#else
-#define TFT_PORT_RST	GPIOB
-#define PIN_RST		GPIO_Pin_5
-
-#define TFT_PORT_DC	GPIOB
-#define PIN_DC		GPIO_Pin_4
-
-#define TFT_PORT_CS	GPIOB
-#define PIN_CS		GPIO_Pin_6
-#endif
-
 void HwLcdInit()
 {
     GPIO_InitTypeDef gpio = {};
 
-#ifdef LCD_DISCOVERY
     __HAL_RCC_GPIOC_CLK_ENABLE();
     __HAL_RCC_GPIOD_CLK_ENABLE();
-#else
-    RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOB|RCC_AHB1Periph_GPIOD, ENABLE);
-#endif
+
     gpio.Pull      = GPIO_NOPULL;
     gpio.Speed     = GPIO_SPEED_FREQ_VERY_HIGH;
     gpio.Mode      = GPIO_MODE_OUTPUT_PP;
@@ -83,10 +68,9 @@ void HwLcdPinLed(uint8_t on)
 
 }
 
-uint8_t HwLcdSend(uint8_t data)
+void HwLcdSend(uint8_t data)
 {
     HwLcdSend16NoWait(data);
-    return 0;
 }
 
 #endif//DISPLAY_ILI9481

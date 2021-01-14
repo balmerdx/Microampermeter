@@ -8,7 +8,6 @@ void DelayDeinit();
 #define DELAY_US_MAX 0xFFFFF
 void DelayUs(uint16_t countUs);
 static inline uint16_t TimeUs() { return TIM15->CNT; }
-static inline uint16_t Time10Ns() { return TIM16->CNT; }
 
 void DelayMs(uint32_t ms);
 uint32_t TimeMs();

@@ -14,6 +14,7 @@ C_INCLIDES= \
 -I$(STM_LIB_DIR)/CMSIS/Device/ST/STM32H7xx/Include \
 -ICore/Src \
 -ICore/Inc \
+-ICore/display \
 -IMiddlewares/ST/STM32_USB_Device_Library/Core/Inc \
 -IMiddlewares/ST/STM32_USB_Device_Library/Class/CDC/Inc \
 -IUSB_DEVICE/App \
@@ -31,7 +32,7 @@ endif
 
 ifeq ($(MAKECMDGOALS),release)
 C_DEFINES= -DNDEBUG
-C_FLAGS = -O3 -g -gdwarf-2
+C_FLAGS = -Os -g -gdwarf-2
 endif
 
 #C_FLAGS += -S #asm listing

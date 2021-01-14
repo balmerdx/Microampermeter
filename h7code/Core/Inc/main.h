@@ -7,9 +7,6 @@ extern "C" {
 
 #include "stm32h7xx_hal.h"
 
-extern ADC_HandleTypeDef hadc1;
-extern ADC_HandleTypeDef hadc2;
-
 void Error_Handler(void);
 
 #ifdef __cplusplus
