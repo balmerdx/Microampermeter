@@ -356,7 +356,7 @@ https://pythonprogramming.net/displaying-images-pygame/
 		напряжение + ток
 		сопротивление
 
-- сделать драйвер QSPI RAM
+- сделать драйвер QSPI RAM --ok
 	Оказывается у Quad SPI есть bank1/bank2 и это разные вещи.
 	Неверно развели ~QSPI_CS на bank1, хотя всё остальное на bank2
 
@@ -364,4 +364,6 @@ https://pythonprogramming.net/displaying-images-pygame/
 
 	QSPI скорость 1427 us на 10000 байтов 7 МБ/сек  (это при чтении HAL_QSPI_Receive софтварно)
 	Используя HAL_QSPI_Receive_DMA получаем 352 us, т.е. 28 МБ/сек
+
+	- проверить всю память --ok
 

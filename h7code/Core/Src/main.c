@@ -39,6 +39,43 @@ static void MX_GPIO_Init(void);
 static void VREF_Init();
 static void MX_QUADSPI_Init(void);
 
+#define QBUFFER_SIZE 2500
+#define QBUFFER_ADDR ((1<<QSPI_MEM_BITS)-1-QBUFFER_SIZE)
+static uint32_t buffer[QBUFFER_SIZE];
+
+bool WriteAllQspi(int idx)
+{
+    //Пишем почти всю память, только кусочек в конце не дописываем
+    for(int addr = 0; addr+sizeof(buffer)-1 < (1<<QSPI_MEM_BITS); addr+= sizeof(buffer))
+    {
+        for(int i=0; i<QBUFFER_SIZE; i++)
+            buffer[i] = idx++;
+        if(!QspiMemWrite(&hqspi, addr, sizeof(buffer), (uint8_t*)buffer))
+            return false;
+    }
+
+    return true;
+}
+
+bool CheckAllQspi(int idx, int* paddr)
+{
+    for(int addr = 0; addr+sizeof(buffer)-1 < (1<<QSPI_MEM_BITS); addr+= sizeof(buffer))
+    {
+        if(!QspiMemRead(&hqspi, addr, sizeof(buffer), (uint8_t*)buffer))
+            return false;
+
+        for(int i=0; i<QBUFFER_SIZE; i++)
+            if(buffer[i] != idx++)
+            {
+                *paddr = addr + i*4;
+                return false;
+            }
+    }
+
+    return true;
+
+}
+
 static bool test_usb = false;
 /**
   * @brief  The application entry point.
@@ -134,11 +171,7 @@ int main(void)
   }
 
   float f = 0;
-  int idx = 3;
-
-#define QBUFFER_SIZE 10000
-#define QBUFFER_ADDR ((1<<QSPI_MEM_BITS)-1-QBUFFER_SIZE)
-static uint8_t buffer[QBUFFER_SIZE];
+  int idx = 0;
 
   while (1)
   {
@@ -152,38 +185,62 @@ static uint8_t buffer[QBUFFER_SIZE];
       UTF_DrawString(x, y, "Hello, QT!");
       y += yoffset;
 
+      bool write_all = true;
       bool ok;
-      for(int i=0; i<QBUFFER_SIZE; i++)
-          buffer[i] = idx + i;
-      ok = QspiMemWrite(&hqspi, QBUFFER_ADDR, sizeof(buffer), (uint8_t*)buffer);
+      if(write_all)
+      {
+          ok = WriteAllQspi(idx);
+      } else
+      {
+          for(int i=0; i<QBUFFER_SIZE; i++)
+              buffer[i] = idx + i;
+          ok = QspiMemWrite(&hqspi, QBUFFER_ADDR, sizeof(buffer), (uint8_t*)buffer);
+      }
 
       for(int i=0; i<QBUFFER_SIZE; i++)
           buffer[i] = 0;
       x = UTF_DrawString(xstart, y, ok?"Write ok":"Write fail");
       y += yoffset;
 
-      uint16_t start_time = TimeUs();
-      ok = QspiMemRead(&hqspi, QBUFFER_ADDR, sizeof(buffer), (uint8_t*)buffer);
-      uint16_t read_time = TimeUs()-start_time;
-
-      if(!ok)
-          x = UTF_DrawString(xstart, y, "Read fail");
-      else
+      if(write_all)
       {
+          uint16_t start_time = TimeMs();
+          int err_addr;
+          ok = CheckAllQspi(idx, &err_addr);
+          uint16_t read_time = TimeMs()-start_time;
+          x = UTF_DrawString(xstart, y, ok?"Check ok" : "Check fail adr=");
+          //x = UTF_printNumI(err_addr, x, y, 100, UTF_LEFT);
+          x = UTF_printNumI(buffer[0], x, y, 100, UTF_LEFT);
+
+          y += yoffset;
+          x = UTF_DrawString(xstart, y, "Read time=");
+          x = UTF_printNumI(read_time, x, y, 100, UTF_LEFT);
+          x = UTF_DrawString(x, y, " ms   ");
+          y += yoffset;
+      } else
+      {
+          uint16_t start_time = TimeUs();
+          ok = QspiMemRead(&hqspi, QBUFFER_ADDR, sizeof(buffer), (uint8_t*)buffer);
+          uint16_t read_time = TimeUs()-start_time;
           bool equal = true;
           for(int i=0; i<QBUFFER_SIZE; i++)
-              if(buffer[i]!=(uint8_t)(idx + i))
+              if(buffer[i]!=(idx + i))
                   equal = false;
-          x = UTF_DrawString(xstart, y, equal ? "Mem equal" : "Mem not equal");
+          if(!ok)
+              x = UTF_DrawString(xstart, y, "Read fail");
+          else
+              x = UTF_DrawString(xstart, y, equal ? "Mem equal" : "Mem not equal");
+          x = UTF_printNumI(buffer[0], x, y, 100, UTF_LEFT);
+          y += yoffset;
+
+          x = UTF_DrawString(xstart, y, "Read time=");
+          x = UTF_printNumI(read_time, x, y, 100, UTF_LEFT);
+          x = UTF_DrawString(x, y, " us   ");
+          y += yoffset;
       }
 
-      x = UTF_printNumI(buffer[0], x, y, 100, UTF_LEFT);
-      y += yoffset;
 
-      x = UTF_DrawString(xstart, y, "Read time=");
-      x = UTF_printNumI(read_time, x, y, 100, UTF_LEFT);
-      x = UTF_DrawString(x, y, " us   ");
-      y += yoffset;
+
 
       x = UTF_DrawString(0, y, "GetPCLK1Freq=");
       x = UTF_printNumI(HAL_RCC_GetPCLK1Freq(), x, y, UTFT_getDisplayXSize()-x, UTF_LEFT);

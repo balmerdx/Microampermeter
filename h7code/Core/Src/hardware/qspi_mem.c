@@ -1,5 +1,6 @@
 #include "stm32h7xx_hal.h"
 #include "qspi_mem.h"
+#include "delay.h"
 
 #define QSPI_TIMEOUT_DEFAULT_VALUE 100
 
@@ -102,7 +103,12 @@ bool QspiMemRead(QSPI_HandleTypeDef* hqspi, uint32_t address, uint32_t count, ui
         return false;
     }
 
-    while(!RxCplt);
+    uint32_t start_time = TimeMs();
+    while(!RxCplt)
+    {
+        if( (uint32_t)(TimeMs()-start_time) > QSPI_TIMEOUT_DEFAULT_VALUE)
+            return false;
+    }
 
     return true;
 }
@@ -151,7 +157,7 @@ bool QspiMemWrite(QSPI_HandleTypeDef* hqspi, uint32_t address, uint32_t count, u
         return false;
     }
 
-    //if(HAL_QSPI_Transmit_DMA(hqspi, buffer, QSPI_TIMEOUT_DEFAULT_VALUE) != HAL_OK) return false;
+    //if(HAL_QSPI_Transmit(hqspi, buffer, QSPI_TIMEOUT_DEFAULT_VALUE) != HAL_OK) return false;
 
     TxCplt = false;
     if(HAL_QSPI_Transmit_DMA(hqspi, buffer) != HAL_OK)
@@ -160,7 +166,12 @@ bool QspiMemWrite(QSPI_HandleTypeDef* hqspi, uint32_t address, uint32_t count, u
     }
 
 
-    while(!TxCplt);
+    uint32_t start_time = TimeMs();
+    while(!TxCplt)
+    {
+        if( (uint32_t)(TimeMs()-start_time) > QSPI_TIMEOUT_DEFAULT_VALUE)
+            return false;
+    }
 
     return true;
 
