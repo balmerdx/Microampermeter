@@ -3,7 +3,6 @@
 //Точность +-1 uS
 void DelayInit();
 void DelayDeinit();
-//max 0xFFFF=0.1 секунда
 
 #define DELAY_US_MAX 0xFFFFF
 void DelayUs(uint16_t countUs);
