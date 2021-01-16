@@ -74,6 +74,8 @@ sources = [
 		"stm32h7xx_hal_i2c.c",
 		"stm32h7xx_hal_i2c_ex.c",
 		"stm32h7xx_hal_exti.c",
+		"stm32h7xx_hal_sai.c",
+		"stm32h7xx_hal_sai_ex.c",
 		"stm32h7xx_hal_spi.c",
 		"stm32h7xx_hal_tim.c",
 		"stm32h7xx_hal_tim_ex.c",

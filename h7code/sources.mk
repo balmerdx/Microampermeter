@@ -59,6 +59,8 @@ DEPS += \
 	output/hal/stm32h7xx_hal_i2c.d \
 	output/hal/stm32h7xx_hal_i2c_ex.d \
 	output/hal/stm32h7xx_hal_exti.d \
+	output/hal/stm32h7xx_hal_sai.d \
+	output/hal/stm32h7xx_hal_sai_ex.d \
 	output/hal/stm32h7xx_hal_spi.d \
 	output/hal/stm32h7xx_hal_tim.d \
 	output/hal/stm32h7xx_hal_tim_ex.d \
@@ -122,6 +124,8 @@ OBJS += \
 	output/hal/stm32h7xx_hal_i2c.o \
 	output/hal/stm32h7xx_hal_i2c_ex.o \
 	output/hal/stm32h7xx_hal_exti.o \
+	output/hal/stm32h7xx_hal_sai.o \
+	output/hal/stm32h7xx_hal_sai_ex.o \
 	output/hal/stm32h7xx_hal_spi.o \
 	output/hal/stm32h7xx_hal_tim.o \
 	output/hal/stm32h7xx_hal_tim_ex.o \
@@ -347,6 +351,14 @@ output/hal/stm32h7xx_hal_i2c_ex.o: Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_ha
 
 output/hal/stm32h7xx_hal_exti.o: Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_exti.c
 	@echo 'Building target: stm32h7xx_hal_exti.c'
+	@$(CC) $(C_FLAGS) -o "$@" "$<"
+
+output/hal/stm32h7xx_hal_sai.o: Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_sai.c
+	@echo 'Building target: stm32h7xx_hal_sai.c'
+	@$(CC) $(C_FLAGS) -o "$@" "$<"
+
+output/hal/stm32h7xx_hal_sai_ex.o: Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_sai_ex.c
+	@echo 'Building target: stm32h7xx_hal_sai_ex.c'
 	@$(CC) $(C_FLAGS) -o "$@" "$<"
 
 output/hal/stm32h7xx_hal_spi.o: Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_spi.c
