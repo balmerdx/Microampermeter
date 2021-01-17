@@ -108,6 +108,14 @@ void InitADS1271_GPIO()
     HAL_GPIO_WritePin(ADS1271_NOT_PDWN_PORT, ADS1271_NOT_PDWN_PIN, 1);
 }
 
+int32_t Convert24(uint32_t data24)
+{
+    if(data24&(1u<<23))
+        data24 |= 0xFF000000;
+
+    return (int32_t)data24;
+}
+
 /**
   * @brief  The application entry point.
   * @retval int
@@ -213,7 +221,6 @@ int main(void)
   float f = 0;
   int idx = 0;
   //HAL_StatusTypeDef status = HAL_SAI_Receive_DMA(&hsai_BlockA1, (uint8_t*)audio_buf, 256);
-  //HAL_StatusTypeDef status = HAL_SAI_Receive_IT(&hsai_BlockA1, (uint8_t*)audio_buf, 256);
 
   while (1)
   {
@@ -223,17 +230,31 @@ int main(void)
       int yoffset = 30;
       y = 0;
 
-      HAL_StatusTypeDef status = HAL_SAI_Receive(&hsai_BlockA1, (uint8_t*)audio_buf, 256, 200);
+      //HAL_StatusTypeDef status = HAL_SAI_Receive_IT(&hsai_BlockA1, (uint8_t*)audio_buf, 256);
+      HAL_StatusTypeDef status = HAL_SAI_Receive(&hsai_BlockA1, (uint8_t*)audio_buf, AUDIO_BUFFER_SIZE, 200);
+
+      int32_t sum0 = 0, sum1 = 0;
+      for(int i=0; i<AUDIO_BUFFER_SIZE/2; i++)
+      {
+          sum0 += Convert24(audio_buf[i*2]);
+          sum1 += Convert24(audio_buf[i*2+1]);
+      }
+
+      sum0 /= AUDIO_BUFFER_SIZE/2;
+      sum1 /= AUDIO_BUFFER_SIZE/2;
+
       x = UTF_DrawString(xstart, y, "Sai test! ");
       x = UTF_printNumI(status, x, y, 100, UTF_RIGHT);
       y += yoffset;
 
       x = UTF_DrawString(xstart, y, "ADC0=");
-      x = UTF_printNumI((int32_t)audio_buf[0], x, y, 100, UTF_RIGHT);
+      //x = UTF_printNumI(Convert24(audio_buf[0]), x, y, 100, UTF_RIGHT);
+      x = UTF_printNumI(sum0, x, y, 100, UTF_RIGHT);
       y += yoffset;
 
       x = UTF_DrawString(xstart, y, "ADC1=");
-      x = UTF_printNumI((int32_t)audio_buf[1], x, y, 100, UTF_RIGHT);
+      //x = UTF_printNumI(Convert24(audio_buf[1]), x, y, 100, UTF_RIGHT);
+      x = UTF_printNumI(sum1, x, y, 100, UTF_RIGHT);
       y += yoffset;
 
       idx++;
