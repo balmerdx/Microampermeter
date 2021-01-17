@@ -406,3 +406,9 @@ https://pythonprogramming.net/displaying-images-pygame/
 	https://community.st.com/s/question/0D53W000003L5VG/does-dma-miss-data-while-it-is-used-by-sai-interface
 
 	- HAL_SAI_Receive_DMA почемуто не работает --ok, надо было в правильный блок памяти буфер запихать
+
+	- MODE 
+		MODE = 0 High Speed
+		к сожалению ошиблись, поэтому High Resolution у нас пока не будет (т.к. надо float по отдельности делать)
+
+	- ~SYNC/~PDWN = 1 	

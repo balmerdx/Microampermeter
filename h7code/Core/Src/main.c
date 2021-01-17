@@ -84,6 +84,30 @@ bool CheckAllQspi(int idx, int* paddr)
 }
 
 static bool test_usb = false;
+
+void InitADS1271_GPIO()
+{
+#define ADS1271_MODE_PORT GPIOE
+#define ADS1271_MODE_PIN GPIO_PIN_3
+
+#define ADS1271_NOT_PDWN_PORT GPIOE
+#define ADS1271_NOT_PDWN_PIN GPIO_PIN_1
+
+    GPIO_InitTypeDef  gpio = {};
+    gpio.Pull      = GPIO_NOPULL;
+    gpio.Speed     = GPIO_SPEED_FREQ_LOW;
+
+    gpio.Mode      = GPIO_MODE_OUTPUT_PP;
+    gpio.Pin       = ADS1271_MODE_PIN;
+    HAL_GPIO_Init(ADS1271_MODE_PORT, &gpio);
+
+    gpio.Pin       = ADS1271_NOT_PDWN_PIN;
+    HAL_GPIO_Init(ADS1271_NOT_PDWN_PORT, &gpio);
+
+    HAL_GPIO_WritePin(ADS1271_MODE_PORT, ADS1271_MODE_PIN, 0);
+    HAL_GPIO_WritePin(ADS1271_NOT_PDWN_PORT, ADS1271_NOT_PDWN_PIN, 1);
+}
+
 /**
   * @brief  The application entry point.
   * @retval int
@@ -106,6 +130,8 @@ int main(void)
   MX_SAI1_Init();
   MX_USB_DEVICE_Init();
   MX_QUADSPI_Init();
+
+  InitADS1271_GPIO();
 
   if(test_usb)
   {
@@ -176,11 +202,18 @@ int main(void)
       while(1);
   }
 
+  HAL_GPIO_WritePin(ADS1271_NOT_PDWN_PORT, ADS1271_NOT_PDWN_PIN, 0);
+  DelayMs(200);
+  HAL_GPIO_WritePin(ADS1271_NOT_PDWN_PORT, ADS1271_NOT_PDWN_PIN, 1);
+  DelayMs(200);
+
+  for(int i=0; i<AUDIO_BUFFER_SIZE; i++)
+    audio_buf[i] = i + 1000;
+
   float f = 0;
   int idx = 0;
-  HAL_StatusTypeDef status = HAL_SAI_Receive_DMA(&hsai_BlockA1, (uint8_t*)audio_buf, 256);
+  //HAL_StatusTypeDef status = HAL_SAI_Receive_DMA(&hsai_BlockA1, (uint8_t*)audio_buf, 256);
   //HAL_StatusTypeDef status = HAL_SAI_Receive_IT(&hsai_BlockA1, (uint8_t*)audio_buf, 256);
-  //HAL_StatusTypeDef status = HAL_SAI_Receive(&hsai_BlockA1, (uint8_t*)audio_buf, 256, 200);
 
   while (1)
   {
@@ -190,8 +223,17 @@ int main(void)
       int yoffset = 30;
       y = 0;
 
+      HAL_StatusTypeDef status = HAL_SAI_Receive(&hsai_BlockA1, (uint8_t*)audio_buf, 256, 200);
       x = UTF_DrawString(xstart, y, "Sai test! ");
       x = UTF_printNumI(status, x, y, 100, UTF_RIGHT);
+      y += yoffset;
+
+      x = UTF_DrawString(xstart, y, "ADC0=");
+      x = UTF_printNumI((int32_t)audio_buf[0], x, y, 100, UTF_RIGHT);
+      y += yoffset;
+
+      x = UTF_DrawString(xstart, y, "ADC1=");
+      x = UTF_printNumI((int32_t)audio_buf[1], x, y, 100, UTF_RIGHT);
       y += yoffset;
 
       idx++;
@@ -460,8 +502,8 @@ static void MX_SAI1_Init(void)
   hsai_BlockA1.Init.FIFOThreshold = SAI_FIFOTHRESHOLD_HF;//SAI_FIFOTHRESHOLD_EMPTY;
   hsai_BlockA1.Init.AudioFrequency = SAI_AUDIO_FREQUENCY_MCKDIV;
   hsai_BlockA1.Init.Mckdiv = 2; //MCLK - 27 MHz
-  hsai_BlockA1.Init.MckOverSampling = SAI_MCK_OVERSAMPLING_ENABLE; //MCLK/512 FS = 52.73 KHz
-  //hsai_BlockA1.Init.MckOverSampling = SAI_MCK_OVERSAMPLING_DISABLE; //MCLK/256 FS =105.46 KHz
+  //hsai_BlockA1.Init.MckOverSampling = SAI_MCK_OVERSAMPLING_ENABLE; //MCLK/512 FS = 52.73 KHz
+  hsai_BlockA1.Init.MckOverSampling = SAI_MCK_OVERSAMPLING_DISABLE; //MCLK/256 FS =105.46 KHz
   hsai_BlockA1.Init.SynchroExt = SAI_SYNCEXT_DISABLE;
   hsai_BlockA1.Init.MonoStereoMode = SAI_STEREOMODE;
   hsai_BlockA1.Init.CompandingMode = SAI_NOCOMPANDING;
