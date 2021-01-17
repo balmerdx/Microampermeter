@@ -31,26 +31,33 @@
 
 /* Private variables ---------------------------------------------------------*/
 QSPI_HandleTypeDef hqspi;
+SAI_HandleTypeDef hsai_BlockA1;
+DMA_HandleTypeDef hdma_sai1_a;
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config400MHz(void);
 static void CPU_CACHE_Enable(void);
+static void MX_DMA_Init(void);
 static void MX_GPIO_Init(void);
 static void VREF_Init();
 static void MX_QUADSPI_Init(void);
+static void MX_SAI1_Init(void);
 
 #define QBUFFER_SIZE 2500
 #define QBUFFER_ADDR ((1<<QSPI_MEM_BITS)-1-QBUFFER_SIZE)
-static uint32_t buffer[QBUFFER_SIZE];
+static uint32_t buffer_qspi[QBUFFER_SIZE];
+
+#define AUDIO_BUFFER_SIZE 512
+uint32_t audio_buf[AUDIO_BUFFER_SIZE] __attribute__((section(".d2_data"))) __attribute__ ((aligned (4)));
 
 bool WriteAllQspi(int idx)
 {
     //Пишем почти всю память, только кусочек в конце не дописываем
-    for(int addr = 0; addr+sizeof(buffer)-1 < (1<<QSPI_MEM_BITS); addr+= sizeof(buffer))
+    for(int addr = 0; addr+sizeof(buffer_qspi)-1 < (1<<QSPI_MEM_BITS); addr+= sizeof(buffer_qspi))
     {
         for(int i=0; i<QBUFFER_SIZE; i++)
-            buffer[i] = idx++;
-        if(!QspiMemWrite(&hqspi, addr, sizeof(buffer), (uint8_t*)buffer))
+            buffer_qspi[i] = idx++;
+        if(!QspiMemWrite(&hqspi, addr, sizeof(buffer_qspi), (uint8_t*)buffer_qspi))
             return false;
     }
 
@@ -59,13 +66,13 @@ bool WriteAllQspi(int idx)
 
 bool CheckAllQspi(int idx, int* paddr)
 {
-    for(int addr = 0; addr+sizeof(buffer)-1 < (1<<QSPI_MEM_BITS); addr+= sizeof(buffer))
+    for(int addr = 0; addr+sizeof(buffer_qspi)-1 < (1<<QSPI_MEM_BITS); addr+= sizeof(buffer_qspi))
     {
-        if(!QspiMemRead(&hqspi, addr, sizeof(buffer), (uint8_t*)buffer))
+        if(!QspiMemRead(&hqspi, addr, sizeof(buffer_qspi), (uint8_t*)buffer_qspi))
             return false;
 
         for(int i=0; i<QBUFFER_SIZE; i++)
-            if(buffer[i] != idx++)
+            if(buffer_qspi[i] != idx++)
             {
                 *paddr = addr + i*4;
                 return false;
@@ -90,10 +97,15 @@ int main(void)
 
   /* Configure the system clock */
   SystemClock_Config400MHz();
-  //SystemClock_Config100MHz();
 
   DelayInit();
   VREF_Init();
+  /* Initialize all configured peripherals */
+  MX_GPIO_Init();
+  MX_DMA_Init();
+  MX_SAI1_Init();
+  MX_USB_DEVICE_Init();
+  MX_QUADSPI_Init();
 
   if(test_usb)
   {
@@ -158,12 +170,6 @@ int main(void)
   UTFT_fillRect(10,10, 20,20);
   UTF_SetFont(font_condensed30);
 
-
-  /* Initialize all configured peripherals */
-  MX_GPIO_Init();
-  MX_USB_DEVICE_Init();
-  MX_QUADSPI_Init();
-
   if(!QspiMemInit(&hqspi))
   {
       UTF_DrawString(0, 100, "QspiMemInit fail");
@@ -172,6 +178,26 @@ int main(void)
 
   float f = 0;
   int idx = 0;
+  HAL_StatusTypeDef status = HAL_SAI_Receive_DMA(&hsai_BlockA1, (uint8_t*)audio_buf, 256);
+  //HAL_StatusTypeDef status = HAL_SAI_Receive_IT(&hsai_BlockA1, (uint8_t*)audio_buf, 256);
+  //HAL_StatusTypeDef status = HAL_SAI_Receive(&hsai_BlockA1, (uint8_t*)audio_buf, 256, 200);
+
+  while (1)
+  {
+      //Sai test
+      int x, y;
+      int xstart = 50;
+      int yoffset = 30;
+      y = 0;
+
+      x = UTF_DrawString(xstart, y, "Sai test! ");
+      x = UTF_printNumI(status, x, y, 100, UTF_RIGHT);
+      y += yoffset;
+
+      idx++;
+      DelayMs(500);
+  }
+
 
   while (1)
   {
@@ -193,12 +219,12 @@ int main(void)
       } else
       {
           for(int i=0; i<QBUFFER_SIZE; i++)
-              buffer[i] = idx + i;
-          ok = QspiMemWrite(&hqspi, QBUFFER_ADDR, sizeof(buffer), (uint8_t*)buffer);
+              buffer_qspi[i] = idx + i;
+          ok = QspiMemWrite(&hqspi, QBUFFER_ADDR, sizeof(buffer_qspi), (uint8_t*)buffer_qspi);
       }
 
       for(int i=0; i<QBUFFER_SIZE; i++)
-          buffer[i] = 0;
+          buffer_qspi[i] = 0;
       x = UTF_DrawString(xstart, y, ok?"Write ok":"Write fail");
       y += yoffset;
 
@@ -210,7 +236,7 @@ int main(void)
           uint16_t read_time = TimeMs()-start_time;
           x = UTF_DrawString(xstart, y, ok?"Check ok" : "Check fail adr=");
           //x = UTF_printNumI(err_addr, x, y, 100, UTF_LEFT);
-          x = UTF_printNumI(buffer[0], x, y, 100, UTF_LEFT);
+          x = UTF_printNumI(buffer_qspi[0], x, y, 100, UTF_LEFT);
 
           y += yoffset;
           x = UTF_DrawString(xstart, y, "Read time=");
@@ -220,17 +246,17 @@ int main(void)
       } else
       {
           uint16_t start_time = TimeUs();
-          ok = QspiMemRead(&hqspi, QBUFFER_ADDR, sizeof(buffer), (uint8_t*)buffer);
+          ok = QspiMemRead(&hqspi, QBUFFER_ADDR, sizeof(buffer_qspi), (uint8_t*)buffer_qspi);
           uint16_t read_time = TimeUs()-start_time;
           bool equal = true;
           for(int i=0; i<QBUFFER_SIZE; i++)
-              if(buffer[i]!=(idx + i))
+              if(buffer_qspi[i]!=(idx + i))
                   equal = false;
           if(!ok)
               x = UTF_DrawString(xstart, y, "Read fail");
           else
               x = UTF_DrawString(xstart, y, equal ? "Mem equal" : "Mem not equal");
-          x = UTF_printNumI(buffer[0], x, y, 100, UTF_LEFT);
+          x = UTF_printNumI(buffer_qspi[0], x, y, 100, UTF_LEFT);
           y += yoffset;
 
           x = UTF_DrawString(xstart, y, "Read time=");
@@ -286,8 +312,6 @@ void SystemClock_Config400MHz(void)
   RCC_OscInitStruct.PLL.PLLM = 2;
   RCC_OscInitStruct.PLL.PLLN = 200;
   RCC_OscInitStruct.PLL.PLLP = 2;
-  //RCC_OscInitStruct.PLL.PLLQ = 32;//25 MHz QSPI
-  //RCC_OscInitStruct.PLL.PLLQ = 8;//100 MHz QSPI
   RCC_OscInitStruct.PLL.PLLQ = 4;//200 MHz QSPI
   RCC_OscInitStruct.PLL.PLLR = 2;
   RCC_OscInitStruct.PLL.PLLRGE = RCC_PLL1VCIRANGE_2;
@@ -304,8 +328,6 @@ void SystemClock_Config400MHz(void)
                               |RCC_CLOCKTYPE_D3PCLK1|RCC_CLOCKTYPE_D1PCLK1;
   RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
   RCC_ClkInitStruct.SYSCLKDivider = RCC_SYSCLK_DIV1;
-
-
 
   if(1)
   {
@@ -332,7 +354,19 @@ void SystemClock_Config400MHz(void)
     Error_Handler();
   }
 
-  PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_USB|RCC_PERIPHCLK_QSPI;
+  PeriphClkInitStruct.PeriphClockSelection =
+          RCC_PERIPHCLK_SAI1|
+          RCC_PERIPHCLK_USB|
+          RCC_PERIPHCLK_QSPI;
+  PeriphClkInitStruct.PLL2.PLL2M = 8;
+  PeriphClkInitStruct.PLL2.PLL2N = 216;
+  //PeriphClkInitStruct.PLL2.PLL2P = 2; //108 MHz
+  PeriphClkInitStruct.PLL2.PLL2P = 4; //54 MHz
+  PeriphClkInitStruct.PLL2.PLL2Q = 4;
+  PeriphClkInitStruct.PLL2.PLL2R = 2;
+  PeriphClkInitStruct.PLL2.PLL2RGE = RCC_PLL2VCIRANGE_0;
+  PeriphClkInitStruct.PLL2.PLL2VCOSEL = RCC_PLL2VCOWIDE;
+  PeriphClkInitStruct.PLL2.PLL2FRACN = 0;
   PeriphClkInitStruct.PLL3.PLL3M = 8;
   PeriphClkInitStruct.PLL3.PLL3N = 192;
   PeriphClkInitStruct.PLL3.PLL3P = 2;
@@ -342,13 +376,13 @@ void SystemClock_Config400MHz(void)
   PeriphClkInitStruct.PLL3.PLL3VCOSEL = RCC_PLL3VCOWIDE;
   PeriphClkInitStruct.PLL3.PLL3FRACN = 0;
   PeriphClkInitStruct.QspiClockSelection = RCC_QSPICLKSOURCE_D1HCLK;//HCLK3 = 200 MHz
-  //PeriphClkInitStruct.QspiClockSelection = RCC_QSPICLKSOURCE_PLL; //see RCC_OscInitStruct.PLL.PLLQ
+  PeriphClkInitStruct.Sai1ClockSelection = RCC_SAI1CLKSOURCE_PLL2;
   PeriphClkInitStruct.UsbClockSelection = RCC_USBCLKSOURCE_PLL3;
   if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK)
   {
     Error_Handler();
   }
-  HAL_RCC_MCOConfig(RCC_MCO1, RCC_MCO1SOURCE_HSE, RCC_MCODIV_1);
+  HAL_RCC_MCOConfig(RCC_MCO1, RCC_MCO1SOURCE_HSE, RCC_MCODIV_1); //Видимо уже не требуется
   /** Enable USB Voltage detector
   */
   HAL_PWREx_EnableUSBVoltageDetector();
@@ -396,6 +430,76 @@ static void MX_QUADSPI_Init(void)
   /* USER CODE BEGIN QUADSPI_Init 2 */
 
   /* USER CODE END QUADSPI_Init 2 */
+
+}
+
+/**
+  * @brief SAI1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_SAI1_Init(void)
+{
+
+  /* USER CODE BEGIN SAI1_Init 0 */
+
+  /* USER CODE END SAI1_Init 0 */
+
+  /* USER CODE BEGIN SAI1_Init 1 */
+
+  /* USER CODE END SAI1_Init 1 */
+  hsai_BlockA1.Instance = SAI1_Block_A;
+  hsai_BlockA1.Init.Protocol = SAI_FREE_PROTOCOL;
+  hsai_BlockA1.Init.AudioMode = SAI_MODEMASTER_RX;
+  hsai_BlockA1.Init.DataSize = SAI_DATASIZE_24;
+  hsai_BlockA1.Init.FirstBit = SAI_FIRSTBIT_MSB;
+  hsai_BlockA1.Init.ClockStrobing = SAI_CLOCKSTROBING_RISINGEDGE;
+  hsai_BlockA1.Init.Synchro = SAI_ASYNCHRONOUS;
+  hsai_BlockA1.Init.OutputDrive = SAI_OUTPUTDRIVE_DISABLE;
+  hsai_BlockA1.Init.NoDivider = SAI_MASTERDIVIDER_ENABLE;
+  hsai_BlockA1.Init.FIFOThreshold = SAI_FIFOTHRESHOLD_HF;//SAI_FIFOTHRESHOLD_EMPTY;
+  hsai_BlockA1.Init.AudioFrequency = SAI_AUDIO_FREQUENCY_MCKDIV;
+  hsai_BlockA1.Init.Mckdiv = 2; //MCLK - 27 MHz
+  hsai_BlockA1.Init.MckOverSampling = SAI_MCK_OVERSAMPLING_ENABLE; //MCLK/512 FS = 52.73 KHz
+  //hsai_BlockA1.Init.MckOverSampling = SAI_MCK_OVERSAMPLING_DISABLE; //MCLK/256 FS =105.46 KHz
+  hsai_BlockA1.Init.SynchroExt = SAI_SYNCEXT_DISABLE;
+  hsai_BlockA1.Init.MonoStereoMode = SAI_STEREOMODE;
+  hsai_BlockA1.Init.CompandingMode = SAI_NOCOMPANDING;
+  hsai_BlockA1.Init.PdmInit.Activation = DISABLE;
+  hsai_BlockA1.Init.PdmInit.MicPairsNbr = 1;
+  hsai_BlockA1.Init.PdmInit.ClockEnable = SAI_PDM_CLOCK1_ENABLE;
+  hsai_BlockA1.FrameInit.FrameLength = 64; //SCLK 6.75 MHz
+  hsai_BlockA1.FrameInit.ActiveFrameLength = 1;
+  hsai_BlockA1.FrameInit.FSDefinition = SAI_FS_STARTFRAME;
+  hsai_BlockA1.FrameInit.FSPolarity = SAI_FS_ACTIVE_HIGH;
+  hsai_BlockA1.FrameInit.FSOffset = SAI_FS_FIRSTBIT;
+  hsai_BlockA1.SlotInit.FirstBitOffset = 0;
+  hsai_BlockA1.SlotInit.SlotSize = SAI_SLOTSIZE_DATASIZE;
+  hsai_BlockA1.SlotInit.SlotNumber = 2;
+  hsai_BlockA1.SlotInit.SlotActive = SAI_SLOTACTIVE_ALL;
+  if (HAL_SAI_Init(&hsai_BlockA1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN SAI1_Init 2 */
+
+  /* USER CODE END SAI1_Init 2 */
+
+}
+
+/**
+  * Enable DMA controller clock
+  */
+static void MX_DMA_Init(void)
+{
+
+  /* DMA controller clock enable */
+  __HAL_RCC_DMA1_CLK_ENABLE();
+
+  /* DMA interrupt init */
+  /* DMA1_Stream0_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA1_Stream0_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMA1_Stream0_IRQn);
 
 }
 

@@ -189,6 +189,16 @@ SECTIONS
     _e_d1_data = .;        /* define a global symbol at data end */
   } >RAM_D1 AT> FLASH
   
+.d2_data :
+{
+  . = ALIGN(4);
+  _s_d2_data = .;        /* create a global symbol at data start */
+  *(.d2_data)           /* .data sections */
+  *(.d2_data*)          /* .data* sections */
+
+  . = ALIGN(4);
+  _e_d2_data = .;        /* define a global symbol at data end */
+} >RAM_D2 AT> FLASH
 
   /* Remove information from the standard libraries */
   /DISCARD/ :

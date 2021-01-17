@@ -369,5 +369,40 @@ https://pythonprogramming.net/displaying-images-pygame/
 
 - ADS1271 запаять
 
+- FSMC и 8080 дисплей (можно ускорить в разы используя FSMC)!
+	https://www.compel.ru/lib/90626
+	PC0 - FMC_SDNWE
+	PC2 - FMC_SDNE0
+	PC4 - FMC_SDNE0
+	PC7 - FMC_NE1  
+	PC8 - FMC_NE2/FMC_NCE
+	PD4 - FMC_NOE  ****** 85
+	PD5 - FMC_NWE  ****** 86
+	PD7 - FMC_NE1  ****** 88
+	PD11 - FMC_A16 ****** 58
+	PD12 - FMC_A17
+	PD13 - FMC_A18
+
+	PD14 - FMC_D0/FMC_DA0 61
+	PD15 - FMC_D1/FMC_DA1 62
+	PD0  - FMC_D2/FMC_DA2 81
+	PD1  - FMC_D3/FMC_DA3 82
+	PE7  - FMC_D4/FMC_DA4 37
+	PE8  - FMC_D5/FMC_DA5 38
+	PE9  - FMC_D6/FMC_DA6 39
+	PE10 - FMC_D7/FMC_DA7 40
+	PE11 - FMC_D8/FMC_DA8 41
+	PE12 - FMC_D9/FMC_DA9 42
+	PE13 - FMC_D10/FMC_DA10 43
+	PE14 - FMC_D11/FMC_DA11 44
+	PE15 - FMC_D12/FMC_DA12 45
+	PD8  - FMC_D13/FMC_DA13 55
+	PD9  - FMC_D14/FMC_DA14 56
+	PD10 - FMC_D15/FMC_DA15 57
+
 - ADS1271 получить данные используя SAI
 
+	/home/balmer/radio/stm32/new_lib/h7/STM32Cube_FW_H7_V1.5.0/Projects/STM32H743I-EVAL/Examples/SAI
+	https://community.st.com/s/question/0D53W000003L5VG/does-dma-miss-data-while-it-is-used-by-sai-interface
+
+	- HAL_SAI_Receive_DMA почемуто не работает --ok, надо было в правильный блок памяти буфер запихать
