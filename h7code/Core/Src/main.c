@@ -33,6 +33,9 @@
 QSPI_HandleTypeDef hqspi;
 SAI_HandleTypeDef hsai_BlockA1;
 DMA_HandleTypeDef hdma_sai1_a;
+int sai_dma_interrupt = 0;
+int sai_half_complete = 0;
+int sai_full_complete = 0;
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config400MHz(void);
@@ -116,6 +119,24 @@ int32_t Convert24(uint32_t data24)
     return (int32_t)data24;
 }
 
+void HAL_SAI_ErrorCallback(SAI_HandleTypeDef *hsai)
+{
+    UTF_SetFont(font_condensed30);
+    UTF_DrawString(0, 0, "SAI Error");
+    Error_Handler();
+}
+
+void HAL_SAI_RxHalfCpltCallback(SAI_HandleTypeDef *hsai)
+{
+    sai_half_complete++;
+}
+
+void HAL_SAI_RxCpltCallback(SAI_HandleTypeDef *hsai)
+{
+    sai_full_complete++;
+}
+
+
 /**
   * @brief  The application entry point.
   * @retval int
@@ -138,6 +159,8 @@ int main(void)
   MX_SAI1_Init();
   MX_USB_DEVICE_Init();
   MX_QUADSPI_Init();
+
+  GpiosInit();
 
   InitADS1271_GPIO();
 
@@ -220,7 +243,7 @@ int main(void)
 
   float f = 0;
   int idx = 0;
-  //HAL_StatusTypeDef status = HAL_SAI_Receive_DMA(&hsai_BlockA1, (uint8_t*)audio_buf, 256);
+  HAL_StatusTypeDef status = HAL_SAI_Receive_DMA(&hsai_BlockA1, (uint8_t*)&audio_buf[0], AUDIO_BUFFER_SIZE);
 
   while (1)
   {
@@ -231,8 +254,9 @@ int main(void)
       y = 0;
 
       //HAL_StatusTypeDef status = HAL_SAI_Receive_IT(&hsai_BlockA1, (uint8_t*)audio_buf, 256);
-      HAL_StatusTypeDef status = HAL_SAI_Receive(&hsai_BlockA1, (uint8_t*)audio_buf, AUDIO_BUFFER_SIZE, 200);
+      //HAL_StatusTypeDef status = HAL_SAI_Receive(&hsai_BlockA1, (uint8_t*)audio_buf, AUDIO_BUFFER_SIZE, 200);
 
+      SCB_InvalidateDCache_by_Addr(audio_buf, AUDIO_BUFFER_SIZE*sizeof(audio_buf[0]));
       int32_t sum0 = 0, sum1 = 0;
       for(int i=0; i<AUDIO_BUFFER_SIZE/2; i++)
       {
@@ -243,8 +267,14 @@ int main(void)
       sum0 /= AUDIO_BUFFER_SIZE/2;
       sum1 /= AUDIO_BUFFER_SIZE/2;
 
-      x = UTF_DrawString(xstart, y, "Sai test! ");
-      x = UTF_printNumI(status, x, y, 100, UTF_RIGHT);
+      //x = UTF_DrawString(xstart, y, "Sai test! ");
+      //x = UTF_printNumI(status, x, y, 100, UTF_RIGHT);
+      x = UTF_DrawString(xstart, y, "half=");
+      x = UTF_printNumI(sai_half_complete, x, y, 100, UTF_RIGHT);
+      y += yoffset;
+
+      x = UTF_DrawString(xstart, y, "full=");
+      x = UTF_printNumI(sai_full_complete, x, y, 100, UTF_RIGHT);
       y += yoffset;
 
       x = UTF_DrawString(xstart, y, "ADC0=");
@@ -520,7 +550,7 @@ static void MX_SAI1_Init(void)
   hsai_BlockA1.Init.Synchro = SAI_ASYNCHRONOUS;
   hsai_BlockA1.Init.OutputDrive = SAI_OUTPUTDRIVE_DISABLE;
   hsai_BlockA1.Init.NoDivider = SAI_MASTERDIVIDER_ENABLE;
-  hsai_BlockA1.Init.FIFOThreshold = SAI_FIFOTHRESHOLD_HF;//SAI_FIFOTHRESHOLD_EMPTY;
+  hsai_BlockA1.Init.FIFOThreshold = SAI_FIFOTHRESHOLD_HF;
   hsai_BlockA1.Init.AudioFrequency = SAI_AUDIO_FREQUENCY_MCKDIV;
   hsai_BlockA1.Init.Mckdiv = 2; //MCLK - 27 MHz
   //hsai_BlockA1.Init.MckOverSampling = SAI_MCK_OVERSAMPLING_ENABLE; //MCLK/512 FS = 52.73 KHz

@@ -1,12 +1,12 @@
 #include "stm32h7xx_hal.h"
 #include "gpios.h"
-/*
-#define RESISTOR_PORT GPIOE
-#define RESISTOR_PIN_100_Om GPIO_PIN_7
-#define RESISTOR_PIN_10_Om  GPIO_PIN_8
-#define RESISTOR_PIN_1_Om   GPIO_PIN_9
 
-#define EN_V_PORT GPIOE
+#define RESISTOR_PORT GPIOA
+#define RESISTOR_PIN_100_Om GPIO_PIN_3
+#define RESISTOR_PIN_10_Om  GPIO_PIN_2
+#define RESISTOR_PIN_1_Om   GPIO_PIN_1
+
+#define EN_V_PORT GPIOA
 #define EN_V_PIN  GPIO_PIN_0
 
 static RESISTOR last_r;
@@ -23,7 +23,6 @@ void GpiosInit()
 
     gpio.Pin       = EN_V_PIN;
     HAL_GPIO_Init(EN_V_PORT, &gpio);
-
 
     last_r = RESISTOR_1_Kom;
 
@@ -69,4 +68,4 @@ float GetResistorValue()
     case RESISTOR_1_Om: return PAR(R1K, R1);
     }
 }
-*/
+

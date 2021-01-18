@@ -257,8 +257,10 @@ void HAL_SAI_MspInit(SAI_HandleTypeDef* hsai)
     hdma_sai1_a.Init.Mode = DMA_CIRCULAR;
     //hdma_sai1_a.Init.Mode = DMA_NORMAL;
     hdma_sai1_a.Init.Priority = DMA_PRIORITY_LOW;
-    hdma_sai1_a.Init.FIFOMode = DMA_FIFOMODE_DISABLE;
-
+    hdma_sai1_a.Init.FIFOMode = DMA_FIFOMODE_ENABLE;
+    hdma_sai1_a.Init.FIFOThreshold       = DMA_FIFO_THRESHOLD_FULL;
+    hdma_sai1_a.Init.MemBurst            = DMA_MBURST_SINGLE;
+    hdma_sai1_a.Init.PeriphBurst         = DMA_PBURST_SINGLE;
     if (HAL_DMA_Init(&hdma_sai1_a) != HAL_OK)
     {
       Error_Handler();
@@ -267,6 +269,7 @@ void HAL_SAI_MspInit(SAI_HandleTypeDef* hsai)
     // Several peripheral DMA handle pointers point to the same DMA handle.
     // Be aware that there is only one channel to perform all the requested DMAs.
     __HAL_LINKDMA(hsai,hdmarx,hdma_sai1_a);
+    __HAL_LINKDMA(hsai,hdmatx,hdma_sai1_a);
 
   }
 }

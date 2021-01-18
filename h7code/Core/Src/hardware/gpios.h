@@ -1,5 +1,5 @@
 #pragma once
-/*
+
 void GpiosInit();
 
 typedef enum RESISTOR
@@ -16,4 +16,3 @@ float GetResistorValue();
 
 
 void SetEnableV(bool enable);
-*/
