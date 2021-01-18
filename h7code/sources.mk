@@ -8,11 +8,13 @@ DEPS += \
 	output/base/Core/Src/stm32h7xx_hal_msp.d \
 	output/base/Core/Src/stm32h7xx_it.d \
 	output/base/Core/Src/system_stm32h7xx.d \
+	output/base/Core/Src/hardware/ADS1271_input.d \
 	output/base/Core/Src/hardware/delay.d \
 	output/base/Core/Src/hardware/gpios.d \
 	output/base/Core/Src/hardware/hw_ili9481.d \
 	output/base/Core/Src/hardware/qspi_mem.d \
 	output/base/Core/Src/hardware/quadrature_encoder.d \
+	output/base/Core/Src/measure/calculate.d \
 	output/base/Core/display/UTFT.d \
 	output/base/Core/display/float_to_string.d \
 	output/base/Core/display/utf_font.d \
@@ -73,11 +75,13 @@ OBJS += \
 	output/base/Core/Src/stm32h7xx_hal_msp.o \
 	output/base/Core/Src/stm32h7xx_it.o \
 	output/base/Core/Src/system_stm32h7xx.o \
+	output/base/Core/Src/hardware/ADS1271_input.o \
 	output/base/Core/Src/hardware/delay.o \
 	output/base/Core/Src/hardware/gpios.o \
 	output/base/Core/Src/hardware/hw_ili9481.o \
 	output/base/Core/Src/hardware/qspi_mem.o \
 	output/base/Core/Src/hardware/quadrature_encoder.o \
+	output/base/Core/Src/measure/calculate.o \
 	output/base/Core/display/UTFT.o \
 	output/base/Core/display/float_to_string.o \
 	output/base/Core/display/utf_font.o \
@@ -149,6 +153,10 @@ output/base/Core/Src/system_stm32h7xx.o: ./Core/Src/system_stm32h7xx.c
 	@echo 'Building target: system_stm32h7xx.c'
 	@$(CC) $(C_FLAGS) -o "$@" "$<"
 
+output/base/Core/Src/hardware/ADS1271_input.o: ./Core/Src/hardware/ADS1271_input.c
+	@echo 'Building target: ADS1271_input.c'
+	@$(CC) $(C_FLAGS) -o "$@" "$<"
+
 output/base/Core/Src/hardware/delay.o: ./Core/Src/hardware/delay.c
 	@echo 'Building target: delay.c'
 	@$(CC) $(C_FLAGS) -o "$@" "$<"
@@ -167,6 +175,10 @@ output/base/Core/Src/hardware/qspi_mem.o: ./Core/Src/hardware/qspi_mem.c
 
 output/base/Core/Src/hardware/quadrature_encoder.o: ./Core/Src/hardware/quadrature_encoder.c
 	@echo 'Building target: quadrature_encoder.c'
+	@$(CC) $(C_FLAGS) -o "$@" "$<"
+
+output/base/Core/Src/measure/calculate.o: ./Core/Src/measure/calculate.c
+	@echo 'Building target: calculate.c'
 	@$(CC) $(C_FLAGS) -o "$@" "$<"
 
 output/base/Core/display/UTFT.o: ./Core/display/UTFT.c

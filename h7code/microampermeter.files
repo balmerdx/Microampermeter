@@ -2,11 +2,13 @@ Core/Src/main.c
 Core/Src/stm32h7xx_hal_msp.c
 Core/Src/stm32h7xx_it.c
 Core/Src/system_stm32h7xx.c
+Core/Src/hardware/ADS1271_input.c
 Core/Src/hardware/delay.c
 Core/Src/hardware/gpios.c
 Core/Src/hardware/hw_ili9481.c
 Core/Src/hardware/qspi_mem.c
 Core/Src/hardware/quadrature_encoder.c
+Core/Src/measure/calculate.c
 Core/display/UTFT.c
 Core/display/float_to_string.c
 Core/display/utf_font.c
@@ -63,11 +65,13 @@ Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_uart_ex.c
 Core/Inc/main.h
 Core/Inc/stm32h7xx_hal_conf.h
 Core/Inc/stm32h7xx_it.h
+Core/Src/hardware/ADS1271_input.h
 Core/Src/hardware/delay.h
 Core/Src/hardware/gpios.h
 Core/Src/hardware/hw_ili9481.h
 Core/Src/hardware/qspi_mem.h
 Core/Src/hardware/quadrature_encoder.h
+Core/Src/measure/calculate.h
 Core/display/UTFT.h
 Core/display/float_to_string.h
 Core/display/utf_font.h

@@ -25,17 +25,17 @@
 #include "hardware/gpios.h"
 #include "hardware/quadrature_encoder.h"
 #include "hardware/qspi_mem.h"
+#include "hardware/ADS1271_input.h"
 #include "UTFT.h"
 #include "fonts/font_condensed30.h"
 #include "fonts/font_condensed59.h"
+
+#include "measure/calculate.h"
 
 /* Private variables ---------------------------------------------------------*/
 QSPI_HandleTypeDef hqspi;
 SAI_HandleTypeDef hsai_BlockA1;
 DMA_HandleTypeDef hdma_sai1_a;
-int sai_dma_interrupt = 0;
-int sai_half_complete = 0;
-int sai_full_complete = 0;
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config400MHz(void);
@@ -46,12 +46,48 @@ static void VREF_Init();
 static void MX_QUADSPI_Init(void);
 static void MX_SAI1_Init(void);
 
+//adc0 - I, adc1 - V
+uint64_t adc0_result = 0;
+uint64_t adc1_result = 0;
+uint32_t adc0_count = 0;
+uint32_t adc1_count = 0;
+
+volatile bool adc_store_request = false;
+volatile uint64_t adc0_result_stored = 0;
+volatile uint64_t adc1_result_stored = 0;
+volatile uint32_t adc0_count_stored = 0;
+volatile uint32_t adc1_count_stored = 0;
+
+void ADS1271_ReceiveData(uint32_t* data, int size)
+{
+    for(int i=0; i<size; i+=2)
+    {
+        adc0_result += Convert24(data[i]);
+        adc1_result += Convert24(data[i+1]);
+    }
+
+    adc0_count += size/2;
+    adc1_count += size/2;
+
+    if(adc_store_request)
+    {
+        adc0_result_stored = adc0_result;
+        adc1_result_stored = adc1_result;
+        adc0_count_stored = adc0_count;
+        adc1_count_stored = adc1_count;
+
+        adc0_result = 0;
+        adc1_result = 0;
+        adc0_count = 0;
+        adc1_count = 0;
+
+        adc_store_request = false;
+    }
+}
+
 #define QBUFFER_SIZE 2500
 #define QBUFFER_ADDR ((1<<QSPI_MEM_BITS)-1-QBUFFER_SIZE)
 static uint32_t buffer_qspi[QBUFFER_SIZE];
-
-#define AUDIO_BUFFER_SIZE 512
-uint32_t audio_buf[AUDIO_BUFFER_SIZE] __attribute__((section(".d2_data"))) __attribute__ ((aligned (4)));
 
 bool WriteAllQspi(int idx)
 {
@@ -88,55 +124,6 @@ bool CheckAllQspi(int idx, int* paddr)
 
 static bool test_usb = false;
 
-void InitADS1271_GPIO()
-{
-#define ADS1271_MODE_PORT GPIOE
-#define ADS1271_MODE_PIN GPIO_PIN_3
-
-#define ADS1271_NOT_PDWN_PORT GPIOE
-#define ADS1271_NOT_PDWN_PIN GPIO_PIN_1
-
-    GPIO_InitTypeDef  gpio = {};
-    gpio.Pull      = GPIO_NOPULL;
-    gpio.Speed     = GPIO_SPEED_FREQ_LOW;
-
-    gpio.Mode      = GPIO_MODE_OUTPUT_PP;
-    gpio.Pin       = ADS1271_MODE_PIN;
-    HAL_GPIO_Init(ADS1271_MODE_PORT, &gpio);
-
-    gpio.Pin       = ADS1271_NOT_PDWN_PIN;
-    HAL_GPIO_Init(ADS1271_NOT_PDWN_PORT, &gpio);
-
-    HAL_GPIO_WritePin(ADS1271_MODE_PORT, ADS1271_MODE_PIN, 0);
-    HAL_GPIO_WritePin(ADS1271_NOT_PDWN_PORT, ADS1271_NOT_PDWN_PIN, 1);
-}
-
-int32_t Convert24(uint32_t data24)
-{
-    if(data24&(1u<<23))
-        data24 |= 0xFF000000;
-
-    return (int32_t)data24;
-}
-
-void HAL_SAI_ErrorCallback(SAI_HandleTypeDef *hsai)
-{
-    UTF_SetFont(font_condensed30);
-    UTF_DrawString(0, 0, "SAI Error");
-    Error_Handler();
-}
-
-void HAL_SAI_RxHalfCpltCallback(SAI_HandleTypeDef *hsai)
-{
-    sai_half_complete++;
-}
-
-void HAL_SAI_RxCpltCallback(SAI_HandleTypeDef *hsai)
-{
-    sai_full_complete++;
-}
-
-
 /**
   * @brief  The application entry point.
   * @retval int
@@ -160,47 +147,17 @@ int main(void)
   MX_USB_DEVICE_Init();
   MX_QUADSPI_Init();
 
+  QuadEncInit();
   GpiosInit();
+  ADS1271_Init();
 
-  InitADS1271_GPIO();
+  UTFT_InitLCD(UTFT_LANDSCAPE);
+  UTFT_fillScr(VGA_BLACK);
+  UTFT_setColor(VGA_WHITE);
+  UTF_SetFont(font_condensed30);
 
   if(test_usb)
   {
-      MX_USB_DEVICE_Init();
-
-      UTFT_InitLCD(UTFT_LANDSCAPE);
-      QuadEncInit();
-
-      if(1)
-      { //Test LCD speed
-          uint32_t start_ms = TimeMs();
-          int count = 256;
-          for(int i=0; i<count; i++)
-            UTFT_fillScr(i);
-
-          uint32_t delta_ms = TimeMs()-start_ms;
-
-          UTFT_fillScr(VGA_BLUE);
-          UTFT_setColor(VGA_GREEN);
-          UTFT_fillRect(10,10, 20,20);
-          UTF_SetFont(font_condensed59);
-
-          int x = 0, y = 100;
-          x = UTF_printNumF(count*1000.f/delta_ms, x, y, 3, 100, UTF_RIGHT);
-          UTF_SetFont(font_condensed30);
-          UTF_DrawString(x, y, " FPS");
-
-          while(1)
-          {
-
-          }
-      }
-
-      UTFT_fillScr(VGA_BLUE);
-      UTFT_setColor(VGA_GREEN);
-      UTFT_fillRect(10,10, 20,20);
-      UTF_SetFont(font_condensed30);
-
       while(1)
       {
           int16_t value = QuadEncValue();
@@ -217,15 +174,7 @@ int main(void)
 
           HAL_Delay(30);
       }
-
   }
-
-
-  UTFT_InitLCD(UTFT_LANDSCAPE);
-  UTFT_fillScr(VGA_BLACK);
-  UTFT_setColor(VGA_GREEN);
-  UTFT_fillRect(10,10, 20,20);
-  UTF_SetFont(font_condensed30);
 
   if(!QspiMemInit(&hqspi))
   {
@@ -233,17 +182,9 @@ int main(void)
       while(1);
   }
 
-  HAL_GPIO_WritePin(ADS1271_NOT_PDWN_PORT, ADS1271_NOT_PDWN_PIN, 0);
-  DelayMs(200);
-  HAL_GPIO_WritePin(ADS1271_NOT_PDWN_PORT, ADS1271_NOT_PDWN_PIN, 1);
-  DelayMs(200);
+  int index = 0;
 
-  for(int i=0; i<AUDIO_BUFFER_SIZE; i++)
-    audio_buf[i] = i + 1000;
-
-  float f = 0;
-  int idx = 0;
-  HAL_StatusTypeDef status = HAL_SAI_Receive_DMA(&hsai_BlockA1, (uint8_t*)&audio_buf[0], AUDIO_BUFFER_SIZE);
+  ADS1271_Start();
 
   while (1)
   {
@@ -253,45 +194,92 @@ int main(void)
       int yoffset = 30;
       y = 0;
 
-      //HAL_StatusTypeDef status = HAL_SAI_Receive_IT(&hsai_BlockA1, (uint8_t*)audio_buf, 256);
-      //HAL_StatusTypeDef status = HAL_SAI_Receive(&hsai_BlockA1, (uint8_t*)audio_buf, AUDIO_BUFFER_SIZE, 200);
+      adc_store_request = true;
+      while(adc_store_request);
 
-      SCB_InvalidateDCache_by_Addr(audio_buf, AUDIO_BUFFER_SIZE*sizeof(audio_buf[0]));
-      int32_t sum0 = 0, sum1 = 0;
-      for(int i=0; i<AUDIO_BUFFER_SIZE/2; i++)
-      {
-          sum0 += Convert24(audio_buf[i*2]);
-          sum1 += Convert24(audio_buf[i*2+1]);
-      }
+      int32_t sum0 = adc0_result_stored/adc0_count_stored;
+      int32_t sum1 = adc1_result_stored/adc1_count_stored;
 
-      sum0 /= AUDIO_BUFFER_SIZE/2;
-      sum1 /= AUDIO_BUFFER_SIZE/2;
-
-      //x = UTF_DrawString(xstart, y, "Sai test! ");
-      //x = UTF_printNumI(status, x, y, 100, UTF_RIGHT);
-      x = UTF_DrawString(xstart, y, "half=");
-      x = UTF_printNumI(sai_half_complete, x, y, 100, UTF_RIGHT);
+      CalcResult calc_result;
+      calculate(sum1, sum0,
+                     GetResistorValue(), &calc_result);
+/*
+      x = UTF_DrawString(xstart, y, "count0=");
+      x = UTF_printNumI(adc0_count_stored, x, y, 100, UTF_RIGHT);
       y += yoffset;
 
-      x = UTF_DrawString(xstart, y, "full=");
-      x = UTF_printNumI(sai_full_complete, x, y, 100, UTF_RIGHT);
+      x = UTF_DrawString(xstart, y, "count1=");
+      x = UTF_printNumI(adc1_count_stored, x, y, 100, UTF_RIGHT);
       y += yoffset;
-
+*/
       x = UTF_DrawString(xstart, y, "ADC0=");
-      //x = UTF_printNumI(Convert24(audio_buf[0]), x, y, 100, UTF_RIGHT);
       x = UTF_printNumI(sum0, x, y, 100, UTF_RIGHT);
       y += yoffset;
 
       x = UTF_DrawString(xstart, y, "ADC1=");
-      //x = UTF_printNumI(Convert24(audio_buf[1]), x, y, 100, UTF_RIGHT);
       x = UTF_printNumI(sum1, x, y, 100, UTF_RIGHT);
       y += yoffset;
 
-      idx++;
+      x = UTF_DrawString(xstart, y, "Vcurrent(mV)=");
+      x = UTF_printNumF(calc_result.Vcurrent*1000, x, y, 5, 100, UTF_RIGHT);
+      y += yoffset;
+
+      x = UTF_DrawString(xstart, y, "Vout(mV)=");
+      x = UTF_printNumF(calc_result.Vout*1000, x, y, 5, 100, UTF_RIGHT);
+      y += yoffset;
+
+      if(calc_result.infinity_resistance)
+      {
+          x = UTF_DrawString(xstart, y, "Infinity            ");
+
+      } else
+      {
+          x = UTF_DrawString(xstart, y, "R(KOm)=");
+          x = UTF_printNumF(calc_result.resistance*1e-3f, x, y, 5, 100, UTF_RIGHT);
+      }
+      y += yoffset;
+
+      x = UTF_DrawString(xstart, y, "I(uA)=");
+      x = UTF_printNumF(calc_result.current*1e6, x, y, 5, 100, UTF_RIGHT);
+      y += yoffset;
+
+      if(index++%5==0)
+      {
+          float vmax = 0.1;
+          float vmin = 0.005;
+          //Переключаем пределы по халявному.
+          if(calc_result.Vcurrent > vmax)
+          {
+              if(GetResistor()==RESISTOR_1_Kom)
+              {
+                  SetResistor(RESISTOR_100_Om);
+              } else
+              if(GetResistor()==RESISTOR_100_Om)
+              {
+                  SetResistor(RESISTOR_10_Om);
+              }
+
+          } else
+          if(calc_result.Vcurrent < vmin)
+          {
+              if(GetResistor()==RESISTOR_10_Om)
+              {
+                  SetResistor(RESISTOR_100_Om);
+              } else
+              if(GetResistor()==RESISTOR_100_Om)
+              {
+                  SetResistor(RESISTOR_1_Kom);
+              }
+          }
+
+      }
+
       DelayMs(500);
   }
 
 
+  float f = 0;
+  int idx = 0;
   while (1)
   {
 
