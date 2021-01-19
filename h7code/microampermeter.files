@@ -9,6 +9,8 @@ Core/Src/hardware/hw_ili9481.c
 Core/Src/hardware/qspi_mem.c
 Core/Src/hardware/quadrature_encoder.c
 Core/Src/measure/calculate.c
+Core/Src/measure/receive_data.c
+Core/Src/measure/usb_communication.c
 Core/display/UTFT.c
 Core/display/float_to_string.c
 Core/display/utf_font.c
@@ -72,6 +74,8 @@ Core/Src/hardware/hw_ili9481.h
 Core/Src/hardware/qspi_mem.h
 Core/Src/hardware/quadrature_encoder.h
 Core/Src/measure/calculate.h
+Core/Src/measure/receive_data.h
+Core/Src/measure/usb_communication.h
 Core/display/UTFT.h
 Core/display/float_to_string.h
 Core/display/utf_font.h

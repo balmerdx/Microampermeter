@@ -198,7 +198,7 @@ SECTIONS
 
   . = ALIGN(4);
   _e_d2_data = .;        /* define a global symbol at data end */
-} >RAM_D2 AT> FLASH
+} >RAM_D2
 
   /* Remove information from the standard libraries */
   /DISCARD/ :

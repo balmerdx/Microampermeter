@@ -15,6 +15,8 @@ DEPS += \
 	output/base/Core/Src/hardware/qspi_mem.d \
 	output/base/Core/Src/hardware/quadrature_encoder.d \
 	output/base/Core/Src/measure/calculate.d \
+	output/base/Core/Src/measure/receive_data.d \
+	output/base/Core/Src/measure/usb_communication.d \
 	output/base/Core/display/UTFT.d \
 	output/base/Core/display/float_to_string.d \
 	output/base/Core/display/utf_font.d \
@@ -82,6 +84,8 @@ OBJS += \
 	output/base/Core/Src/hardware/qspi_mem.o \
 	output/base/Core/Src/hardware/quadrature_encoder.o \
 	output/base/Core/Src/measure/calculate.o \
+	output/base/Core/Src/measure/receive_data.o \
+	output/base/Core/Src/measure/usb_communication.o \
 	output/base/Core/display/UTFT.o \
 	output/base/Core/display/float_to_string.o \
 	output/base/Core/display/utf_font.o \
@@ -179,6 +183,14 @@ output/base/Core/Src/hardware/quadrature_encoder.o: ./Core/Src/hardware/quadratu
 
 output/base/Core/Src/measure/calculate.o: ./Core/Src/measure/calculate.c
 	@echo 'Building target: calculate.c'
+	@$(CC) $(C_FLAGS) -o "$@" "$<"
+
+output/base/Core/Src/measure/receive_data.o: ./Core/Src/measure/receive_data.c
+	@echo 'Building target: receive_data.c'
+	@$(CC) $(C_FLAGS) -o "$@" "$<"
+
+output/base/Core/Src/measure/usb_communication.o: ./Core/Src/measure/usb_communication.c
+	@echo 'Building target: usb_communication.c'
 	@$(CC) $(C_FLAGS) -o "$@" "$<"
 
 output/base/Core/display/UTFT.o: ./Core/display/UTFT.c

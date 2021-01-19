@@ -31,6 +31,8 @@
 #include "fonts/font_condensed59.h"
 
 #include "measure/calculate.h"
+#include "measure/receive_data.h"
+#include "measure/usb_communication.h"
 
 /* Private variables ---------------------------------------------------------*/
 QSPI_HandleTypeDef hqspi;
@@ -45,45 +47,6 @@ static void MX_GPIO_Init(void);
 static void VREF_Init();
 static void MX_QUADSPI_Init(void);
 static void MX_SAI1_Init(void);
-
-//adc0 - I, adc1 - V
-uint64_t adc0_result = 0;
-uint64_t adc1_result = 0;
-uint32_t adc0_count = 0;
-uint32_t adc1_count = 0;
-
-volatile bool adc_store_request = false;
-volatile uint64_t adc0_result_stored = 0;
-volatile uint64_t adc1_result_stored = 0;
-volatile uint32_t adc0_count_stored = 0;
-volatile uint32_t adc1_count_stored = 0;
-
-void ADS1271_ReceiveData(uint32_t* data, int size)
-{
-    for(int i=0; i<size; i+=2)
-    {
-        adc0_result += Convert24(data[i]);
-        adc1_result += Convert24(data[i+1]);
-    }
-
-    adc0_count += size/2;
-    adc1_count += size/2;
-
-    if(adc_store_request)
-    {
-        adc0_result_stored = adc0_result;
-        adc1_result_stored = adc1_result;
-        adc0_count_stored = adc0_count;
-        adc1_count_stored = adc1_count;
-
-        adc0_result = 0;
-        adc1_result = 0;
-        adc0_count = 0;
-        adc1_count = 0;
-
-        adc_store_request = false;
-    }
-}
 
 #define QBUFFER_SIZE 2500
 #define QBUFFER_ADDR ((1<<QSPI_MEM_BITS)-1-QBUFFER_SIZE)
@@ -120,6 +83,87 @@ bool CheckAllQspi(int idx, int* paddr)
 
     return true;
 
+}
+
+void DrawResult()
+{
+    int x, y;
+    int xstart = 10;
+    int yoffset = 30;
+    y = 0;
+
+    MidData d = GetMidData();
+
+    CalcResult calc_result;
+    calculate(d.adc1_mid, d.adc0_mid,
+                   GetResistorValue(), &calc_result);
+
+    x = UTF_DrawString(xstart, y, "count=");
+    x = UTF_printNumI(d.samples_count, x, y, 100, UTF_RIGHT);
+    y += yoffset;
+
+    x = UTF_DrawString(xstart, y, "ADC0=");
+    x = UTF_printNumI(d.adc0_mid, x, y, 100, UTF_RIGHT);
+    y += yoffset;
+
+    x = UTF_DrawString(xstart, y, "ADC1=");
+    x = UTF_printNumI(d.adc1_mid, x, y, 100, UTF_RIGHT);
+    y += yoffset;
+
+    x = UTF_DrawString(xstart, y, "Vcurrent(mV)=");
+    x = UTF_printNumF(calc_result.Vcurrent*1000, x, y, 5, 100, UTF_RIGHT);
+    y += yoffset;
+
+    x = UTF_DrawString(xstart, y, "Vout(mV)=");
+    x = UTF_printNumF(calc_result.Vout*1000, x, y, 5, 100, UTF_RIGHT);
+    y += yoffset;
+
+    if(calc_result.infinity_resistance)
+    {
+        x = UTF_DrawString(xstart, y, "Infinity            ");
+
+    } else
+    {
+        x = UTF_DrawString(xstart, y, "R(KOm)=");
+        x = UTF_printNumF(calc_result.resistance*1e-3f, x, y, 5, 100, UTF_RIGHT);
+    }
+    y += yoffset;
+
+    x = UTF_DrawString(xstart, y, "I(uA)=");
+    x = UTF_printNumF(calc_result.current*1e6, x, y, 3, 100, UTF_RIGHT);
+    y += yoffset;
+
+    static int index = 0;
+    if(index++%5==0)
+    {
+        float vmax = 0.1;
+        float vmin = 0.005;
+        //Переключаем пределы по халявному.
+        if(calc_result.Vcurrent > vmax)
+        {
+            if(GetResistor()==RESISTOR_1_Kom)
+            {
+                SetResistor(RESISTOR_100_Om);
+            } else
+            if(GetResistor()==RESISTOR_100_Om)
+            {
+                SetResistor(RESISTOR_10_Om);
+            }
+
+        } else
+        if(calc_result.Vcurrent < vmin)
+        {
+            if(GetResistor()==RESISTOR_10_Om)
+            {
+                SetResistor(RESISTOR_100_Om);
+            } else
+            if(GetResistor()==RESISTOR_100_Om)
+            {
+                SetResistor(RESISTOR_1_Kom);
+            }
+        }
+
+    }
 }
 
 static bool test_usb = false;
@@ -182,99 +226,21 @@ int main(void)
       while(1);
   }
 
-  int index = 0;
 
   ADS1271_Start();
 
+  uint32_t prev_draw_time = TimeMs();
   while (1)
   {
-      //Sai test
-      int x, y;
-      int xstart = 50;
-      int yoffset = 30;
-      y = 0;
-
-      adc_store_request = true;
-      while(adc_store_request);
-
-      int32_t sum0 = adc0_result_stored/adc0_count_stored;
-      int32_t sum1 = adc1_result_stored/adc1_count_stored;
-
-      CalcResult calc_result;
-      calculate(sum1, sum0,
-                     GetResistorValue(), &calc_result);
-/*
-      x = UTF_DrawString(xstart, y, "count0=");
-      x = UTF_printNumI(adc0_count_stored, x, y, 100, UTF_RIGHT);
-      y += yoffset;
-
-      x = UTF_DrawString(xstart, y, "count1=");
-      x = UTF_printNumI(adc1_count_stored, x, y, 100, UTF_RIGHT);
-      y += yoffset;
-*/
-      x = UTF_DrawString(xstart, y, "ADC0=");
-      x = UTF_printNumI(sum0, x, y, 100, UTF_RIGHT);
-      y += yoffset;
-
-      x = UTF_DrawString(xstart, y, "ADC1=");
-      x = UTF_printNumI(sum1, x, y, 100, UTF_RIGHT);
-      y += yoffset;
-
-      x = UTF_DrawString(xstart, y, "Vcurrent(mV)=");
-      x = UTF_printNumF(calc_result.Vcurrent*1000, x, y, 5, 100, UTF_RIGHT);
-      y += yoffset;
-
-      x = UTF_DrawString(xstart, y, "Vout(mV)=");
-      x = UTF_printNumF(calc_result.Vout*1000, x, y, 5, 100, UTF_RIGHT);
-      y += yoffset;
-
-      if(calc_result.infinity_resistance)
+      uint32_t cur_time = TimeMs();
+      if( (uint32_t)(cur_time-prev_draw_time) > 500)
       {
-          x = UTF_DrawString(xstart, y, "Infinity            ");
-
-      } else
-      {
-          x = UTF_DrawString(xstart, y, "R(KOm)=");
-          x = UTF_printNumF(calc_result.resistance*1e-3f, x, y, 5, 100, UTF_RIGHT);
-      }
-      y += yoffset;
-
-      x = UTF_DrawString(xstart, y, "I(uA)=");
-      x = UTF_printNumF(calc_result.current*1e6, x, y, 5, 100, UTF_RIGHT);
-      y += yoffset;
-
-      if(index++%5==0)
-      {
-          float vmax = 0.1;
-          float vmin = 0.005;
-          //Переключаем пределы по халявному.
-          if(calc_result.Vcurrent > vmax)
-          {
-              if(GetResistor()==RESISTOR_1_Kom)
-              {
-                  SetResistor(RESISTOR_100_Om);
-              } else
-              if(GetResistor()==RESISTOR_100_Om)
-              {
-                  SetResistor(RESISTOR_10_Om);
-              }
-
-          } else
-          if(calc_result.Vcurrent < vmin)
-          {
-              if(GetResistor()==RESISTOR_10_Om)
-              {
-                  SetResistor(RESISTOR_100_Om);
-              } else
-              if(GetResistor()==RESISTOR_100_Om)
-              {
-                  SetResistor(RESISTOR_1_Kom);
-              }
-          }
-
+          DrawResult();
+          prev_draw_time = cur_time;
       }
 
-      DelayMs(500);
+      UsbCommandsQuant();
+      DelayMs(1);
   }
 
 
