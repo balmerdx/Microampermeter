@@ -21,8 +21,10 @@ static float VoltageFromInt(int32_t measureData)
 void calculate(int32_t measureV, int32_t measureI,
                float Rshunt, CalcResult* calc_result)
 {
+    measureI -= 770; //adc0
+    measureV -= -100; //adc1
+
     float Vcurrent = CurrentFromInt(measureI);
-    Vcurrent -= 10e-6;
     float Vout = VoltageFromInt(measureV);
 
     calc_result->Vcurrent = Vcurrent;

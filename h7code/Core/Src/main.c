@@ -166,8 +166,6 @@ void DrawResult()
     }
 }
 
-static bool test_usb = false;
-
 /**
   * @brief  The application entry point.
   * @retval int
@@ -200,32 +198,11 @@ int main(void)
   UTFT_setColor(VGA_WHITE);
   UTF_SetFont(font_condensed30);
 
-  if(test_usb)
-  {
-      while(1)
-      {
-          int16_t value = QuadEncValue();
-          int xstart = 0;
-          int x = xstart, y = 100;
-          x = UTF_printNumI(value, x, y, 100, UTF_RIGHT);
-          UTF_SetFont(font_condensed30);
-          UTF_DrawString(x, y, " ENC");
-
-          y += UTF_Height();
-
-          x = xstart;
-          UTF_DrawString(x, y, QuadEncButton()?"P":"X");
-
-          HAL_Delay(30);
-      }
-  }
-
   if(!QspiMemInit(&hqspi))
   {
       UTF_DrawString(0, 100, "QspiMemInit fail");
       while(1);
   }
-
 
   ADS1271_Start();
 

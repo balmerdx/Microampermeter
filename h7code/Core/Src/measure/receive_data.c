@@ -17,8 +17,8 @@ static uint64_t adc1_result = 0;
 static uint32_t samples_count = 0;
 
 static volatile bool adc_store_request = false;
-static volatile uint64_t adc0_result_stored = 0;
-static volatile uint64_t adc1_result_stored = 0;
+static volatile int64_t adc0_result_stored = 0;
+static volatile int64_t adc1_result_stored = 0;
 static volatile uint32_t samples_count_stored = 0;
 
 void ADS1271_ReceiveData(uint32_t* data, int size)
