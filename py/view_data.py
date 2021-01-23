@@ -8,6 +8,7 @@ from struct import iter_unpack
 from scipy.fftpack import fft
 import scipy as np
 from sys import argv
+from scipy import signal
 import xml.etree.ElementTree as ET
 
 TIME_STEP = 1/105.46e3
@@ -66,7 +67,8 @@ def makeFFT(data):
 
 
 def plotFFT(data, color = 'blue'):
-	(xf, yf) = makeFFT(data)
+	window = signal.blackman(len(data))
+	(xf, yf) = makeFFT(data * window)
 
 	fig, ax = plt.subplots()
 	ax.set_xlabel('F (Hz)')
@@ -139,11 +141,10 @@ def ViewDataBin(filename):
 	plotFFT(data_y, color = 'blue')
 	#plotFFT2(data_x, data_y)
 
-if len(sys.argv)==1:
-	print("view_data.py sinus.bin")
-	exit(1)
-
-filename = sys.argv[1]
+if len(sys.argv)>1:
+	filename = sys.argv[1]
+else:
+	filename = "data.bin"
 
 ext = filename[-4:]
 if ext == ".bin":
