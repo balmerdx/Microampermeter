@@ -1,15 +1,16 @@
 #include "main.h"
 #include "calculate.h"
 
-static float CurrentFromInt(int32_t measureData)
+static float VCurrentFromInt(int32_t measureData)
 {
     float ku = 10;
     float vmax = 2.0;
-    float korr = 104.9f/100.f; //Коррекция тока
+    float korr = 1/0.9625f; //Коррекция тока
+    //float korr = 1.f;
     return measureData*vmax/(1<<23)/ku*korr;
 }
 
-static float VoltageFromInt(int32_t measureData)
+static float VOutFromInt(int32_t measureData)
 {
     float ku = 10; //ОУ
     float ku1 = 0.027;//Резистивный делитель
@@ -21,11 +22,11 @@ static float VoltageFromInt(int32_t measureData)
 void calculate(int32_t measureV, int32_t measureI,
                float Rshunt, CalcResult* calc_result)
 {
-    measureI -= 770; //adc0
+    measureI -= 500; //adc0
     measureV -= -100; //adc1
 
-    float Vcurrent = CurrentFromInt(measureI);
-    float Vout = VoltageFromInt(measureV);
+    float Vcurrent = VCurrentFromInt(measureI);
+    float Vout = VOutFromInt(measureV);
 
     calc_result->Vcurrent = Vcurrent;
     calc_result->Vout = Vout;
@@ -38,7 +39,7 @@ void calculate(int32_t measureV, int32_t measureI,
     if(current>1e-10)
     {
         calc_result->infinity_resistance = false;
-        resistance = Vout/current;
+        resistance = (Vout-Vcurrent)/current;
     }
 
     calc_result->resistance = resistance;

@@ -429,3 +429,41 @@ https://pythonprogramming.net/displaying-images-pygame/
 
 	Уменьшим напряжение перепаяв резистор на R4 750 Ом (на синей плате)
 
+- быстрое переключение пределов измерения
+	- собрать источник быстроменяющегося сопротивления (резисторы+управляющие транзисторы)
+
+- думаем про GUI
+	- вынести GUI и тестовый код из main
+	- калибровка offset/scale
+	- основной диалог, варианты отображаемой информации
+		- ток (+напряжение мелким шрифром)
+		- мощность (+ток/напряжение)
+		- сопротивление
+
+	- диалог с гистограммами потребления
+	
+
+- попробовать for fun перейти на clang
+	https://interrupt.memfault.com/blog/arm-cortexm-with-llvm-clang
+	даже заработало, но смысла в этом не вижу
+
+
+
+- arm-none-eabi-objdump --disassemble output/program_release.elf
+
+- как делаем коррекцию
+	Vcurrent - измеренное значение 
+	k - коэффициент корреции
+	current = Vcurrent/Rshunt
+	resistance = (Vout-Vcurrent)/current;
+	resistance = (Vout-Vcurrent)/(Vcurrent/Rshunt)
+
+	resistance/Rshunt = Vout/Vcurrent*k-1
+
+	k = (resistance/Rshunt+1)*Vcurrent/Vout
+	Vcurrent = 11.649
+	Vout = 1222.3
+
+
+
+

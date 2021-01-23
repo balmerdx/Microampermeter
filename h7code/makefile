@@ -1,10 +1,21 @@
+#USE_CLANG = 1
+
 RM := rm -rf
+
 TC=${ARM_NONE_EABI}/arm-none-eabi
 CC=$(TC)-gcc
+CC_ASM=$(TC)-gcc
+CC_LINK=$(TC)-gcc
 LD=$(TC)-ld -v
 OBJCOPY=$(TC)-objcopy
 AR=$(TC)-ar
 GDB=$(TC)-gdb
+
+ifdef USE_CLANG
+CLANG_PATH = /home/balmer/radio/clang/clang+llvm-11.0.1-x86_64-linux-gnu-ubuntu-16.04/bin
+CC=${CLANG_PATH}/clang
+endif
+
 
 STM_LIB_DIR = "Drivers"
 C_INCLIDES= \
@@ -25,6 +36,14 @@ C_INCLIDES+= -includeDrivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal.h
 M_CPU = -mthumb -mcpu=cortex-m7 -mfpu=fpv5-d16 -mfloat-abi=hard
 LDFLAGS = $(M_CPU) -specs=nano.specs
 
+M_CPU_ADDITIONAL = 
+ifdef USE_CLANG
+	#M_CPU_ADDITIONAL += --target=arm-none-eabi -fno-short-enums
+	M_CPU_ADDITIONAL += --target=armv7em-none-eabi
+
+	C_INCLIDES += -isystem${ARM_NONE_EABI}/../arm-none-eabi/include
+endif
+
 ifeq ($(MAKECMDGOALS),debug)
 C_DEFINES= -DDEBUG
 C_FLAGS = -O0 -g -gdwarf-2
@@ -32,7 +51,11 @@ endif
 
 ifeq ($(MAKECMDGOALS),release)
 C_DEFINES= -DNDEBUG
-C_FLAGS = -Os -g -gdwarf-2
+	ifdef USE_CLANG
+		C_FLAGS = -Oz -g -gdwarf-2
+	else
+		C_FLAGS = -Os -g -gdwarf-2
+	endif
 endif
 
 #C_FLAGS += -S #asm listing
@@ -51,7 +74,7 @@ C_DEFINES+= \
 
 C_DEFINES+= -DPCB_V3
 
-C_FLAGS+= -Wall -c -MMD $(C_INCLIDES) $(C_DEFINES) $(M_CPU)
+C_FLAGS+= -Wall -c -MMD $(C_INCLIDES) $(C_DEFINES) $(M_CPU) ${M_CPU_ADDITIONAL}
 
 LIBS = -lc -lm -lnosys
 LDFLAGS += -TSTM32H750VBTx_FLASH.ld  $(LIBS)  -Wl,-Map=output/linker.map,--cref
@@ -79,7 +102,7 @@ debug: executable
 executable: $(OBJS) $(USER_OBJS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: GCC Linker'
-	@$(CC) $(OBJS) $(USER_OBJS) $(LDFLAGS) -o "$(TARGET)_$(MAKECMDGOALS).elf"
+	@$(CC_LINK) $(OBJS) $(USER_OBJS) $(LDFLAGS) -o "$(TARGET)_$(MAKECMDGOALS).elf"
 	@echo 'Finished building target: $@'
 	@echo 'Create Binary'
 	@$(OBJCOPY) -S  -O binary  "$(TARGET)_$(MAKECMDGOALS).elf" "$(TARGET)_$(MAKECMDGOALS).bin"
