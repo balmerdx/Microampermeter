@@ -9,8 +9,8 @@
 #define ADS1271_NOT_PDWN_PIN GPIO_PIN_1
 
 
-#define AUDIO_BUFFER_SIZE 512
-uint32_t audio_buf[AUDIO_BUFFER_SIZE] __attribute__((section(".d2_data"))) __attribute__ ((aligned (4)));
+#define AUDIO_BUFFER_SIZE 64
+uint32_t audio_buf[AUDIO_BUFFER_SIZE] __attribute__((section(".d2_data"))) __attribute__ ((aligned (32)));
 
 extern SAI_HandleTypeDef hsai_BlockA1;
 

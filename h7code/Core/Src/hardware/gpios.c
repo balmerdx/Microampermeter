@@ -52,14 +52,14 @@ static float PAR(float R1, float R2)
     return R1*R2/(R1+R2);
 }
 
-float GetResistorValue()
+float GetResistorValue(RESISTOR r)
 {
     float R1K = 1000;
     float R100 = 100;
     float R10 = 10;
     float R1 = 1.2f;
 
-    switch(last_r)
+    switch(r)
     {
     default:
     case RESISTOR_1_Kom: return R1K;

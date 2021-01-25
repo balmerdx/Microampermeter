@@ -11,4 +11,8 @@ MidData GetMidData();
 
 void StartAdcBufferFilling();
 bool SendAdcBuffer();
+bool SendAdcCurrentNanoampers();
 bool IsAdcBufferFull();
+
+void EnableCapturingTrigger();
+bool IsEnabledCapturingTrigger();

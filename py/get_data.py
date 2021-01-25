@@ -6,6 +6,12 @@ import sys
 import struct
 import xml.etree.ElementTree as ET
 
+USB_COMMAND_ADC_BUFFER_START = 0x6BDE0001
+USB_COMMAND_ADC_BUFFER_GET = 0x6BDE0002
+USB_COMMAND_ADC_BUFFER_STATUS = 0x6BDE0003
+USB_COMMAND_NANOAMPERS = 0x6BDE0004
+
+
 ser = None
 
 def connect():
@@ -25,7 +31,7 @@ def close():
 	ser.close()
 
 def StartSampling():
-	ser.write(struct.pack("I",0x6BDE0001)) #USB_COMMAND_ADC_BUFFER_START
+	ser.write(struct.pack("I",USB_COMMAND_ADC_BUFFER_START))
 	time.sleep(0.1)
 	data = ser.read_all()
 	if len(data)!=4:
@@ -41,7 +47,7 @@ def StartSampling():
 
 
 	while True:
-		ser.write(struct.pack("I",0x6BDE0003)) #USB_COMMAND_ADC_BUFFER_STATUS
+		ser.write(struct.pack("I",USB_COMMAND_ADC_BUFFER_STATUS))
 		time.sleep(0.1)
 		data = ser.read_all()
 		if len(data)!=4:
@@ -62,8 +68,8 @@ def StartSampling():
 	return False
 
 
-def ReceiveData(filename):
-	ser.write(struct.pack("I",0x6BDE0002))
+def ReceiveData(filename, command):
+	ser.write(struct.pack("I", command))
 	print("Data query.")
 	f = open(filename, "wb")
 	sum_size = 0
@@ -95,12 +101,20 @@ def main():
 		print("Cannot connect to serial port")
 		exit(1)
 
-	filename = "data.bin"
-	if len(sys.argv)>2:
-		filename = sys.argv[2]
-	print("filename=",filename)
-	StartSampling()
-	ReceiveData(filename=filename)
+	if False:
+		filename = "data.bin"
+		if len(sys.argv)>2:
+			filename = sys.argv[2]
+		print("filename=",filename)
+		StartSampling()
+		ReceiveData(filename=filename, command=USB_COMMAND_ADC_BUFFER_GET)
+	else:		
+		filename = "data.na"
+		if len(sys.argv)>2:
+			filename = sys.argv[2]
+		print("filename=",filename)
+		ReceiveData(filename=filename, command=USB_COMMAND_NANOAMPERS)
+	
 	pass
 
 def help():

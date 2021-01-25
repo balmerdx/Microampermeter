@@ -12,7 +12,7 @@ typedef enum RESISTOR
 
 void SetResistor(RESISTOR r);
 RESISTOR GetResistor();
-float GetResistorValue();
+float GetResistorValue(RESISTOR r);
 
 
 void SetEnableV(bool enable);

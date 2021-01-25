@@ -14,6 +14,9 @@
 //Проверяет, насколько буфер заполнен
 #define USB_COMMAND_ADC_BUFFER_STATUS 0x6BDE0003u
 
+#define USB_COMMAND_NANOAMPERS 0x6BDE0004u
+
+
 #define USB_RECEIVED_DATA_SIZE 32
 //Количество слов в буфере g_usb_received_data
 static volatile uint32_t g_usb_received_words = 0;
@@ -53,6 +56,7 @@ void UsbCommandsQuant()
         uint32_t command = g_usb_received_data[g_usb_received_offset];
         g_usb_received_offset++;
 
+        /*
         UTF_SetFont(font_condensed30);
         int x, y;
         int xstart = 300;
@@ -60,6 +64,7 @@ void UsbCommandsQuant()
         y = 0;
         UTF_printNumI(command, xstart, y, 130, UTF_RIGHT);
         y += yoffset;
+        */
 
         if(command == USB_COMMAND_ADC_BUFFER_START)
         {
@@ -81,6 +86,11 @@ void UsbCommandsQuant()
             result = IsAdcBufferFull()?1:0;
             CDC_Transmit_FS((uint8_t*)(&result), sizeof(result));
             return;
+        }
+
+        if(command == USB_COMMAND_NANOAMPERS)
+        {
+            SendAdcCurrentNanoampers();
         }
     }
 

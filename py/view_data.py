@@ -3,6 +3,7 @@ import array
 import math
 import cmath
 import sys
+from os.path import splitext
 import matplotlib.pyplot as plt
 from struct import iter_unpack
 from scipy.fftpack import fft
@@ -18,36 +19,81 @@ def makeTimeList(readableData, xmin, xstep):
 	return np.linspace(start = xmin, stop = xstep*(N-1), num = N)
 
 def ToIntFrom24bit(d):
+	d = d & 0xFFFFFF
 	if d < 0x800000:
 		return d
 	return d-0x1000000
 
-def readDataInt(filename="data.bin"):
+def readDataInt(filename, na):
+	'''
+		na = nanoamter format
+	'''
 	data_x = []
 	data_y = []
 	f = open(filename, "rb")
 	data = f.read()
 	f.close()
 
-	for (x,y) in iter_unpack("II", data):
-		data_x.append(ToIntFrom24bit(x))
-		data_y.append(ToIntFrom24bit(y))
+	if na:
+		for (x,y) in iter_unpack("ii", data):
+			data_x.append(x)
+			data_y.append(y)
+	else:
+		for (x,y) in iter_unpack("II", data):
+			data_x.append(ToIntFrom24bit(x))
+			data_y.append(ToIntFrom24bit(y))
 	return (data_x, data_y)
 
 
-def readData(filename="data.bin"):
-	(data_x, data_y) = readDataInt(filename)
-	mul = 1./(2**22)
-	return (np.asarray(data_x, dtype=np.float32)*mul, np.asarray(data_y, dtype=np.float32)*mul)
+def readData(filename, na):
+	(data_x, data_y) = readDataInt(filename, na)
+	if na:
+		mul_x = 1e-3 #nA -> µA
+		return (np.asarray(data_x, dtype=np.float32)*mul_x, np.asarray(data_y, dtype=np.int32))
+	else:
+		mul_x = 1./(2**22)
+		mul_y = mul_x
+		return (np.asarray(data_x, dtype=np.float32)*mul_x, np.asarray(data_y, dtype=np.float32)*mul_y)
+	pass
 
-def plotXY(data_x, data_y):
+def plotXY(data_x, data_y = None, xlabel = "T(ms)"):
 	fig, ax = plt.subplots()
 
-	#timeList = makeTimeList(data_x, 0, TIME_STEP)
+	timeList = makeTimeList(data_x, 0, TIME_STEP*1e3)
+	#timeList = makeTimeList(data_x, 0, 1)
+
+	if xlabel:
+		ax.set_xlabel(xlabel)
+	ax.plot(timeList, data_x, color='red')
+	if data_y:
+		ax.plot(timeList, data_y, color='blue')
+	plt.show()
+
+def plotColors(data_x, data_y, xlabel = "T(ms)", ylabel="I(µA)"):
+	fig, ax = plt.subplots()
+
+	#timeList = makeTimeList(data_x, 0, TIME_STEP*1e3)
 	timeList = makeTimeList(data_x, 0, 1)
 
-	ax.plot(timeList, data_x, color='red')
-	ax.plot(timeList, data_y, color='blue')
+	if xlabel:
+		ax.set_xlabel(xlabel)
+	if ylabel:
+		ax.set_ylabel(ylabel)
+
+	colors = ['red', 'green', 'blue', 'black']
+
+	cur_y = data_y[0]
+	start_i = 0
+	for i in range(len(timeList)):
+		if data_y[i]!=cur_y:
+			end_i= i+1
+			ax.plot(timeList[start_i:end_i], data_x[start_i:end_i], color=colors[cur_y])
+			start_i = i
+			cur_y = data_y[i]
+
+	if start_i < len(timeList):
+		ax.plot(timeList[start_i:len(timeList)], data_x[start_i:len(timeList)], color=colors[cur_y])
+
 	plt.show()
 
 def removeAverage(data):
@@ -110,9 +156,9 @@ def checkBits(data, text):
 			print(text, ": bit", i, " is 0 permanently")
 	return
 
-def ViewDataBin(filename):
+def ViewDataBin(filename, na):
 	'''
-	(data_xi, data_yi) = readDataInt(filename)
+	(data_xi, data_yi) = readDataInt(filename, na)
 	big = 100000
 	for i in range(len(data_xi)-100, len(data_xi)):
 	#for i in range(len(data_xi)):
@@ -128,24 +174,32 @@ def ViewDataBin(filename):
 	return
 	'''
 
-	(data_x, data_y) = readData(filename)
+	(data_x, data_y) = readData(filename, na)
 
 	print(len(data_x), len(data_y))
+	if na:
+		plotColors(data_x, data_y)
+		#plotXY(data_x)
+		return
 	#print(data_x[0], data_y[0])
 
 	#data_x = removeAverage(data_x)
 	#data_y = removeAverage(data_y)
-
-	#plotXY(data_x, data_y)
-	plotFFT(data_x, color = 'red')
-	plotFFT(data_y, color = 'blue')
+	plotXY(data_x, data_y)
+	#plotXY(data_x)
+	#plotXY(data_y)
+	#plotFFT(data_x, color = 'red')
+	#plotFFT(data_y, color = 'blue')
 	#plotFFT2(data_x, data_y)
 
 if len(sys.argv)>1:
 	filename = sys.argv[1]
 else:
-	filename = "data.bin"
+	filename = "data.na"
 
-ext = filename[-4:]
+ext = splitext(filename)[1]
+print("ext=", ext)
 if ext == ".bin":
-	ViewDataBin(filename)
+	ViewDataBin(filename, na = False)
+if ext == ".na":
+	ViewDataBin(filename, na = True)
