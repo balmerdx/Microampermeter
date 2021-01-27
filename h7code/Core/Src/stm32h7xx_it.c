@@ -164,18 +164,102 @@ void SysTick_Handler(void)
 /* For the available peripheral interrupt handler names,                      */
 /* please refer to the startup file (startup_stm32h7xx.s).                    */
 /******************************************************************************/
+
+typedef struct
+{
+  __IO uint32_t ISR;   /*!< DMA interrupt status register */
+  __IO uint32_t Reserved0;
+  __IO uint32_t IFCR;  /*!< DMA interrupt flag clear register */
+} DMA_Base_Registers;
+
+void HAL_DMA_IRQHandlerSai(DMA_HandleTypeDef *hdma)
+{
+    uint32_t tmpisr_dma;
+
+    /* calculate DMA base and stream number */
+    DMA_Base_Registers  *regs_dma  = (DMA_Base_Registers *)hdma->StreamBaseAddress;
+
+    tmpisr_dma  = regs_dma->ISR;
+
+    /* Transfer Error Interrupt management ***************************************/
+    if ((tmpisr_dma & (DMA_FLAG_TEIF0_4 << (hdma->StreamIndex & 0x1FU))) != 0U)
+    {
+      if(__HAL_DMA_GET_IT_SOURCE(hdma, DMA_IT_TE) != 0U)
+      {
+        /* Disable the transfer error interrupt */
+        ((DMA_Stream_TypeDef   *)hdma->Instance)->CR  &= ~(DMA_IT_TE);
+
+        /* Clear the transfer error flag */
+        regs_dma->IFCR = DMA_FLAG_TEIF0_4 << (hdma->StreamIndex & 0x1FU);
+
+        /* Update error code */
+        hdma->ErrorCode |= HAL_DMA_ERROR_TE;
+      }
+    }
+    /* FIFO Error Interrupt management ******************************************/
+    if ((tmpisr_dma & (DMA_FLAG_FEIF0_4 << (hdma->StreamIndex & 0x1FU))) != 0U)
+    {
+      if(__HAL_DMA_GET_IT_SOURCE(hdma, DMA_IT_FE) != 0U)
+      {
+        /* Clear the FIFO error flag */
+        regs_dma->IFCR = DMA_FLAG_FEIF0_4 << (hdma->StreamIndex & 0x1FU);
+
+        /* Update error code */
+        hdma->ErrorCode |= HAL_DMA_ERROR_FE;
+      }
+    }
+    /* Direct Mode Error Interrupt management ***********************************/
+    if ((tmpisr_dma & (DMA_FLAG_DMEIF0_4 << (hdma->StreamIndex & 0x1FU))) != 0U)
+    {
+      if(__HAL_DMA_GET_IT_SOURCE(hdma, DMA_IT_DME) != 0U)
+      {
+        /* Clear the direct mode error flag */
+        regs_dma->IFCR = DMA_FLAG_DMEIF0_4 << (hdma->StreamIndex & 0x1FU);
+
+        /* Update error code */
+        hdma->ErrorCode |= HAL_DMA_ERROR_DME;
+      }
+    }
+    /* Half Transfer Complete Interrupt management ******************************/
+    if ((tmpisr_dma & (DMA_FLAG_HTIF0_4 << (hdma->StreamIndex & 0x1FU))) != 0U)
+    {
+      if(__HAL_DMA_GET_IT_SOURCE(hdma, DMA_IT_HT) != 0U)
+      {
+        /* Clear the half transfer complete flag */
+        regs_dma->IFCR = DMA_FLAG_HTIF0_4 << (hdma->StreamIndex & 0x1FU);
+
+        /* Half transfer callback */
+        HAL_SAI_RxHalfCpltCallback(&hsai_BlockA1);
+      }
+    }
+    /* Transfer Complete Interrupt management ***********************************/
+    if ((tmpisr_dma & (DMA_FLAG_TCIF0_4 << (hdma->StreamIndex & 0x1FU))) != 0U)
+    {
+      if(__HAL_DMA_GET_IT_SOURCE(hdma, DMA_IT_TC) != 0U)
+      {
+        /* Clear the transfer complete flag */
+        regs_dma->IFCR = DMA_FLAG_TCIF0_4 << (hdma->StreamIndex & 0x1FU);
+
+        /* Transfer complete callback */
+        HAL_SAI_RxCpltCallback(&hsai_BlockA1);
+      }
+    }
+}
+
 /**
   * @brief This function handles DMA1 stream0 global interrupt.
   */
 void DMA1_Stream0_IRQHandler(void)
 {
-  /* USER CODE BEGIN DMA1_Stream0_IRQn 0 */
+    /* USER CODE BEGIN DMA1_Stream0_IRQn 0 */
 
-  /* USER CODE END DMA1_Stream0_IRQn 0 */
-  HAL_DMA_IRQHandler(&hdma_sai1_a);
-  /* USER CODE BEGIN DMA1_Stream0_IRQn 1 */
+    /* USER CODE END DMA1_Stream0_IRQn 0 */
+    //Вызываем упрощённый вариант, без кучи проверок для ускорения. С полным вариантом тоже будет работать, но медленнее
+    HAL_DMA_IRQHandlerSai(&hdma_sai1_a);
+    //HAL_DMA_IRQHandler(&hdma_sai1_a);
+    /* USER CODE BEGIN DMA1_Stream0_IRQn 1 */
 
-  /* USER CODE END DMA1_Stream0_IRQn 1 */
+    /* USER CODE END DMA1_Stream0_IRQn 1 */
 }
 
 /**

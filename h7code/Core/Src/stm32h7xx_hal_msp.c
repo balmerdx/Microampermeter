@@ -279,24 +279,24 @@ void HAL_SAI_MspDeInit(SAI_HandleTypeDef* hsai)
 /* SAI1 */
     if(hsai->Instance==SAI1_Block_A)
     {
-    SAI1_client --;
-    if (SAI1_client == 0)
-      {
-      /* Peripheral clock disable */
-       __HAL_RCC_SAI1_CLK_DISABLE();
-      HAL_NVIC_DisableIRQ(SAI1_IRQn);
-      }
+        SAI1_client --;
+        if (SAI1_client == 0)
+        {
+            /* Peripheral clock disable */
+            __HAL_RCC_SAI1_CLK_DISABLE();
+            HAL_NVIC_DisableIRQ(SAI1_IRQn);
+        }
 
-    /**SAI1_A_Block_A GPIO Configuration
-    PE2     ------> SAI1_MCLK_A
-    PE4     ------> SAI1_FS_A
-    PE5     ------> SAI1_SCK_A
-    PE6     ------> SAI1_SD_A
-    */
-    HAL_GPIO_DeInit(GPIOE, GPIO_PIN_2|GPIO_PIN_4|GPIO_PIN_5|GPIO_PIN_6);
+        /**SAI1_A_Block_A GPIO Configuration
+        PE2     ------> SAI1_MCLK_A
+        PE4     ------> SAI1_FS_A
+        PE5     ------> SAI1_SCK_A
+        PE6     ------> SAI1_SD_A
+        */
+        HAL_GPIO_DeInit(GPIOE, GPIO_PIN_2|GPIO_PIN_4|GPIO_PIN_5|GPIO_PIN_6);
 
-    HAL_DMA_DeInit(hsai->hdmarx);
-    HAL_DMA_DeInit(hsai->hdmatx);
+        HAL_DMA_DeInit(hsai->hdmarx);
+        HAL_DMA_DeInit(hsai->hdmatx);
     }
 }
 

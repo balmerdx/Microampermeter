@@ -149,28 +149,57 @@ bool SendAdcBuffer()
 
 bool SendAdcCurrentNanoampers()
 {
-    for(uint32_t pos = 0; pos<big_buf_required; pos += USB_PACKET_SIZE_INTS)
+    //На сколько запаздывают данные о токе, по сравнению с переключением резисторов.
+    //по два int на сэмпл, поэтому на 2 умножаем
+    int r_offset = 38*2;
+    //Сколько сэмплов после промежутка r_offset считаются невалидными
+    int r_invalid = 9;
+
+    RESISTOR prev_r = (RESISTOR)(big_buf[0]>>24);
+    int invalid_samples = 0;
+    int32_t last_current_na = 0;
+
+    for(int pos = 0; pos<big_buf_required; pos += USB_PACKET_SIZE_INTS)
     {
         while(!CDC_IsTransmitComplete())
             HAL_Delay(1);
 
-        uint32_t size = USB_PACKET_SIZE_INTS;
+        int size = USB_PACKET_SIZE_INTS;
         if(pos+size > big_buf_required)
             size = big_buf_required-pos;
 
         //Transform current
-        volatile uint32_t* in_data = big_buf+pos;
         for(int i=0; i<size; i+=2)
         {
-            RESISTOR r = (RESISTOR)(in_data[i]>>24);
-            int32_t adc_I = Convert24(in_data[i]&0xFFFFFF);
-            int32_t adc_V = Convert24(in_data[i+1]);
+            int buf_idx = i + pos;
+            int buf_idx_r = buf_idx - r_offset;
+            if(buf_idx_r<0)
+                buf_idx_r = 0;
+            RESISTOR r = (RESISTOR)(big_buf[buf_idx_r]>>24);
+            int32_t adc_I = Convert24(big_buf[buf_idx]&0xFFFFFF);
+            int32_t adc_V = Convert24(big_buf[buf_idx+1]);
+
 
             CalcResult result;
             calculate(adc_V, adc_I,
                            GetResistorValue(r), &result);
+            int32_t current_na = (int)(result.current*1e9f);
+            if(r!=prev_r)
+            {
+                prev_r = r;
+                invalid_samples = r_invalid;
+            }
 
-            usb_send_buffer[i] = (int)(result.current*1e9f);
+            if(invalid_samples>0)
+            {
+                invalid_samples--;
+                usb_send_buffer[i] = last_current_na;
+            } else
+            {
+                last_current_na = current_na;
+                usb_send_buffer[i] = current_na;
+            }
+
             usb_send_buffer[i+1] = r;
         }
 

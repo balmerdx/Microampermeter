@@ -72,8 +72,8 @@ def plotXY(data_x, data_y = None, xlabel = "T(ms)"):
 def plotColors(data_x, data_y, xlabel = "T(ms)", ylabel="I(µA)"):
 	fig, ax = plt.subplots()
 
-	#timeList = makeTimeList(data_x, 0, TIME_STEP*1e3)
-	timeList = makeTimeList(data_x, 0, 1)
+	timeList = makeTimeList(data_x, 0, TIME_STEP*1e3)
+	#timeList = makeTimeList(data_x, 0, 1)
 
 	if xlabel:
 		ax.set_xlabel(xlabel)
@@ -155,6 +155,29 @@ def checkBits(data, text):
 		if (bits_or & (1<<i))==0:
 			print(text, ": bit", i, " is 0 permanently")
 	return
+'''
+def colorFixData(data_x, data_y):
+	#В data_y у нас резисторы для переключения.
+	#Мы некоторое количество данных делим на k (так как от старого резистора значения)
+	n_div = 47
+	k_div = 0
+	k_mul = 0.1
+	prev_y = data_y[0]
+	for i in range(len(data_x)):
+		if prev_y!=data_y[i]:
+			prev_y = data_y[i]
+			k_div = n_div
+		if k_div>0:
+			k_div = k_div-1
+			data_x[i] *= k_mul
+			if k_div==6:
+				data_x_last = data_x[i]
+			if k_div<6:
+				data_x[i] = data_x_last
+
+	pass
+'''
+
 
 def ViewDataBin(filename, na):
 	'''
@@ -178,6 +201,7 @@ def ViewDataBin(filename, na):
 
 	print(len(data_x), len(data_y))
 	if na:
+		#colorFixData(data_x, data_y)
 		plotColors(data_x, data_y)
 		#plotXY(data_x)
 		return
