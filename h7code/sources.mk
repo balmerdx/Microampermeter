@@ -271,7 +271,7 @@ output/base/USB_DEVICE/Target/usbd_conf.o: ./USB_DEVICE/Target/usbd_conf.c
 
 output/base/startup_stm32h750xx.o: ./startup_stm32h750xx.s
 	@echo 'Building target: startup_stm32h750xx.s'
-	@$(CC_ASM) $(ASM_FLAGS) -o "$@" "$<"
+	@$(CC) $(ASM_FLAGS) -o "$@" "$<"
 
 output/usb/usbd_core.o: Middlewares/ST/STM32_USB_Device_Library/Core/Src/usbd_core.c
 	@echo 'Building target: usbd_core.c'

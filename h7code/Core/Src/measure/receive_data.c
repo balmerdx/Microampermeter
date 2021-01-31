@@ -6,10 +6,19 @@
 #include "usb_device.h"
 #include "usbd_cdc_if.h"
 #include "calculate.h"
-
-#define BIG_BUFFER_SIZE 0x8000 //32768
+/*
+//SAMPLES_R - структуры, для учета сдвига данных происходящих при переключении предела измерения.
+//На столько сэмплов запаздывают данные относительно
+#define SAMPLES_R_OFFSET 38
+//Размер буфера должен быть степенью двойки и больше SAMPLES_R_OFFSET
+#define SAMPLES_R_OFFSET_BUFFER 64
+//Столько сэмплов после переключения невалидные (естественно уже после сдвига на R_OFFSET)
+#define SAMPLES_R_ERROR 9
+static uint8_t samples_r_buffer[SAMPLES_R_OFFSET_BUFFER];
+*/
+#define BIG_BUFFER_SIZE 0x4000 //16k*8 bytes
 //Большой буфер, для того, чтобы потом пересылать из него данные в
-static volatile uint32_t big_buf[BIG_BUFFER_SIZE] __attribute__((section(".d2_data"))) __attribute__ ((aligned (4)));
+static volatile ADS1271_Data big_buf[BIG_BUFFER_SIZE] __attribute__((section(".d2_data"))) __attribute__ ((aligned (4)));
 static volatile uint32_t big_buf_current_offset = 0; //Текущее записываемое положение в big_buf
 static volatile uint32_t big_buf_required = 0; //требуемое количество сэмплов
 
@@ -39,24 +48,37 @@ static RESISTOR capturing_r = RESISTOR_1_Kom;
 static void SwitchUpResistor();
 static void SwitchDownResistor();
 
-void ADS1271_ReceiveData(uint32_t* data, int size)
+void ADS1271_ReceiveDataInit()
+{
+//    for(int i=0; i<SAMPLES_R_OFFSET_BUFFER; i++)
+//        samples_r_buffer[i] = GetResistor();
+}
+
+/*
+ *  Эта функция вызывается довольно часто, каждые 0.15 милисекунды.
+ *  Желательно не проводить тут слишком много времени.
+*/
+void ADS1271_ReceiveData(ADS1271_Data *data)
 {
     //Напряжение канала тока слишком маленькое, желательно увеличить номинал шунтирующего резистора
     bool switch_up = false;
     //Напряжение канала тока слишком большое, желательно уменьшить номинал шунтирующего резистора
     bool switch_down = false;
-    for(int i=0; i<size; i+=2)
+
+    RESISTOR r = GetResistor();
+
+    for(int i=0; i<ADS1271_RECEIVE_DATA_SIZE; i++)
     {
-        int32_t adc_I = Convert24(data[i]);
+        int32_t adc_I = Convert24(data[i].adc0);
         if(adc_I<I_min)
             switch_up = true;
         if(adc_I>I_max)
             switch_down = true;
 
         adc0_result += adc_I;
-        adc1_result += Convert24(data[i+1]);
+        adc1_result += Convert24(data[i].adc1);
     }
-    samples_count += size/2;
+    samples_count += ADS1271_RECEIVE_DATA_SIZE;
 
     if(adc_store_request)
     {
@@ -75,9 +97,9 @@ void ADS1271_ReceiveData(uint32_t* data, int size)
     {
         if(GetResistor()==capturing_r)
         {
-            for(int i=0; i<size; i+=2)
+            for(int i=0; i<ADS1271_RECEIVE_DATA_SIZE; i++)
             {
-                int32_t adc_I = Convert24(data[i]);
+                int32_t adc_I = Convert24(data[i].adc0);
                 if(adc_I > capturing_I_start)
                 {
                     StartAdcBufferFilling();
@@ -90,16 +112,15 @@ void ADS1271_ReceiveData(uint32_t* data, int size)
     if(big_buf_current_offset < big_buf_required)
     {
         int size_to_write = big_buf_required - big_buf_current_offset;
-        if(size_to_write > size)
-            size_to_write = size;
+        if(size_to_write > ADS1271_RECEIVE_DATA_SIZE)
+            size_to_write = ADS1271_RECEIVE_DATA_SIZE;
 
-        RESISTOR r = GetResistor();
-        volatile uint32_t* ptr = big_buf + big_buf_current_offset;
-        for(int i=0; i<size; i+=2)
+        volatile ADS1271_Data* ptr = big_buf + big_buf_current_offset;
+        for(int i=0; i<ADS1271_RECEIVE_DATA_SIZE; i++)
         {
             //ptr[i] = Convert24(data[i]);
-            ptr[i] = data[i] | (((uint32_t)r)<<24);
-            ptr[i+1] = data[i+1];
+            ptr[i].adc0 = data[i].adc0 | (((uint32_t)r)<<24);
+            ptr[i].adc1 = data[i].adc1;
         }
 
         big_buf_current_offset += size_to_write;
@@ -151,33 +172,34 @@ bool SendAdcCurrentNanoampers()
 {
     //На сколько запаздывают данные о токе, по сравнению с переключением резисторов.
     //по два int на сэмпл, поэтому на 2 умножаем
-    int r_offset = 38*2;
+    int r_offset = 38;
     //Сколько сэмплов после промежутка r_offset считаются невалидными
     int r_invalid = 9;
 
-    RESISTOR prev_r = (RESISTOR)(big_buf[0]>>24);
+    RESISTOR prev_r = (RESISTOR)(big_buf[0].adc0>>24);
     int invalid_samples = 0;
     int32_t last_current_na = 0;
 
-    for(int pos = 0; pos<big_buf_required; pos += USB_PACKET_SIZE_INTS)
+    int size_8bytes = USB_PACKET_SIZE_INTS/2;
+    for(int pos = 0; pos<big_buf_required; pos += size_8bytes)
     {
         while(!CDC_IsTransmitComplete())
             HAL_Delay(1);
 
-        int size = USB_PACKET_SIZE_INTS;
+        int size = size_8bytes;
         if(pos+size > big_buf_required)
             size = big_buf_required-pos;
 
         //Transform current
-        for(int i=0; i<size; i+=2)
+        for(int i=0; i<size; i++)
         {
             int buf_idx = i + pos;
             int buf_idx_r = buf_idx - r_offset;
             if(buf_idx_r<0)
                 buf_idx_r = 0;
-            RESISTOR r = (RESISTOR)(big_buf[buf_idx_r]>>24);
-            int32_t adc_I = Convert24(big_buf[buf_idx]&0xFFFFFF);
-            int32_t adc_V = Convert24(big_buf[buf_idx+1]);
+            RESISTOR r = (RESISTOR)(big_buf[buf_idx_r].adc0>>24);
+            int32_t adc_I = Convert24(big_buf[buf_idx].adc0&0xFFFFFF);
+            int32_t adc_V = Convert24(big_buf[buf_idx].adc1);
 
 
             CalcResult result;
@@ -191,20 +213,16 @@ bool SendAdcCurrentNanoampers()
             }
 
             if(invalid_samples>0)
-            {
                 invalid_samples--;
-                usb_send_buffer[i] = last_current_na;
-            } else
-            {
+            else
                 last_current_na = current_na;
-                usb_send_buffer[i] = current_na;
-            }
 
-            usb_send_buffer[i+1] = r;
+            usb_send_buffer[i*2] = last_current_na;
+            usb_send_buffer[i*2+1] = r;
         }
 
 
-        uint8_t result = CDC_Transmit_FS((uint8_t*)(usb_send_buffer), size*sizeof(uint32_t));
+        uint8_t result = CDC_Transmit_FS((uint8_t*)(usb_send_buffer), size*sizeof(ADS1271_Data));
         if(result!=USBD_OK)
             return false;
     }

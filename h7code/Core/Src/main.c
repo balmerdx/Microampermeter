@@ -120,8 +120,8 @@ void DrawResult()
 {
     if(EncButtonPressed())
     {
-        //EnableCapturingTrigger();
-        SampleCapacitor();
+        EnableCapturingTrigger();
+        //SampleCapacitor();
     }
 
     int x, y;

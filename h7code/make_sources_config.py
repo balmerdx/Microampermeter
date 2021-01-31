@@ -91,6 +91,22 @@ sources = [
 		"Inc"
 	]
 },
+{
+	"base" : "Drivers/CMSIS",
+	"output" : "CMSIS",
+	"dirs" : [
+		"Include"
+	]
+},
+{
+	"base" : "Drivers/CMSIS/Device/ST/STM32H7xx/Include",
+	"output" : "CMSIS",
+	"files" : [
+		"stm32h7xx.h",
+		"stm32h750xx.h",
+	]
+},
+	
 
 ]
 

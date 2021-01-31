@@ -171,45 +171,48 @@ void HAL_DMA_IRQHandlerSai(DMA_HandleTypeDef *hdma)
     DMA_TypeDef* regs_dma = DMA1;
     uint32_t tmpisr_dma = regs_dma->LISR;
 
-    /* Transfer Error Interrupt management ***************************************/
+    /* Думаю, что ни один из этих вариантов ошибок не имеет смысла обрабатывать в circular mode
+    // Transfer Error Interrupt management ***************************************
     if ((tmpisr_dma & DMA_FLAG_TEIF0_4) != 0U)
     {
       if(__HAL_DMA_GET_IT_SOURCE(hdma, DMA_IT_TE) != 0U)
       {
-        /* Disable the transfer error interrupt */
+        // Disable the transfer error interrupt
         ((DMA_Stream_TypeDef   *)hdma->Instance)->CR  &= ~(DMA_IT_TE);
 
-        /* Clear the transfer error flag */
+        // Clear the transfer error flag
         regs_dma->LIFCR = DMA_FLAG_TEIF0_4;
 
-        /* Update error code */
+        // Update error code
         hdma->ErrorCode |= HAL_DMA_ERROR_TE;
       }
     }
-    /* FIFO Error Interrupt management ******************************************/
+    // FIFO Error Interrupt management ******************************************
     if ((tmpisr_dma & DMA_FLAG_FEIF0_4) != 0U)
     {
       if(__HAL_DMA_GET_IT_SOURCE(hdma, DMA_IT_FE) != 0U)
       {
-        /* Clear the FIFO error flag */
+        // Clear the FIFO error flag
         regs_dma->LIFCR = DMA_FLAG_FEIF0_4;
 
-        /* Update error code */
+        // Update error code
         hdma->ErrorCode |= HAL_DMA_ERROR_FE;
       }
     }
-    /* Direct Mode Error Interrupt management ***********************************/
+    // Direct Mode Error Interrupt management ***********************************
     if ((tmpisr_dma & DMA_FLAG_DMEIF0_4) != 0U)
     {
       if(__HAL_DMA_GET_IT_SOURCE(hdma, DMA_IT_DME) != 0U)
       {
-        /* Clear the direct mode error flag */
+        // Clear the direct mode error flag
         regs_dma->LIFCR = DMA_FLAG_DMEIF0_4;
 
-        /* Update error code */
+        // Update error code
         hdma->ErrorCode |= HAL_DMA_ERROR_DME;
       }
     }
+    */
+
     /* Half Transfer Complete Interrupt management ******************************/
     if ((tmpisr_dma & DMA_FLAG_HTIF0_4) != 0U)
     {
