@@ -6,16 +6,18 @@
 #include "usb_device.h"
 #include "usbd_cdc_if.h"
 #include "calculate.h"
-/*
+
 //SAMPLES_R - структуры, для учета сдвига данных происходящих при переключении предела измерения.
 //На столько сэмплов запаздывают данные относительно
 #define SAMPLES_R_OFFSET 38
 //Размер буфера должен быть степенью двойки и больше SAMPLES_R_OFFSET
-#define SAMPLES_R_OFFSET_BUFFER 64
+#define SAMPLES_R_OFFSET_SIZE 64
+#define SAMPLES_R_OFFSET_MASK (SAMPLES_R_OFFSET_SIZE-1)
 //Столько сэмплов после переключения невалидные (естественно уже после сдвига на R_OFFSET)
 #define SAMPLES_R_ERROR 9
-static uint8_t samples_r_buffer[SAMPLES_R_OFFSET_BUFFER];
-*/
+static uint8_t samples_r_buffer[SAMPLES_R_OFFSET_SIZE];
+static int samples_r_buffer_offset = 0;
+
 #define BIG_BUFFER_SIZE 0x4000 //16k*8 bytes
 //Большой буфер, для того, чтобы потом пересылать из него данные в
 static volatile ADS1271_Data big_buf[BIG_BUFFER_SIZE] __attribute__((section(".d2_data"))) __attribute__ ((aligned (4)));
@@ -50,8 +52,26 @@ static void SwitchDownResistor();
 
 void ADS1271_ReceiveDataInit()
 {
-//    for(int i=0; i<SAMPLES_R_OFFSET_BUFFER; i++)
-//        samples_r_buffer[i] = GetResistor();
+    for(int i=0; i<SAMPLES_R_OFFSET_SIZE; i++)
+        samples_r_buffer[i] = GetResistor();
+}
+
+void ADS1271_FillSamplesR(uint8_t r)
+{
+    for(int i=0; i<ADS1271_RECEIVE_DATA_SIZE; i++)
+    {
+        samples_r_buffer[(samples_r_buffer_offset+i)&SAMPLES_R_OFFSET_MASK] = r;
+    }
+
+    samples_r_buffer_offset = (samples_r_buffer_offset+ADS1271_RECEIVE_DATA_SIZE)&SAMPLES_R_OFFSET_MASK;
+}
+
+//Использовать только внутри ADS1271_ReceiveData
+//Получает старое значение, смещённое на SAMPLES_R_OFFSET сэмплов назад
+__STATIC_FORCEINLINE
+uint8_t ADS1271_GetSamplesR(int i)
+{
+    return samples_r_buffer[(samples_r_buffer_offset+i+(SAMPLES_R_OFFSET_SIZE-SAMPLES_R_OFFSET))&SAMPLES_R_OFFSET_MASK];
 }
 
 /*
@@ -118,13 +138,15 @@ void ADS1271_ReceiveData(ADS1271_Data *data)
         volatile ADS1271_Data* ptr = big_buf + big_buf_current_offset;
         for(int i=0; i<ADS1271_RECEIVE_DATA_SIZE; i++)
         {
-            //ptr[i] = Convert24(data[i]);
-            ptr[i].adc0 = data[i].adc0 | (((uint32_t)r)<<24);
+            //ptr[i].adc0 = data[i].adc0 | (((uint32_t)r)<<24);
+            ptr[i].adc0 = data[i].adc0 | (((uint32_t)ADS1271_GetSamplesR(i))<<24);
             ptr[i].adc1 = data[i].adc1;
         }
 
         big_buf_current_offset += size_to_write;
     }
+
+    ADS1271_FillSamplesR((uint8_t)r);
 
     if(wait_before_new_switch_count>0)
         wait_before_new_switch_count--;
@@ -170,9 +192,6 @@ bool SendAdcBuffer()
 
 bool SendAdcCurrentNanoampers()
 {
-    //На сколько запаздывают данные о токе, по сравнению с переключением резисторов.
-    //по два int на сэмпл, поэтому на 2 умножаем
-    int r_offset = 38;
     //Сколько сэмплов после промежутка r_offset считаются невалидными
     int r_invalid = 9;
 
@@ -194,10 +213,7 @@ bool SendAdcCurrentNanoampers()
         for(int i=0; i<size; i++)
         {
             int buf_idx = i + pos;
-            int buf_idx_r = buf_idx - r_offset;
-            if(buf_idx_r<0)
-                buf_idx_r = 0;
-            RESISTOR r = (RESISTOR)(big_buf[buf_idx_r].adc0>>24);
+            RESISTOR r = (RESISTOR)(big_buf[buf_idx].adc0>>24);
             int32_t adc_I = Convert24(big_buf[buf_idx].adc0&0xFFFFFF);
             int32_t adc_V = Convert24(big_buf[buf_idx].adc1);
 
