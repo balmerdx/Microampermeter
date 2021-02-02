@@ -16,3 +16,5 @@ bool IsAdcBufferFull();
 
 void EnableCapturingTrigger();
 bool IsEnabledCapturingTrigger();
+
+float GetPercentInInterrupt();

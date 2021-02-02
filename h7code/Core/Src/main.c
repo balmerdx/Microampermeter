@@ -138,13 +138,18 @@ void DrawResult()
     x = UTF_DrawString(xstart, y, "count=");
     x = UTF_printNumI(d.samples_count, x, y, 100, UTF_RIGHT);
     y += yoffset;
-
+/*
     x = UTF_DrawString(xstart, y, "ADC0=");
     x = UTF_printNumI(d.adc0_mid, x, y, 100, UTF_RIGHT);
     y += yoffset;
 
     x = UTF_DrawString(xstart, y, "ADC1=");
     x = UTF_printNumI(d.adc1_mid, x, y, 100, UTF_RIGHT);
+    y += yoffset;
+*/
+    x = UTF_DrawString(xstart, y, "interrupt=");
+    x = UTF_printNumF(GetPercentInInterrupt(), x, y, 2, UTF_StringWidth("00.00"), UTF_RIGHT);
+    x = UTF_DrawString(x, y, "%");
     y += yoffset;
 
     x = UTF_DrawString(xstart, y, "Vcurrent(mV)=");

@@ -47,6 +47,15 @@ static bool capturing_enable = false;
 static int32_t capturing_I_start = 150000;
 static RESISTOR capturing_r = RESISTOR_1_Kom;
 
+//Статистика по используемому времени
+static const uint16_t max_interrupt_to_stats = 1000;
+static uint16_t prev_end_time_us = 0;  //Время на конец прерывания
+static uint16_t count_interrupt = 0; //Количество прошедших прерываний
+static uint32_t sum_time_us = 0;  //Время суммарное прошедшее
+static uint32_t sum_interrupt_time_us = 0; //Время суммарно проведённое в прерывании
+static float percent_in_interrupt = 0; //Процент времени, проведённого в прерывании
+
+
 static void SwitchUpResistor();
 static void SwitchDownResistor();
 
@@ -80,6 +89,8 @@ uint8_t ADS1271_GetSamplesR(int i)
 */
 void ADS1271_ReceiveData(ADS1271_Data *data)
 {
+    uint16_t start_time_us = TimeUs();
+
     //Напряжение канала тока слишком маленькое, желательно увеличить номинал шунтирующего резистора
     bool switch_up = false;
     //Напряжение канала тока слишком большое, желательно уменьшить номинал шунтирующего резистора
@@ -138,7 +149,6 @@ void ADS1271_ReceiveData(ADS1271_Data *data)
         volatile ADS1271_Data* ptr = big_buf + big_buf_current_offset;
         for(int i=0; i<ADS1271_RECEIVE_DATA_SIZE; i++)
         {
-            //ptr[i].adc0 = data[i].adc0 | (((uint32_t)r)<<24);
             ptr[i].adc0 = data[i].adc0 | (((uint32_t)ADS1271_GetSamplesR(i))<<24);
             ptr[i].adc1 = data[i].adc1;
         }
@@ -156,6 +166,21 @@ void ADS1271_ReceiveData(ADS1271_Data *data)
     else
     if(switch_down)
         SwitchDownResistor();
+
+    uint16_t cur_end_time_us = TimeUs();
+    sum_time_us += (uint16_t)(cur_end_time_us-prev_end_time_us);
+    sum_interrupt_time_us += (uint16_t)(cur_end_time_us-start_time_us);
+    prev_end_time_us = cur_end_time_us;
+    count_interrupt++;
+
+    if(count_interrupt >=max_interrupt_to_stats )
+    {
+        percent_in_interrupt = (100.0f*sum_interrupt_time_us)/sum_time_us;
+
+        count_interrupt = 0;
+        sum_time_us = 0;
+        sum_interrupt_time_us = 0;
+    }
 }
 
 MidData GetMidData()
@@ -203,7 +228,7 @@ bool SendAdcCurrentNanoampers()
     for(int pos = 0; pos<big_buf_required; pos += size_8bytes)
     {
         while(!CDC_IsTransmitComplete())
-            HAL_Delay(1);
+            __WFI(); //HAL_Delay(1);
 
         int size = size_8bytes;
         if(pos+size > big_buf_required)
@@ -221,7 +246,7 @@ bool SendAdcCurrentNanoampers()
             CalcResult result;
             calculate(adc_V, adc_I,
                            GetResistorValue(r), &result);
-            int32_t current_na = (int)(result.current*1e9f);
+            int32_t current_na = (int32_t)(result.current*1e9f);
             if(r!=prev_r)
             {
                 prev_r = r;
@@ -306,4 +331,9 @@ void EnableCapturingTrigger()
 bool IsEnabledCapturingTrigger()
 {
     return capturing_enable;
+}
+
+float GetPercentInInterrupt()
+{
+    return percent_in_interrupt;
 }
