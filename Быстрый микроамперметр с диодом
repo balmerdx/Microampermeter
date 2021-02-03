@@ -493,5 +493,9 @@ https://www.keysight.com/ru/pd-2747858-pn-N6705C/dc-power-analyzer-modular-600-w
 - сделать FIFO буфер который будет храниться в QSPI SRAM
 
 - в big_buf пускай попадают уже очищенные данные
-	SAMPLES_R_ERROR должно использоваться в ADS1271_ReceiveData
+	SAMPLES_R_ERROR должно использоваться в ADS1271_ReceiveData --ok
 		r_invalid должно исчезнуть
+
+- вынести adc0_result, adc1_result, samples_count, adc_store_request и т.д. в отдельную функцию и файл.
+
+- сделать окошко с гистограмками

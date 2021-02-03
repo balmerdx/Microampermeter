@@ -33,6 +33,7 @@
 #include "measure/calculate.h"
 #include "measure/receive_data.h"
 #include "measure/usb_communication.h"
+#include "measure/mid_big_interval.h"
 
 /* Private variables ---------------------------------------------------------*/
 QSPI_HandleTypeDef hqspi;
@@ -132,8 +133,8 @@ void DrawResult()
     MidData d = GetMidData();
 
     CalcResult calc_result;
-    calculate(d.adc1_mid, d.adc0_mid,
-                   GetResistorValue(GetResistor()), &calc_result);
+    calculate(d.adc_V, d.adc_I,
+                   GetResistorValue(d.r), &calc_result);
 
     x = UTF_DrawString(xstart, y, "count=");
     x = UTF_printNumI(d.samples_count, x, y, 100, UTF_RIGHT);
@@ -214,38 +215,6 @@ void DrawResult()
 
     x = UTF_DrawStringJustify(0, y, cap, UTFT_getDisplayXSize(), UTF_LEFT);
     y += yoffset;
-/*
-    static int index = 0;
-    if(index++%5==0)
-    {
-        float vmax = 0.1;
-        float vmin = 0.005;
-        //Переключаем пределы по халявному.
-        if(calc_result.Vcurrent > vmax)
-        {
-            if(GetResistor()==RESISTOR_1_Kom)
-            {
-                SetResistor(RESISTOR_100_Om);
-            } else
-            if(GetResistor()==RESISTOR_100_Om)
-            {
-                SetResistor(RESISTOR_10_Om);
-            }
-
-        } else
-        if(calc_result.Vcurrent < vmin)
-        {
-            if(GetResistor()==RESISTOR_10_Om)
-            {
-                SetResistor(RESISTOR_100_Om);
-            } else
-            if(GetResistor()==RESISTOR_100_Om)
-            {
-                SetResistor(RESISTOR_1_Kom);
-            }
-        }
-    }
-*/
 }
 
 /**
@@ -289,6 +258,8 @@ int main(void)
   }
 
   ADS1271_Start();
+
+  SetReceiveDataFunc(0, ReceiveDataFunc_Mid);
 
   uint32_t prev_draw_time = TimeMs();
   while (1)

@@ -19,8 +19,8 @@ void ADS1271_ReceiveData(ADS1271_Data* data);
 void ADS1271_ReceiveDataInit();
 
 //Преобразуем наши 24-х битные данные в 32-х битные
-/*
-__STATIC_FORCEINLINE int32_t Convert24(uint32_t data24)
+__STATIC_FORCEINLINE
+int32_t Convert24(uint32_t data24)
 {
     if(data24&0x800000u)
     {
@@ -29,8 +29,8 @@ __STATIC_FORCEINLINE int32_t Convert24(uint32_t data24)
 
     return (int32_t)data24;
 }
-*/
 
+/*
 __STATIC_FORCEINLINE
 int32_t Convert24(uint32_t data24)
 {
@@ -39,3 +39,4 @@ int32_t Convert24(uint32_t data24)
         return d;
     return d-0x1000000;
 }
+*/

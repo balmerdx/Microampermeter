@@ -2,7 +2,6 @@
 #include "receive_data.h"
 
 #include "hardware/ADS1271_input.h"
-#include "hardware/gpios.h"
 #include "usb_device.h"
 #include "usbd_cdc_if.h"
 #include "calculate.h"
@@ -28,16 +27,6 @@ static volatile uint32_t big_buf_required = 0; //требуемое количе
 #define USB_PACKET_SIZE_INTS 500
 static int32_t usb_send_buffer[USB_PACKET_SIZE_INTS];
 
-//adc0 - I, adc1 - V
-static uint64_t adc0_result = 0;
-static uint64_t adc1_result = 0;
-static uint32_t samples_count = 0;
-
-static volatile bool adc_store_request = false;
-static volatile int64_t adc0_result_stored = 0;
-static volatile int64_t adc1_result_stored = 0;
-static volatile uint32_t samples_count_stored = 0;
-
 static int32_t I_max = 0x400000;
 static int32_t I_min = 0x40000;//I_max/16
 static const int32_t wait_before_new_switch = 3;
@@ -56,6 +45,7 @@ static uint32_t sum_time_us = 0;  //Время суммарное прошедш
 static uint32_t sum_interrupt_time_us = 0; //Время суммарно проведённое в прерывании
 static float percent_in_interrupt = 0; //Процент времени, проведённого в прерывании
 
+static ReceiveDataFunc data_func[RECEIVE_DATA_FUNC_COUNT] = {};
 
 static void SwitchUpResistor();
 static void SwitchDownResistor();
@@ -102,7 +92,7 @@ void ADS1271_ReceiveData(ADS1271_Data *data)
     //Сразу после переключения резистора SAMPLES_R_ERROR сэмплов имеют невалидное значение
     //из-за переходных процессов.
     //Заменяем их старыми сэмплами
-    static ADS1271_Data data_no_error[ADS1271_RECEIVE_DATA_SIZE];
+    static DataNoError data_no_error[ADS1271_RECEIVE_DATA_SIZE];
 
     for(int i=0; i<ADS1271_RECEIVE_DATA_SIZE; i++)
     {
@@ -117,35 +107,24 @@ void ADS1271_ReceiveData(ADS1271_Data *data)
             g_prev_adc0 = data[i].adc0;
         }
 
-        data_no_error[i].adc0 = g_prev_adc0;
-        data_no_error[i].adc1 = data[i].adc1;
+        data_no_error[i].adc_I = Convert24(g_prev_adc0);
+        data_no_error[i].adc_V = Convert24(data[i].adc1);
+        data_no_error[i].r = cur_r;
     }
 
+    for(int i=0; i<RECEIVE_DATA_FUNC_COUNT; i++)
+    {
+        if(data_func[i])
+            data_func[i](data_no_error);
+    }
 
     for(int i=0; i<ADS1271_RECEIVE_DATA_SIZE; i++)
     {
-        int32_t adc_I = Convert24(data_no_error[i].adc0);
+        int32_t adc_I = data_no_error[i].adc_I;
         if(adc_I<I_min)
             switch_up = true;
         if(adc_I>I_max)
             switch_down = true;
-
-        adc0_result += adc_I;
-        adc1_result += Convert24(data_no_error[i].adc1);
-    }
-    samples_count += ADS1271_RECEIVE_DATA_SIZE;
-
-    if(adc_store_request)
-    {
-        adc0_result_stored = adc0_result;
-        adc1_result_stored = adc1_result;
-        samples_count_stored = samples_count;
-
-        adc0_result = 0;
-        adc1_result = 0;
-        samples_count = 0;
-
-        adc_store_request = false;
     }
 
     if(capturing_enable)
@@ -154,7 +133,7 @@ void ADS1271_ReceiveData(ADS1271_Data *data)
         {
             for(int i=0; i<ADS1271_RECEIVE_DATA_SIZE; i++)
             {
-                int32_t adc_I = Convert24(data_no_error[i].adc0);
+                int32_t adc_I = data_no_error[i].adc_I;
                 if(adc_I > capturing_I_start)
                 {
                     StartAdcBufferFilling();
@@ -173,8 +152,8 @@ void ADS1271_ReceiveData(ADS1271_Data *data)
         volatile ADS1271_Data* ptr = big_buf + big_buf_current_offset;
         for(int i=0; i<ADS1271_RECEIVE_DATA_SIZE; i++)
         {
-            ptr[i].adc0 = data_no_error[i].adc0 | (((uint32_t)ADS1271_GetSamplesR(i))<<24);
-            ptr[i].adc1 = data_no_error[i].adc1;
+            ptr[i].adc0 = data_no_error[i].adc_I | (((uint32_t)data_no_error[i].r)<<24);
+            ptr[i].adc1 = data_no_error[i].adc_V;
         }
 
         big_buf_current_offset += size_to_write;
@@ -208,20 +187,6 @@ void ADS1271_ReceiveData(ADS1271_Data *data)
     }
 }
 
-MidData GetMidData()
-{
-    MidData d;
-    adc_store_request = true;
-    while(adc_store_request);
-
-    d.samples_count = samples_count_stored;
-
-    d.adc0_mid = adc0_result_stored/samples_count_stored;
-    d.adc1_mid = adc1_result_stored/samples_count_stored;
-
-    return d;
-}
-
 bool SendAdcBuffer()
 {
     for(uint32_t pos = 0; pos<big_buf_required; pos += USB_PACKET_SIZE_INTS)
@@ -242,18 +207,10 @@ bool SendAdcBuffer()
 
 bool SendAdcCurrentNanoampers()
 {
-    //Сколько сэмплов после промежутка r_offset считаются невалидными
-    int r_invalid = 0;//9;
-
-    RESISTOR prev_r = (RESISTOR)(big_buf[0].adc0>>24);
-    int invalid_samples = 0;
-    int32_t last_current_na = 0;
-
     int size_8bytes = USB_PACKET_SIZE_INTS/2;
     for(int pos = 0; pos<big_buf_required; pos += size_8bytes)
     {
         while(!CDC_IsTransmitComplete())
-            //__WFI(); //
             HAL_Delay(1);
 
         int size = size_8bytes;
@@ -268,23 +225,12 @@ bool SendAdcCurrentNanoampers()
             int32_t adc_I = Convert24(big_buf[buf_idx].adc0&0xFFFFFF);
             int32_t adc_V = Convert24(big_buf[buf_idx].adc1);
 
-
             CalcResult result;
             calculate(adc_V, adc_I,
                            GetResistorValue(r), &result);
             int32_t current_na = (int32_t)(result.current*1e9f);
-            if(r!=prev_r)
-            {
-                prev_r = r;
-                invalid_samples = r_invalid;
-            }
 
-            if(invalid_samples>0)
-                invalid_samples--;
-            else
-                last_current_na = current_na;
-
-            usb_send_buffer[i*2] = last_current_na;
+            usb_send_buffer[i*2] = current_na;
             usb_send_buffer[i*2+1] = r;
         }
 
@@ -362,4 +308,18 @@ bool IsEnabledCapturingTrigger()
 float GetPercentInInterrupt()
 {
     return percent_in_interrupt;
+}
+
+void SetReceiveDataFunc(int idx, ReceiveDataFunc fn)
+{
+    if(idx>=0 && idx<RECEIVE_DATA_FUNC_COUNT)
+        data_func[idx] = fn;
+}
+
+bool ContainsReceiveDataFunc(ReceiveDataFunc fn)
+{
+    for(int i=0; i<RECEIVE_DATA_FUNC_COUNT; i++)
+        if(data_func[i] == fn)
+            return true;
+    return false;
 }
