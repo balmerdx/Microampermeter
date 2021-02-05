@@ -130,6 +130,7 @@ int main(void)
   }
 
   ADS1271_Start();
+  g_default_font = font_condensed30;
   InterfaceStart();
 
   SetReceiveDataFunc(0, ReceiveDataFunc_Mid);
