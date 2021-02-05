@@ -20,6 +20,7 @@ sources = [
 		"Core/Src",
 		"Core/Src/hardware",
 		"Core/Src/measure",
+		"Core/Src/gui",
 		"Core/display",
 		"Core/display/fonts",
 		"Core/display/interface",

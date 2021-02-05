@@ -29,6 +29,9 @@
 #include "UTFT.h"
 #include "fonts/font_condensed30.h"
 #include "fonts/font_condensed59.h"
+#include "interface/interface.h"
+
+#include "gui/scene_single.h"
 
 #include "measure/calculate.h"
 #include "measure/receive_data.h"
@@ -86,136 +89,6 @@ bool CheckAllQspi(int idx, int* paddr)
 
 }
 
-volatile bool sai_error = false;
-void HAL_SAI_ErrorCallback(SAI_HandleTypeDef *hsai)
-{
-    sai_error = true;
-}
-
-void SampleCapacitor()
-{
-    int x1=40, y1=40, x2=60, y2=60;
-    UTFT_setColor(VGA_RED);
-    UTFT_fillRect(x1, y1, x2, y2);
-
-    SetEnableV(false);
-    DelayMs(1000);
-
-    UTFT_setColor(VGA_GREEN);
-    UTFT_fillRect(x1, y1, x2, y2);
-
-    StartAdcBufferFilling();
-    DelayUs(100);
-    SetEnableV(true);
-    DelayUs(2000);
-    SetEnableV(false);
-    DelayMs(300);
-
-    UTFT_setColor(VGA_BLACK);
-    UTFT_fillRect(x1, y1, x2, y2);
-
-    UTFT_setColor(VGA_WHITE);
-}
-
-void DrawResult()
-{
-    if(EncButtonPressed())
-    {
-        EnableCapturingTrigger();
-        //SampleCapacitor();
-    }
-
-    int x, y;
-    int xstart = 10;
-    int yoffset = 30;
-    y = 0;
-
-    MidData d = GetMidData();
-
-    CalcResult calc_result;
-    calculate(d.adc_V, d.adc_I,
-                   GetResistorValue(d.r), &calc_result);
-
-    x = UTF_DrawString(xstart, y, "count=");
-    x = UTF_printNumI(d.samples_count, x, y, 100, UTF_RIGHT);
-    y += yoffset;
-/*
-    x = UTF_DrawString(xstart, y, "ADC0=");
-    x = UTF_printNumI(d.adc0_mid, x, y, 100, UTF_RIGHT);
-    y += yoffset;
-
-    x = UTF_DrawString(xstart, y, "ADC1=");
-    x = UTF_printNumI(d.adc1_mid, x, y, 100, UTF_RIGHT);
-    y += yoffset;
-*/
-    x = UTF_DrawString(xstart, y, "interrupt=");
-    x = UTF_printNumF(GetPercentInInterrupt(), x, y, 2, UTF_StringWidth("00.00"), UTF_RIGHT);
-    x = UTF_DrawString(x, y, "%");
-    y += yoffset;
-
-    x = UTF_DrawString(xstart, y, "Vcurrent(mV)=");
-    x = UTF_printNumF(calc_result.Vcurrent*1000, x, y, 5, 100, UTF_RIGHT);
-    y += yoffset;
-
-    x = UTF_DrawString(xstart, y, "Vout(mV)=");
-    x = UTF_printNumF(calc_result.Vout*1000, x, y, 5, 100, UTF_RIGHT);
-    y += yoffset;
-
-    if(calc_result.infinity_resistance)
-    {
-        x = UTF_DrawString(xstart, y, "Infinity            ");
-
-    } else
-    {
-        x = UTF_DrawString(xstart, y, "R(KOm)=");
-        x = UTF_printNumF(calc_result.resistance*1e-3f, x, y, 5, 100, UTF_RIGHT);
-    }
-    y += yoffset;
-
-    x = UTF_DrawString(xstart, y, "I(uA)=");
-    x = UTF_printNumF(calc_result.current*1e6, x, y, 3, 100, UTF_RIGHT);
-    y += yoffset;
-
-    RESISTOR r = GetResistor();
-    if(r==RESISTOR_1_Om)
-    {
-        x = UTF_DrawString(xstart, y, "SHUNT=1 Om  ");
-    } else
-    if(r==RESISTOR_10_Om)
-    {
-        x = UTF_DrawString(xstart, y, "SHUNT=10 Om  ");
-    } else
-    if(r==RESISTOR_100_Om)
-    {
-        x = UTF_DrawString(xstart, y, "SHUNT=100 Om  ");
-    } else
-    {
-        x = UTF_DrawString(xstart, y, "SHUNT=1 KOm  ");
-    }
-    y += yoffset;
-
-
-    //Capture info
-    char cap[100];
-    strcpy(cap, "  ");
-    if(sai_error)
-    {
-        strcat(cap, "SAI Error");
-    } else
-    if(IsEnabledCapturingTrigger())
-    {
-        strcat(cap, "Capture started");
-    } else
-    {
-        if(IsAdcBufferFull())
-            strcat(cap, "Capture completed");
-        else
-            strcat(cap, "No capture");
-    }
-
-    x = UTF_DrawStringJustify(0, y, cap, UTFT_getDisplayXSize(), UTF_LEFT);
-    y += yoffset;
-}
 
 /**
   * @brief  The application entry point.
@@ -249,7 +122,6 @@ int main(void)
   UTFT_InitLCD(UTFT_LANDSCAPE);
   UTFT_fillScr(VGA_BLACK);
   UTFT_setColor(VGA_WHITE);
-  UTF_SetFont(font_condensed30);
 
   if(!QspiMemInit(&hqspi))
   {
@@ -258,24 +130,20 @@ int main(void)
   }
 
   ADS1271_Start();
+  InterfaceStart();
 
   SetReceiveDataFunc(0, ReceiveDataFunc_Mid);
 
-  uint32_t prev_draw_time = TimeMs();
+  SceneSingleStart();
+
   while (1)
   {
-      uint32_t cur_time = TimeMs();
-      if( (uint32_t)(cur_time-prev_draw_time) > 500)
-      {
-          DrawResult();
-          prev_draw_time = cur_time;
-      }
-
+      InterfaceQuant();
       UsbCommandsQuant();
       DelayMs(1);
   }
 
-
+/*
   float f = 0;
   int idx = 0;
   while (1)
@@ -361,6 +229,7 @@ int main(void)
 
       DelayMs(500);
   }
+*/
 }
 
 
