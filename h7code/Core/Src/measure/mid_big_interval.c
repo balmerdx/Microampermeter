@@ -1,6 +1,8 @@
 #include "main.h"
 #include "mid_big_interval.h"
 #include "hardware/ADS1271_input.h"
+#include "my_filter.h"
+
 #include <limits.h>
 #include <sys/param.h>
 
@@ -37,8 +39,17 @@ void ReceiveDataFunc_Mid(DataNoError* data)
         adc_I_result += data[i].adc_I;
         adc_V_result += data[i].adc_V;
 
-        adc_I_min = MIN(adc_I_min, data[i].adc_I);
-        adc_I_max = MAX(adc_I_max, data[i].adc_I);
+        int32_t adc_I_x4 = SosFilterProcess_x4_0(data[i].adc_I);
+        if((i&3)==3)
+        {
+            int32_t adc_I_x16 = SosFilterProcess_x4_1(adc_I_x4);
+
+            if((i&15)==15)
+            {
+                adc_I_min = MIN(adc_I_min, adc_I_x16);
+                adc_I_max = MAX(adc_I_max, adc_I_x16);
+            }
+        }
     }
 
     samples_count += ADS1271_RECEIVE_DATA_SIZE;

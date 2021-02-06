@@ -37,6 +37,7 @@
 #include "measure/receive_data.h"
 #include "measure/usb_communication.h"
 #include "measure/mid_big_interval.h"
+#include "measure/my_filter.h"
 
 /* Private variables ---------------------------------------------------------*/
 QSPI_HandleTypeDef hqspi;
@@ -128,6 +129,8 @@ int main(void)
       UTF_DrawString(0, 100, "QspiMemInit fail");
       while(1);
   }
+
+  MyFilterInit();
 
   ADS1271_Start();
   g_default_font = font_condensed30;

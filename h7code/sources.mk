@@ -15,7 +15,9 @@ DEPS += \
 	output/base/Core/Src/hardware/qspi_mem.d \
 	output/base/Core/Src/hardware/quadrature_encoder.d \
 	output/base/Core/Src/measure/calculate.d \
+	output/base/Core/Src/measure/iir_filter.d \
 	output/base/Core/Src/measure/mid_big_interval.d \
+	output/base/Core/Src/measure/my_filter.d \
 	output/base/Core/Src/measure/receive_data.d \
 	output/base/Core/Src/measure/usb_communication.d \
 	output/base/Core/Src/gui/font_big_nums.d \
@@ -87,7 +89,9 @@ OBJS += \
 	output/base/Core/Src/hardware/qspi_mem.o \
 	output/base/Core/Src/hardware/quadrature_encoder.o \
 	output/base/Core/Src/measure/calculate.o \
+	output/base/Core/Src/measure/iir_filter.o \
 	output/base/Core/Src/measure/mid_big_interval.o \
+	output/base/Core/Src/measure/my_filter.o \
 	output/base/Core/Src/measure/receive_data.o \
 	output/base/Core/Src/measure/usb_communication.o \
 	output/base/Core/Src/gui/font_big_nums.o \
@@ -191,8 +195,16 @@ output/base/Core/Src/measure/calculate.o: ./Core/Src/measure/calculate.c
 	@echo 'Building target: calculate.c'
 	@$(CC) $(C_FLAGS) -o "$@" "$<"
 
+output/base/Core/Src/measure/iir_filter.o: ./Core/Src/measure/iir_filter.c
+	@echo 'Building target: iir_filter.c'
+	@$(CC) $(C_FLAGS) -o "$@" "$<"
+
 output/base/Core/Src/measure/mid_big_interval.o: ./Core/Src/measure/mid_big_interval.c
 	@echo 'Building target: mid_big_interval.c'
+	@$(CC) $(C_FLAGS) -o "$@" "$<"
+
+output/base/Core/Src/measure/my_filter.o: ./Core/Src/measure/my_filter.c
+	@echo 'Building target: my_filter.c'
 	@$(CC) $(C_FLAGS) -o "$@" "$<"
 
 output/base/Core/Src/measure/receive_data.o: ./Core/Src/measure/receive_data.c
