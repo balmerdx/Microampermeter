@@ -11,6 +11,9 @@ typedef struct
     int32_t adc_V;
     RESISTOR r;
     uint32_t samples_count;
+
+    int32_t adc_I_min;
+    int32_t adc_I_max;
 } MidData;
 
 MidData GetMidData();

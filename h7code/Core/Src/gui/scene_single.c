@@ -16,19 +16,34 @@
 #include "measure/calculate.h"
 #include "measure/mid_big_interval.h"
 
+typedef enum
+{
+    LINE2_RESISTANCE,
+    LINE2_CURRENT_MIN_MAX,
+} LINE2_TYPE;
+
 #define COLOR_BACK1 VGA_TEAL
 #define COLOR_BACK2 VGA_NAVY
 const int X_MARGIN = 2; //Столько места желательно оставлять справа/слева от надписи
 
 const bool enable_percent_view = true;
 
+LINE2_TYPE line2_type = LINE2_CURRENT_MIN_MAX;//LINE2_RESISTANCE;
+
 static RectA r_shunt;
 static RectA r_vout;
 static RectA r_num_current;
 static RectA r_param_current;
+
+static RectA r_percent; //Процент использования времени в IRQ
+
+//Только если line2_type == LINE2_RESISTANCE
 static RectA r_num_resistance;
 static RectA r_param_resistance;
-static RectA r_percent; //Процент использования времени в IRQ
+
+//Только если line2_type == LINE2_CURRENT_MIN_MAX
+static RectA r_current_min;
+static RectA r_current_max;
 
 static void SceneSingleQuant();
 
@@ -82,8 +97,10 @@ void SceneSingleStart()
         //Обрезаем по вертикали
         int sub_height = (r_tmp.height-UTF_Height()*2)/2;
         R_SplitY1(&r_tmp, sub_height, &r_fill, &r_tmp);
+        //r_fill.back_color = VGA_MAROON;
         R_FillRectBack(&r_fill);
         R_SplitY2(&r_tmp, sub_height, &r_tmp, &r_fill);
+        //r_fill.back_color = VGA_MAROON;
         R_FillRectBack(&r_fill);
 
         //Обрезаем по горизонтали.
@@ -93,23 +110,43 @@ void SceneSingleStart()
         R_SplitX2(&r_tmp, sub_width, &r_tmp, &r_fill);
         R_FillRectBack(&r_fill);
 
-        //Делим на две части по вертикали заполняем пробел
-        RectA r_num, r_param;
-        R_SplitX1(&r_tmp, width_number, &r_num, &r_tmp);
-        R_SplitX1(&r_tmp, width_spaces, &r_fill, &r_param);
-        R_FillRectBack(&r_fill);
+        RectA r_line1, r_line2;
+        //Делим по горизонтали на две линии
+        R_SplitY1(&r_tmp, UTF_Height(), &r_line1, &r_line2);
 
-        R_SplitY1(&r_num, UTF_Height(), &r_num_current, &r_num_resistance);
-        R_SplitY1(&r_param, UTF_Height(), &r_param_current, &r_param_resistance);
+        R_SplitX1(&r_line1, width_number, &r_num_current, &r_tmp);
+        R_SplitX1(&r_tmp, width_spaces, &r_fill, &r_param_current);
+        R_FillRectBack(&r_fill);
 
         //r_num_current.back_color = VGA_GREEN;
         R_FillRectBack(&r_num_current);
-        //r_num_resistance.back_color = VGA_BLUE;
-        R_FillRectBack(&r_num_resistance);
         //r_param_current.back_color = VGA_OLIVE;
         R_FillRectBack(&r_param_current);
-        //r_param_resistance.back_color = VGA_MAROON;
-        R_FillRectBack(&r_param_resistance);
+
+        if(line2_type == LINE2_RESISTANCE)
+        {
+            R_SplitX1(&r_line2, width_number, &r_num_resistance, &r_tmp);
+            R_SplitX1(&r_tmp, width_spaces, &r_fill, &r_param_resistance);
+            R_FillRectBack(&r_fill);
+
+            //r_num_resistance.back_color = VGA_BLUE;
+            R_FillRectBack(&r_num_resistance);
+            //r_param_resistance.back_color = VGA_MAROON;
+            R_FillRectBack(&r_param_resistance);
+        }
+
+        if(line2_type == LINE2_CURRENT_MIN_MAX)
+        {
+            UTF_SetFont(g_default_font);
+            R_SplitY1(&r_line2, UTF_Height(), &r_current_min, &r_line2);
+            R_SplitY1(&r_line2, UTF_Height(), &r_current_max, &r_line2);
+            //r_line2.back_color = VGA_OLIVE;
+            R_FillRectBack(&r_line2);
+            //r_current_min.back_color = VGA_BLUE;
+            R_FillRectBack(&r_current_min);
+            //r_current_max.back_color = VGA_MAROON;
+            R_FillRectBack(&r_current_max);
+        }
     }
 
     prev_draw_time = TimeMs();
@@ -206,12 +243,43 @@ void DrawResultOld()
     y += yoffset;
 }
 
-//places - общее количество символов
-void  PrintFixedSizeFloat(const RectA* in, float value, int places, UTF_JUSTIFY justify)
+void catFloat(char* outstr, int outstr_size, float value, int digits)
 {
+    //digits - количество цифр, как до, так и после запятой.
+    //Предполагается, что fabsf(value)<9999
+    int places = 0;
+    if(value >= 1000)
+        places = MAX(digits-4, 0);
+    else
+    if(value >= 100)
+        places = MAX(digits-3, 0);
+    else
+    if(value >= 10)
+        places = MAX(digits-2, 0);
+    else
+    if(value >= 1)
+        places = MAX(digits-1, 0);
+    else
+        places = digits;
+
+    int len = strlen(outstr);
+    floatToString(outstr+len, outstr_size-len, value, places, 0, false);
+    if(places==0)
+        strcat(outstr, ".");
+}
+
+//places - общее количество символов
+void PrintFixedSizeFloat(const RectA* in, float value, int digits, UTF_JUSTIFY justify)
+{
+/*
     char st[27];
     floatToString(st, 27, value, places, 0, false);
     st[places] = 0;
+*/
+    char st[27];
+    st[0] = 0;
+    catFloat(st, sizeof(st), value, digits);
+
     R_DrawStringJustify(in, st, justify);
 }
 
@@ -227,57 +295,85 @@ void DrawResult()
     calculate(d.adc_V, d.adc_I,
                    GetResistorValue(d.r), &calc_result);
 
-    int places = 6;
+    int places = 4;
 
-    if(calc_result.infinity_resistance)
+    if(line2_type == LINE2_RESISTANCE)
     {
-        UTF_SetFont(font_big_nums);
-        R_DrawStringJustify(&r_num_resistance, "-----", UTF_RIGHT);
-        UTF_SetFont(g_default_font);
-        R_DrawStringJustify(&r_param_resistance, "--", UTF_LEFT);
-    } else
-    {
-        float mul = 1;
-        if(calc_result.resistance > 9e6f)
+        if(calc_result.infinity_resistance)
         {
-            mul = 1e-6f;
-            R_DrawStringJustify(&r_param_resistance, "MOm", UTF_LEFT);
-        } else
-        if(calc_result.resistance > 9e3f)
-        {
-            mul = 1e-3f;
-            R_DrawStringJustify(&r_param_resistance, "KOm", UTF_LEFT);
+            UTF_SetFont(font_big_nums);
+            R_DrawStringJustify(&r_num_resistance, "-----", UTF_RIGHT);
+            UTF_SetFont(g_default_font);
+            R_DrawStringJustify(&r_param_resistance, "--", UTF_LEFT);
         } else
         {
-            mul = 1;
-            R_DrawStringJustify(&r_param_resistance, "Om", UTF_LEFT);
+            float mul = 1;
+            if(calc_result.resistance > 9e6f)
+            {
+                mul = 1e-6f;
+                R_DrawStringJustify(&r_param_resistance, "MOm", UTF_LEFT);
+            } else
+            if(calc_result.resistance > 9e3f)
+            {
+                mul = 1e-3f;
+                R_DrawStringJustify(&r_param_resistance, "KOm", UTF_LEFT);
+            } else
+            {
+                mul = 1;
+                R_DrawStringJustify(&r_param_resistance, "Om", UTF_LEFT);
+            }
+
+            UTF_SetFont(font_big_nums);
+            PrintFixedSizeFloat(&r_num_resistance, calc_result.resistance*mul, places, UTF_RIGHT);
+            UTF_SetFont(g_default_font);
         }
-
-        UTF_SetFont(font_big_nums);
-        PrintFixedSizeFloat(&r_num_resistance, calc_result.resistance*mul, places, UTF_RIGHT);
-        UTF_SetFont(g_default_font);
     }
 
     {
         float mul = 1;
+        char* suffix = "";
         if(calc_result.current > 1e-3f)
         {
             mul = 1e3f;
-            R_DrawStringJustify(&r_param_current, "mA", UTF_LEFT);
+            suffix = "mA";
         } else
         if(calc_result.current > 1e-6f)
         {
             mul = 1e6f;
-            R_DrawStringJustify(&r_param_current, "uA", UTF_LEFT);
+            suffix = "uA";
         } else
         {
             mul = 1e9f;
-            R_DrawStringJustify(&r_param_current, "nA", UTF_LEFT);
+            suffix = "nA";
         }
 
+        R_DrawStringJustify(&r_param_current, suffix, UTF_LEFT);
         UTF_SetFont(font_big_nums);
         PrintFixedSizeFloat(&r_num_current, calc_result.current*mul, places, UTF_RIGHT);
         UTF_SetFont(g_default_font);
+
+        if(line2_type == LINE2_CURRENT_MIN_MAX)
+        {
+            calculate(d.adc_V, d.adc_I_min,
+                           GetResistorValue(d.r), &calc_result);
+            strcpy(buf, "min = ");
+            catFloat(buf, sizeof(buf), calc_result.current*mul, places);
+            strcat(buf, " ");
+            strcat(buf, suffix);
+            R_DrawStringJustify(&r_current_min, buf, UTF_CENTER);
+
+            calculate(d.adc_V, d.adc_I_max,
+                           GetResistorValue(d.r), &calc_result);
+            strcpy(buf, "min = ");
+            catFloat(buf, sizeof(buf), calc_result.current*mul, places);
+            strcat(buf, " ");
+            strcat(buf, suffix);
+            R_DrawStringJustify(&r_current_max, buf, UTF_CENTER);
+
+            //R_FillRectBack(&r_current_min);
+            //R_FillRectBack(&r_current_max);
+        }
+
     }
 
     strcpy(buf, "Vout = ");
