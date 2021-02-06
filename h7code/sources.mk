@@ -18,6 +18,7 @@ DEPS += \
 	output/base/Core/Src/measure/mid_big_interval.d \
 	output/base/Core/Src/measure/receive_data.d \
 	output/base/Core/Src/measure/usb_communication.d \
+	output/base/Core/Src/gui/font_big_nums.d \
 	output/base/Core/Src/gui/scene_single.d \
 	output/base/Core/display/UTFT.d \
 	output/base/Core/display/float_to_string.d \
@@ -89,6 +90,7 @@ OBJS += \
 	output/base/Core/Src/measure/mid_big_interval.o \
 	output/base/Core/Src/measure/receive_data.o \
 	output/base/Core/Src/measure/usb_communication.o \
+	output/base/Core/Src/gui/font_big_nums.o \
 	output/base/Core/Src/gui/scene_single.o \
 	output/base/Core/display/UTFT.o \
 	output/base/Core/display/float_to_string.o \
@@ -199,6 +201,10 @@ output/base/Core/Src/measure/receive_data.o: ./Core/Src/measure/receive_data.c
 
 output/base/Core/Src/measure/usb_communication.o: ./Core/Src/measure/usb_communication.c
 	@echo 'Building target: usb_communication.c'
+	@$(CC) $(C_FLAGS) -o "$@" "$<"
+
+output/base/Core/Src/gui/font_big_nums.o: ./Core/Src/gui/font_big_nums.c
+	@echo 'Building target: font_big_nums.c'
 	@$(CC) $(C_FLAGS) -o "$@" "$<"
 
 output/base/Core/Src/gui/scene_single.o: ./Core/Src/gui/scene_single.c

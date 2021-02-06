@@ -7,7 +7,7 @@
 #include "UTFT.h"
 #include "float_to_string.h"
 #include "fonts/font_condensed30.h"
-#include "fonts/font_condensed59.h"
+#include "font_big_nums.h"
 #include "interface/interface.h"
 #include "interface/rect_utils.h"
 #include "interface/statusbar.h"
@@ -20,12 +20,15 @@
 #define COLOR_BACK2 VGA_NAVY
 const int X_MARGIN = 2; //Столько места желательно оставлять справа/слева от надписи
 
+const bool enable_percent_view = true;
+
 static RectA r_shunt;
 static RectA r_vout;
 static RectA r_num_current;
 static RectA r_param_current;
 static RectA r_num_resistance;
 static RectA r_param_resistance;
+static RectA r_percent; //Процент использования времени в IRQ
 
 static void SceneSingleQuant();
 
@@ -50,9 +53,16 @@ void SceneSingleStart()
         RectA r_bottom;
         R_SplitY2(&r_tmp, UTF_Height(), &r_tmp, &r_bottom);
 
+        if(enable_percent_view)
+        {
+            R_SplitX2(&r_bottom, UTF_StringWidth("99.9%"), &r_bottom, &r_percent);
+            r_percent.back_color = COLOR_BACKGROUND_DARK_GRAY;
+        }
+
         R_SplitX1(&r_bottom, r_bottom.width/2, &r_shunt, &r_vout);
         r_shunt.back_color = COLOR_BACK1;
         r_vout.back_color = COLOR_BACK2;
+
     }
 
     {
@@ -60,14 +70,12 @@ void SceneSingleStart()
         //Ток и сопротивление большими буквами.
         //Сверху и снизу, справа и слева закрасим.
         int width_param = UTF_StringWidth("mA");
-        width_param = MAX(width_param, UTF_StringWidth("uA"));
-        width_param = MAX(width_param, UTF_StringWidth("nA"));
         width_param = MAX(width_param, UTF_StringWidth("KOm"));
         width_param = MAX(width_param, UTF_StringWidth("MOm"));
 
         int width_spaces = UTF_StringWidth("  ");
 
-        UTF_SetFont(font_condensed59);
+        UTF_SetFont(font_big_nums);
         int width_number = UTF_StringWidth("-0.0000");
 
         RectA r_fill;
@@ -198,9 +206,9 @@ void DrawResultOld()
     y += yoffset;
 }
 
+//places - общее количество символов
 void  PrintFixedSizeFloat(const RectA* in, float value, int places, UTF_JUSTIFY justify)
 {
-    //places - количество
     char st[27];
     floatToString(st, 27, value, places, 0, false);
     st[places] = 0;
@@ -223,7 +231,9 @@ void DrawResult()
 
     if(calc_result.infinity_resistance)
     {
+        UTF_SetFont(font_big_nums);
         R_DrawStringJustify(&r_num_resistance, "-----", UTF_RIGHT);
+        UTF_SetFont(g_default_font);
         R_DrawStringJustify(&r_param_resistance, "--", UTF_LEFT);
     } else
     {
@@ -243,7 +253,7 @@ void DrawResult()
             R_DrawStringJustify(&r_param_resistance, "Om", UTF_LEFT);
         }
 
-        UTF_SetFont(font_condensed59);
+        UTF_SetFont(font_big_nums);
         PrintFixedSizeFloat(&r_num_resistance, calc_result.resistance*mul, places, UTF_RIGHT);
         UTF_SetFont(g_default_font);
     }
@@ -265,7 +275,7 @@ void DrawResult()
             R_DrawStringJustify(&r_param_current, "nA", UTF_LEFT);
         }
 
-        UTF_SetFont(font_condensed59);
+        UTF_SetFont(font_big_nums);
         PrintFixedSizeFloat(&r_num_current, calc_result.current*mul, places, UTF_RIGHT);
         UTF_SetFont(g_default_font);
     }
@@ -294,6 +304,14 @@ void DrawResult()
     }
 
     R_DrawStringJustify(&r_shunt, shunt_str, UTF_CENTER);
+
+    if(enable_percent_view)
+    {
+        float value = fmin(GetPercentInInterrupt(), 99.9f);
+        floatToString(buf, sizeof(buf), value, 1, 0, false);
+        strcat(buf, "%");
+        R_DrawStringJustify(&r_percent, buf, UTF_RIGHT);
+    }
 }
 
 void SceneSingleQuant()

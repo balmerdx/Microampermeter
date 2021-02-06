@@ -12,6 +12,7 @@ Core/Src/measure/calculate.c
 Core/Src/measure/mid_big_interval.c
 Core/Src/measure/receive_data.c
 Core/Src/measure/usb_communication.c
+Core/Src/gui/font_big_nums.c
 Core/Src/gui/scene_single.c
 Core/display/UTFT.c
 Core/display/float_to_string.c
@@ -79,6 +80,7 @@ Core/Src/measure/calculate.h
 Core/Src/measure/mid_big_interval.h
 Core/Src/measure/receive_data.h
 Core/Src/measure/usb_communication.h
+Core/Src/gui/font_big_nums.h
 Core/Src/gui/scene_single.h
 Core/display/UTFT.h
 Core/display/float_to_string.h
