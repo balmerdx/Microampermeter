@@ -5,6 +5,11 @@
 
 #include "interface/interface.h"
 #include "interface/menu.h"
+
+static void MenuLine2Start();
+static void MenuLine2Quant();
+static void MenuRootQuant();
+
 enum
 {
     MR_RETURN,
@@ -14,7 +19,6 @@ enum
 
 static int last_menu_index = 0;
 
-static void MenuRootQuant();
 
 void MenuRootStart()
 {
@@ -48,6 +52,29 @@ void MenuRootQuant()
 
     if(MenuData()==MR_LINE2)
     {
+        MenuLine2Start();
         return;
     }
+}
+
+
+void MenuLine2Start()
+{
+    MenuReset("Details view");
+    MenuAdd("Current Min/Max", LINE2_CURRENT_MIN_MAX);
+    MenuAdd("Resistance", LINE2_RESISTANCE);
+
+    MenuSetIndex(MenuIndexByData(line2_type));
+    MenuRedraw();
+    InterfaceGoto(MenuLine2Quant);
+}
+
+void MenuLine2Quant()
+{
+    MenuQuant();
+    if(!EncButtonPressed())
+        return;
+
+    line2_type = MenuData();
+    SceneSingleStart();
 }

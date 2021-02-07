@@ -18,12 +18,6 @@
 #include "measure/calculate.h"
 #include "measure/mid_big_interval.h"
 
-typedef enum
-{
-    LINE2_RESISTANCE,
-    LINE2_CURRENT_MIN_MAX,
-} LINE2_TYPE;
-
 #define COLOR_BACK1 VGA_TEAL
 #define COLOR_BACK2 VGA_NAVY
 const int X_MARGIN = 2; //Столько места желательно оставлять справа/слева от надписи
@@ -223,7 +217,7 @@ void DrawResult()
     MidData d = GetMidData();
     CalcResult calc_result;
     calculateRV(d.adc_V, d.current,
-                   GetResistorValue(d.r), &calc_result);
+                   GetResistorValue(GetResistor()), &calc_result);
 
     int places = 4;
 

@@ -35,14 +35,12 @@ void calculateRV(int32_t measureV, float current,
 
     calc_result->current = current;
 
-    float Vcurrent = current * Rshunt;
-
     float resistance = 1e9;
     calc_result->infinity_resistance = true;
     if(current>1e-10)
     {
         calc_result->infinity_resistance = false;
-        resistance = (Vout-Vcurrent)/current;
+        resistance = Vout/current - Rshunt;
     }
 
     calc_result->resistance = resistance;

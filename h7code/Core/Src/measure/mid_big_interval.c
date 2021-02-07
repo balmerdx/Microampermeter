@@ -22,7 +22,6 @@ static float current_max =-CURRENT_MAX;
 static volatile bool adc_store_request = false;
 static volatile int32_t samples_V_count_stored = 0;
 static volatile int64_t adc_V_result_stored = 0;
-static RESISTOR r_last_stored = RESISTOR_1_Kom;
 static int32_t samples_current_count_stored = 0;
 static volatile double current_result_stored = 0;
 static volatile float current_min_stored = 0;
@@ -46,7 +45,6 @@ void ReceiveDataFunc_Mid(DataNoError* data)
     {
         samples_V_count_stored = samples_V_count;
         adc_V_result_stored = adc_V_result;
-        r_last_stored = r_last;
 
         samples_current_count_stored = samples_current_count;
         current_result_stored = current_result;
@@ -84,7 +82,6 @@ MidData GetMidData()
         while(adc_store_request);
     }
 
-    d.r = r_last_stored;
     d.samples_V_count = samples_V_count_stored;
     d.samples_current_count = samples_current_count_stored;
 
