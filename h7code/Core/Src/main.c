@@ -130,6 +130,7 @@ int main(void)
       while(1);
   }
 
+  CorrectionInit();
   MyFilterInit();
 
   ADS1271_Start();

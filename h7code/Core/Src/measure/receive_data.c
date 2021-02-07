@@ -226,7 +226,8 @@ bool SendAdcCurrentNanoampers()
             int32_t adc_V = Convert24(big_buf[buf_idx].adc1);
 
             CalcResult result;
-            calculate(adc_V, adc_I,
+            float current = calculateCurrent(adc_I, GetResistorValueInv(r));
+            calculateRV(adc_V, current,
                            GetResistorValue(r), &result);
             int32_t current_na = (int32_t)(result.current*1e9f);
 

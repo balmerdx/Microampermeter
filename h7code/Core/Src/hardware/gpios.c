@@ -11,6 +11,8 @@
 
 static RESISTOR last_r;
 
+static float resistor_value_inv[RESISTOR_1_Om+1];
+
 void GpiosInit()
 {
     GPIO_InitTypeDef  gpio = {};
@@ -25,6 +27,11 @@ void GpiosInit()
     HAL_GPIO_Init(EN_V_PORT, &gpio);
 
     last_r = RESISTOR_1_Kom;
+
+    resistor_value_inv[RESISTOR_1_Kom] = 1.f/GetResistorValue(RESISTOR_1_Kom);
+    resistor_value_inv[RESISTOR_100_Om] = 1.f/GetResistorValue(RESISTOR_100_Om);
+    resistor_value_inv[RESISTOR_10_Om] = 1.f/GetResistorValue(RESISTOR_10_Om);
+    resistor_value_inv[RESISTOR_1_Om] = 1.f/GetResistorValue(RESISTOR_1_Om);
 
     SetEnableV(true);
 }
@@ -69,3 +76,7 @@ float GetResistorValue(RESISTOR r)
     }
 }
 
+float GetResistorValueInv(RESISTOR r)
+{
+    return resistor_value_inv[r];
+}
