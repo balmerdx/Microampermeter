@@ -2,6 +2,8 @@
 #include "my_filter.h"
 #include "iir_filter.h"
 
+FilterX g_filterX = FilterX_16;
+
 //fmax = 0.25 Т.е. фильтр в 4 раза частоту уменьшает максимальную
 //signal.cheby2(16, 70, fmax, 'low', analog=False, output="sos")
 #define coeff_sos_x4_sections 8
@@ -27,13 +29,41 @@ float zi_1[coeff_sos_x4_sections*2];
 FilterData data1 = {
     .n_sections = coeff_sos_x4_sections,
     .coeff = coeff_sos_x4,
-    .zi = zi_0
+    .zi = zi_1
 };
+
+float zi_2[coeff_sos_x4_sections*2];
+FilterData data2 = {
+    .n_sections = coeff_sos_x4_sections,
+    .coeff = coeff_sos_x4,
+    .zi = zi_2
+};
+
+float zi_3[coeff_sos_x4_sections*2];
+FilterData data3 = {
+    .n_sections = coeff_sos_x4_sections,
+    .coeff = coeff_sos_x4,
+    .zi = zi_3
+};
+
+float zi_4[coeff_sos_x4_sections*2];
+FilterData data4 = {
+    .n_sections = coeff_sos_x4_sections,
+    .coeff = coeff_sos_x4,
+    .zi = zi_4
+};
+
+static int current_index;
 
 void MyFilterInit()
 {
     SosFilterInit(&data0);
     SosFilterInit(&data1);
+    SosFilterInit(&data2);
+    SosFilterInit(&data3);
+    SosFilterInit(&data4);
+
+    current_index = 0;
 }
 
 float SosFilterProcess_x4_0(float newX)
@@ -45,4 +75,43 @@ float SosFilterProcess_x4_0(float newX)
 float SosFilterProcess_x4_1(float newX)
 {
     return SosFilterProcess(&data1, newX);
+}
+
+void FilterNextSample(float sample, FilterNextSampleCallback callback)
+{
+    if(g_filterX==FilterX_1)
+        callback(sample);
+    current_index++;
+
+    float sample1 = SosFilterProcess(&data0, sample);
+    if((current_index&(4-1))==0)
+    {
+        if(g_filterX==FilterX_4)
+            callback(sample1);
+
+        float sample2 = SosFilterProcess(&data1, sample1);
+        if((current_index&(16-1))==0)
+        {
+            if(g_filterX==FilterX_16)
+                callback(sample2);
+            float sample3 = SosFilterProcess(&data2, sample2);
+            if((current_index&(64-1))==0)
+            {
+                if(g_filterX==FilterX_64)
+                    callback(sample3);
+                float sample4 = SosFilterProcess(&data3, sample3);
+                if((current_index&(256-1))==0)
+                {
+                    if(g_filterX==FilterX_256)
+                        callback(sample4);
+                    float sample5 = SosFilterProcess(&data4, sample4);
+                    if((current_index&(1024-1))==0)
+                    {
+                        if(g_filterX==FilterX_1024)
+                            callback(sample5);
+                    }
+                }
+            }
+        }
+    }
 }

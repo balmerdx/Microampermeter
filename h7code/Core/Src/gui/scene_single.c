@@ -3,6 +3,8 @@
 #include <sys/param.h>
 
 #include "scene_single.h"
+#include "menu_root.h"
+#include "menu_bandwidth.h"
 
 #include "UTFT.h"
 #include "float_to_string.h"
@@ -56,15 +58,33 @@ void SceneSingleStart()
 
     RectA r_tmp = R_DisplaySize();
     RectA r_top;
-    R_SplitY1(&r_tmp, HeaderYEnd(), &r_top, &r_tmp);
+    R_SplitY1(&r_tmp, UTF_Height(), &r_top, &r_tmp);
 
-    HeaderSetTextAndRedraw("Microampermeter");
+    {
+        RectA r_header;
+        RectA r_bandwidth;
+        int width = 0;
+        for(int i=FilterX_1; i<=FilterX_1024 ;i++)
+        {
+            width = MAX(width, UTF_StringWidth(FilterXBandwidth(i))+X_MARGIN*2);
+        }
+
+        R_SplitX2(&r_top, width, &r_header, &r_bandwidth);
+
+        UTFT_setColor(VGA_WHITE);
+        r_header.back_color = STATUSBAR_BACKGROUND;
+        R_DrawStringJustify(&r_header, "Microampermeter", UTF_CENTER);
+
+        r_bandwidth.back_color = COLOR_BACK1;
+        R_DrawStringJustify(&r_bandwidth, FilterXBandwidth(g_filterX), UTF_CENTER);
+    }
 
     {
         //Нижняя строка.
         //Разместим пока на ней
         //SHUNT=1 KOm  - сопротивление текущего используемого шунта
         //Vout=1.222 V - напряжение выходное
+        //11% - процент времени проведённый в прерывании
         RectA r_bottom;
         R_SplitY2(&r_tmp, UTF_Height(), &r_tmp, &r_bottom);
 
@@ -325,6 +345,8 @@ void SceneSingleQuant()
 
     if(EncButtonPressed())
     {
-        EnableCapturingTrigger();
+        //EnableCapturingTrigger();
+        MenuRootStart();
+        return;
     }
 }

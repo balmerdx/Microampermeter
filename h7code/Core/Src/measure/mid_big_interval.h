@@ -9,12 +9,14 @@ typedef struct
 {
     int32_t adc_V;
     RESISTOR r;
-    uint32_t samples_count;
+    uint32_t samples_V_count;
+    uint32_t samples_current_count;
 
     float current;
     float current_min;
     float current_max;
 } MidData;
+
 
 MidData GetMidData();
 
