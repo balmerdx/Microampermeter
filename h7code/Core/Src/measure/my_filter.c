@@ -36,13 +36,13 @@ void MyFilterInit()
     SosFilterInit(&data1);
 }
 
-int32_t SosFilterProcess_x4_0(int32_t newX)
+float SosFilterProcess_x4_0(float newX)
 {
     return SosFilterProcess(&data0, newX);
 }
 
 
-int32_t SosFilterProcess_x4_1(int32_t newX)
+float SosFilterProcess_x4_1(float newX)
 {
     return SosFilterProcess(&data1, newX);
 }

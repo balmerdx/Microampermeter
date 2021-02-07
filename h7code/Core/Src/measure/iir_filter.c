@@ -23,7 +23,7 @@ void SosFilterInit(FilterData* data)
     }
 }
 
-int32_t SosFilterProcess(FilterData* data, int32_t newX)
+float SosFilterProcess(FilterData* data, float newX)
 {
     float x = newX;
     float* zi0 = data->zi;
@@ -45,7 +45,8 @@ int32_t SosFilterProcess(FilterData* data, int32_t newX)
         zi1[i] = (b2 * x_n - a2 * x);
     }
 
-    return lroundl(x);
+    //return lroundl(x);
+    return x;
 }
 
 

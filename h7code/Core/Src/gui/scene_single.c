@@ -202,8 +202,7 @@ void DrawResult()
 
     MidData d = GetMidData();
     CalcResult calc_result;
-    float current = calculateCurrent(d.adc_I, GetResistorValueInv(d.r));
-    calculateRV(d.adc_V, current,
+    calculateRV(d.adc_V, d.current,
                    GetResistorValue(d.r), &calc_result);
 
     int places = 4;
@@ -265,16 +264,14 @@ void DrawResult()
 
         if(line2_type == LINE2_CURRENT_MIN_MAX)
         {
-            float current_min = calculateCurrent(d.adc_I_min, GetResistorValueInv(d.r));
             strcpy(buf, "min = ");
-            catFloat(buf, sizeof(buf), current_min*mul, places);
+            catFloat(buf, sizeof(buf), d.current_min*mul, places);
             strcat(buf, " ");
             strcat(buf, suffix);
             R_DrawStringJustify(&r_current_min, buf, UTF_CENTER);
 
-            float current_max = calculateCurrent(d.adc_I_max, GetResistorValueInv(d.r));
             strcpy(buf, "max = ");
-            catFloat(buf, sizeof(buf), current_max*mul, places);
+            catFloat(buf, sizeof(buf), d.current_max*mul, places);
             strcat(buf, " ");
             strcat(buf, suffix);
             R_DrawStringJustify(&r_current_max, buf, UTF_CENTER);

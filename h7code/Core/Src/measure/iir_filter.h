@@ -16,5 +16,5 @@ typedef struct FilterData
 
 void SosFilterInit(FilterData* data);
 
-int32_t SosFilterProcess(FilterData* data, int32_t newX);
+float SosFilterProcess(FilterData* data, float newX);
 
