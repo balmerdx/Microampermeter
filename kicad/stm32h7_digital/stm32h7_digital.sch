@@ -1666,4 +1666,6 @@ Wire Wire Line
 	8850 900  8950 900 
 Wire Wire Line
 	8950 900  8950 850 
+Text Notes 9000 3750 0    50   ~ 0
+~QSPI_CS - нужно к PC11 прицеплять
 $EndSCHEMATC

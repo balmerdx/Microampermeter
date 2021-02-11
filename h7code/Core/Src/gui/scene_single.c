@@ -167,7 +167,7 @@ void SceneSingleStart()
     InterfaceGoto(SceneSingleQuant);
 }
 
-void catFloat(char* outstr, int outstr_size, float value, int digits)
+void catFloatFixed(char* outstr, int outstr_size, float value, int digits)
 {
     //digits - количество цифр, как до, так и после запятой.
     //Предполагается, что fabsf(value)<9999
@@ -202,7 +202,7 @@ void PrintFixedSizeFloat(const RectA* in, float value, int digits, UTF_JUSTIFY j
 */
     char st[27];
     st[0] = 0;
-    catFloat(st, sizeof(st), value, digits);
+    catFloatFixed(st, sizeof(st), value, digits);
 
     R_DrawStringJustify(in, st, justify);
 }
@@ -279,13 +279,13 @@ void DrawResult()
         if(line2_type == LINE2_CURRENT_MIN_MAX)
         {
             strcpy(buf, "min = ");
-            catFloat(buf, sizeof(buf), d.current_min*mul, places);
+            catFloatFixed(buf, sizeof(buf), d.current_min*mul, places);
             strcat(buf, " ");
             strcat(buf, suffix);
             R_DrawStringJustify(&r_current_min, buf, UTF_CENTER);
 
             strcpy(buf, "max = ");
-            catFloat(buf, sizeof(buf), d.current_max*mul, places);
+            catFloatFixed(buf, sizeof(buf), d.current_max*mul, places);
             strcat(buf, " ");
             strcat(buf, suffix);
             R_DrawStringJustify(&r_current_max, buf, UTF_CENTER);

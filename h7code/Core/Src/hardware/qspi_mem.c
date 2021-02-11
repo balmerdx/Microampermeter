@@ -6,17 +6,17 @@
 
 bool use_qspi = true;
 
-static volatile bool RxCplt = false;
-static volatile bool TxCplt = false;
+volatile bool Qspi_RxCplt = false;
+volatile bool Qspi_TxCplt = false;
 
 void HAL_QSPI_RxCpltCallback(QSPI_HandleTypeDef *hqspi)
 {
-    RxCplt = true;
+    Qspi_RxCplt = true;
 }
 
 void HAL_QSPI_TxCpltCallback(QSPI_HandleTypeDef *hqspi)
 {
-    TxCplt = true;
+    Qspi_TxCplt = true;
 }
 
 
@@ -97,14 +97,14 @@ bool QspiMemRead(QSPI_HandleTypeDef* hqspi, uint32_t address, uint32_t count, ui
 
     //if(HAL_QSPI_Receive(hqspi, buffer, QSPI_TIMEOUT_DEFAULT_VALUE) != HAL_OK) return false;
 
-    RxCplt = false;
+    Qspi_RxCplt = false;
     if(HAL_QSPI_Receive_DMA(hqspi, buffer) != HAL_OK)
     {
         return false;
     }
 
     uint32_t start_time = TimeMs();
-    while(!RxCplt)
+    while(!Qspi_RxCplt)
     {
         if( (uint32_t)(TimeMs()-start_time) > QSPI_TIMEOUT_DEFAULT_VALUE)
             return false;
@@ -159,7 +159,7 @@ bool QspiMemWrite(QSPI_HandleTypeDef* hqspi, uint32_t address, uint32_t count, u
 
     //if(HAL_QSPI_Transmit(hqspi, buffer, QSPI_TIMEOUT_DEFAULT_VALUE) != HAL_OK) return false;
 
-    TxCplt = false;
+    Qspi_TxCplt = false;
     if(HAL_QSPI_Transmit_DMA(hqspi, buffer) != HAL_OK)
     {
         return false;
@@ -167,7 +167,7 @@ bool QspiMemWrite(QSPI_HandleTypeDef* hqspi, uint32_t address, uint32_t count, u
 
 
     uint32_t start_time = TimeMs();
-    while(!TxCplt)
+    while(!Qspi_TxCplt)
     {
         if( (uint32_t)(TimeMs()-start_time) > QSPI_TIMEOUT_DEFAULT_VALUE)
             return false;

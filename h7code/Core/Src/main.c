@@ -123,13 +123,13 @@ int main(void)
   UTFT_InitLCD(UTFT_LANDSCAPE);
   UTFT_fillScr(VGA_BLACK);
   UTFT_setColor(VGA_WHITE);
-
+/*
   if(!QspiMemInit(&hqspi))
   {
       UTF_DrawString(0, 100, "QspiMemInit fail");
       while(1);
   }
-
+*/
   CorrectionInit();
   MyFilterInit();
 
@@ -368,7 +368,8 @@ static void MX_QUADSPI_Init(void)
   /* USER CODE END QUADSPI_Init 1 */
   /* QUADSPI parameter configuration*/
   hqspi.Instance = QUADSPI;
-  hqspi.Init.ClockPrescaler = 2;
+  //hqspi.Init.ClockPrescaler = 2;
+  hqspi.Init.ClockPrescaler = 32;
   hqspi.Init.FifoThreshold = 4;
   hqspi.Init.SampleShifting = QSPI_SAMPLE_SHIFTING_NONE;
   hqspi.Init.FlashSize = QSPI_MEM_BITS; //8 MB = 23 bits address
