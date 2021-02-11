@@ -17,6 +17,7 @@ DEPS += \
 	output/base/Core/Src/hardware/qspi_mem.d \
 	output/base/Core/Src/hardware/quadrature_encoder.d \
 	output/base/Core/Src/hardware/vbat.d \
+	output/base/Core/Src/images/images.d \
 	output/base/Core/Src/measure/calculate.d \
 	output/base/Core/Src/measure/iir_filter.d \
 	output/base/Core/Src/measure/mid_big_interval.d \
@@ -97,6 +98,7 @@ OBJS += \
 	output/base/Core/Src/hardware/qspi_mem.o \
 	output/base/Core/Src/hardware/quadrature_encoder.o \
 	output/base/Core/Src/hardware/vbat.o \
+	output/base/Core/Src/images/images.o \
 	output/base/Core/Src/measure/calculate.o \
 	output/base/Core/Src/measure/iir_filter.o \
 	output/base/Core/Src/measure/mid_big_interval.o \
@@ -213,6 +215,10 @@ output/base/Core/Src/hardware/quadrature_encoder.o: ./Core/Src/hardware/quadratu
 
 output/base/Core/Src/hardware/vbat.o: ./Core/Src/hardware/vbat.c
 	@echo 'Building target: vbat.c'
+	@$(CC) $(C_FLAGS) -o "$@" "$<"
+
+output/base/Core/Src/images/images.o: ./Core/Src/images/images.c
+	@echo 'Building target: images.c'
 	@$(CC) $(C_FLAGS) -o "$@" "$<"
 
 output/base/Core/Src/measure/calculate.o: ./Core/Src/measure/calculate.c

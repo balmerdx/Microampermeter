@@ -13,6 +13,7 @@
 #include "interface/interface.h"
 #include "interface/rect_utils.h"
 #include "interface/statusbar.h"
+#include "images/images.h"
 
 #include "measure/receive_data.h"
 #include "measure/calculate.h"
@@ -24,6 +25,8 @@
 const int X_MARGIN = 2; //Столько места желательно оставлять справа/слева от надписи
 
 const bool enable_percent_view = true;
+
+static RectA r_battery;
 
 LINE2_TYPE line2_type = LINE2_CURRENT_MIN_MAX;//LINE2_RESISTANCE;
 
@@ -43,6 +46,7 @@ static RectA r_current_min;
 static RectA r_current_max;
 
 static void SceneSingleQuant();
+static void UpdateVbatLow();
 
 static uint32_t prev_draw_time;
 
@@ -64,13 +68,14 @@ void SceneSingleStart()
             width = MAX(width, UTF_StringWidth(FilterXBandwidth(i))+X_MARGIN*2);
         }
 
+        r_top.back_color = STATUSBAR_BACKGROUND;
+        R_SplitX2(&r_top, batery_full_img.width, &r_top, &r_battery);
         R_SplitX2(&r_top, width, &r_header, &r_bandwidth);
 
         UTFT_setColor(VGA_WHITE);
-        r_header.back_color = STATUSBAR_BACKGROUND;
         R_DrawStringJustify(&r_header, "Microampermeter", UTF_CENTER);
 
-        r_bandwidth.back_color = COLOR_BACK1;
+        //r_bandwidth.back_color = COLOR_BACK1;
         R_DrawStringJustify(&r_bandwidth, FilterXBandwidth(g_filterX), UTF_CENTER);
     }
 
@@ -295,12 +300,6 @@ void DrawResult()
     }
 
     strcpy(buf, "Vout = ");
-    /*
-    uint16_t start_us = TimeUs();
-    calc_result.Vout = VBatVoltage(); //Test code
-    uint16_t delta_us = TimeUs()-start_us;
-    */
-
     floatToString(buf+strlen(buf), 27, calc_result.Vout, 4, 0, false);
     strcat(buf, " Volts");
     R_DrawStringJustify(&r_vout, buf, UTF_CENTER);
@@ -332,6 +331,8 @@ void DrawResult()
         strcat(buf, "%");
         R_DrawStringJustify(&r_percent, buf, UTF_RIGHT);
     }
+
+    UpdateVbatLow();
 }
 
 void SceneSingleQuant()
@@ -350,4 +351,9 @@ void SceneSingleQuant()
         MenuRootStart();
         return;
     }
+}
+
+void UpdateVbatLow()
+{
+    UTFT_drawBitmap4(r_battery.x, r_battery.y, VBatIsLow()?&batery_empty_img:&batery_full_img);
 }

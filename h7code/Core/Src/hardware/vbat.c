@@ -1,6 +1,10 @@
 #include "main.h"
 #include "vbat.h"
 
+static const float Vref = 2.42f;//Volts - захардкодили актуальное значение
+static const float VbatLow = 3.2f;//Напряжение питания на процессоре, ниже которого считается, что "всё плохо"
+
+
 /* ADC handle declaration */
 ADC_HandleTypeDef        AdcHandle;
 /* ADC channel configuration structure declaration */
@@ -79,6 +83,10 @@ float VBatVoltage()
     uint32_t uwConvertedValue = HAL_ADC_GetValue(&AdcHandle);
 
     /* Convert the result from 16 bit value to the voltage dimension (mV unit) */
-    float Vref = 2.42f;//Volts - захардкодили актуальное значение
     return 4 * ((uwConvertedValue * Vref) / 0xFFF);
+}
+
+bool VBatIsLow()
+{
+    return VBatVoltage() < VbatLow;
 }

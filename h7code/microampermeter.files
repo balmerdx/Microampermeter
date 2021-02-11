@@ -11,6 +11,7 @@ Core/Src/hardware/qspi.c
 Core/Src/hardware/qspi_mem.c
 Core/Src/hardware/quadrature_encoder.c
 Core/Src/hardware/vbat.c
+Core/Src/images/images.c
 Core/Src/measure/calculate.c
 Core/Src/measure/iir_filter.c
 Core/Src/measure/mid_big_interval.c
@@ -87,6 +88,9 @@ Core/Src/hardware/qspi.h
 Core/Src/hardware/qspi_mem.h
 Core/Src/hardware/quadrature_encoder.h
 Core/Src/hardware/vbat.h
+Core/Src/images/batery_empty.h
+Core/Src/images/batery_full.h
+Core/Src/images/images.h
 Core/Src/measure/calculate.h
 Core/Src/measure/iir_filter.h
 Core/Src/measure/mid_big_interval.h

@@ -2,3 +2,4 @@
 
 void VBatInit();
 float VBatVoltage();
+bool VBatIsLow();
