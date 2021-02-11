@@ -17,6 +17,7 @@
 #include "measure/receive_data.h"
 #include "measure/calculate.h"
 #include "measure/mid_big_interval.h"
+#include "hardware/vbat.h"
 
 #define COLOR_BACK1 VGA_TEAL
 #define COLOR_BACK2 VGA_NAVY
@@ -294,6 +295,12 @@ void DrawResult()
     }
 
     strcpy(buf, "Vout = ");
+    /*
+    uint16_t start_us = TimeUs();
+    calc_result.Vout = VBatVoltage(); //Test code
+    uint16_t delta_us = TimeUs()-start_us;
+    */
+
     floatToString(buf+strlen(buf), 27, calc_result.Vout, 4, 0, false);
     strcat(buf, " Volts");
     R_DrawStringJustify(&r_vout, buf, UTF_CENTER);

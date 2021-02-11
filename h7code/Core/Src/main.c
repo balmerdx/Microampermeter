@@ -26,6 +26,7 @@
 #include "hardware/quadrature_encoder.h"
 #include "hardware/qspi_mem.h"
 #include "hardware/ADS1271_input.h"
+#include "hardware/vbat.h"
 #include "UTFT.h"
 #include "fonts/font_condensed30.h"
 #include "fonts/font_condensed59.h"
@@ -119,6 +120,7 @@ int main(void)
   ADS1271_Init();
 
   SetResistor(RESISTOR_1_Kom);
+  VBatInit();
 
   UTFT_InitLCD(UTFT_LANDSCAPE);
   UTFT_fillScr(VGA_BLACK);
@@ -147,94 +149,6 @@ int main(void)
       UsbCommandsQuant();
       DelayMs(1);
   }
-
-/*
-  float f = 0;
-  int idx = 0;
-  while (1)
-  {
-
-      int x, y;
-      int xstart = 50;
-      int yoffset = 30;
-      y = 0;
-
-      x = UTF_printNumF(f, xstart, y, 3, 100, UTF_RIGHT);
-      UTF_DrawString(x, y, "Hello, QT!");
-      y += yoffset;
-
-      bool write_all = true;
-      bool ok;
-      if(write_all)
-      {
-          ok = WriteAllQspi(idx);
-      } else
-      {
-          for(int i=0; i<QBUFFER_SIZE; i++)
-              buffer_qspi[i] = idx + i;
-          ok = QspiMemWrite(&hqspi, QBUFFER_ADDR, sizeof(buffer_qspi), (uint8_t*)buffer_qspi);
-      }
-
-      for(int i=0; i<QBUFFER_SIZE; i++)
-          buffer_qspi[i] = 0;
-      x = UTF_DrawString(xstart, y, ok?"Write ok":"Write fail");
-      y += yoffset;
-
-      if(write_all)
-      {
-          uint16_t start_time = TimeMs();
-          int err_addr;
-          ok = CheckAllQspi(idx, &err_addr);
-          uint16_t read_time = TimeMs()-start_time;
-          x = UTF_DrawString(xstart, y, ok?"Check ok" : "Check fail adr=");
-          //x = UTF_printNumI(err_addr, x, y, 100, UTF_LEFT);
-          x = UTF_printNumI(buffer_qspi[0], x, y, 100, UTF_LEFT);
-
-          y += yoffset;
-          x = UTF_DrawString(xstart, y, "Read time=");
-          x = UTF_printNumI(read_time, x, y, 100, UTF_LEFT);
-          x = UTF_DrawString(x, y, " ms   ");
-          y += yoffset;
-      } else
-      {
-          uint16_t start_time = TimeUs();
-          ok = QspiMemRead(&hqspi, QBUFFER_ADDR, sizeof(buffer_qspi), (uint8_t*)buffer_qspi);
-          uint16_t read_time = TimeUs()-start_time;
-          bool equal = true;
-          for(int i=0; i<QBUFFER_SIZE; i++)
-              if(buffer_qspi[i]!=(idx + i))
-                  equal = false;
-          if(!ok)
-              x = UTF_DrawString(xstart, y, "Read fail");
-          else
-              x = UTF_DrawString(xstart, y, equal ? "Mem equal" : "Mem not equal");
-          x = UTF_printNumI(buffer_qspi[0], x, y, 100, UTF_LEFT);
-          y += yoffset;
-
-          x = UTF_DrawString(xstart, y, "Read time=");
-          x = UTF_printNumI(read_time, x, y, 100, UTF_LEFT);
-          x = UTF_DrawString(x, y, " us   ");
-          y += yoffset;
-      }
-
-
-
-
-      x = UTF_DrawString(0, y, "GetPCLK1Freq=");
-      x = UTF_printNumI(HAL_RCC_GetPCLK1Freq(), x, y, UTFT_getDisplayXSize()-x, UTF_LEFT);
-      y += yoffset;
-      x = UTF_DrawString(0, y, "GetHCLKFreq=");
-      x = UTF_printNumI(HAL_RCC_GetHCLKFreq(), x, y, UTFT_getDisplayXSize()-x, UTF_LEFT);
-      y += yoffset;
-
-
-
-      f += 0.01f;
-      idx++;
-
-      DelayMs(500);
-  }
-*/
 }
 
 
@@ -368,8 +282,8 @@ static void MX_QUADSPI_Init(void)
   /* USER CODE END QUADSPI_Init 1 */
   /* QUADSPI parameter configuration*/
   hqspi.Instance = QUADSPI;
-  //hqspi.Init.ClockPrescaler = 2;
-  hqspi.Init.ClockPrescaler = 32;
+  hqspi.Init.ClockPrescaler = 2;
+  //hqspi.Init.ClockPrescaler = 32;
   hqspi.Init.FifoThreshold = 4;
   hqspi.Init.SampleShifting = QSPI_SAMPLE_SHIFTING_NONE;
   hqspi.Init.FlashSize = QSPI_MEM_BITS; //8 MB = 23 bits address

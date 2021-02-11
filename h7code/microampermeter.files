@@ -4,13 +4,13 @@ Core/Src/stm32h7xx_it.c
 Core/Src/system_stm32h7xx.c
 Core/Src/hardware/ADS1271_input.c
 Core/Src/hardware/delay.c
-Core/Src/hardware/flash_out_of_bound.c
 Core/Src/hardware/gpios.c
 Core/Src/hardware/hw_ili9481.c
 Core/Src/hardware/m25p16.c
 Core/Src/hardware/qspi.c
 Core/Src/hardware/qspi_mem.c
 Core/Src/hardware/quadrature_encoder.c
+Core/Src/hardware/vbat.c
 Core/Src/measure/calculate.c
 Core/Src/measure/iir_filter.c
 Core/Src/measure/mid_big_interval.c
@@ -19,7 +19,7 @@ Core/Src/measure/receive_data.c
 Core/Src/measure/usb_communication.c
 Core/Src/gui/font_big_nums.c
 Core/Src/gui/menu_bandwidth.c
-Core/Src/gui/menu_calibrate.c
+Core/Src/gui/menu_check_flash.c
 Core/Src/gui/menu_root.c
 Core/Src/gui/scene_single.c
 Core/display/UTFT.c
@@ -80,13 +80,13 @@ Core/Inc/stm32h7xx_hal_conf.h
 Core/Inc/stm32h7xx_it.h
 Core/Src/hardware/ADS1271_input.h
 Core/Src/hardware/delay.h
-Core/Src/hardware/flash_out_of_bound.h
 Core/Src/hardware/gpios.h
 Core/Src/hardware/hw_ili9481.h
 Core/Src/hardware/m25p16.h
 Core/Src/hardware/qspi.h
 Core/Src/hardware/qspi_mem.h
 Core/Src/hardware/quadrature_encoder.h
+Core/Src/hardware/vbat.h
 Core/Src/measure/calculate.h
 Core/Src/measure/iir_filter.h
 Core/Src/measure/mid_big_interval.h
@@ -95,7 +95,7 @@ Core/Src/measure/receive_data.h
 Core/Src/measure/usb_communication.h
 Core/Src/gui/font_big_nums.h
 Core/Src/gui/menu_bandwidth.h
-Core/Src/gui/menu_calibrate.h
+Core/Src/gui/menu_check_flash.h
 Core/Src/gui/menu_root.h
 Core/Src/gui/scene_single.h
 Core/display/UTFT.h

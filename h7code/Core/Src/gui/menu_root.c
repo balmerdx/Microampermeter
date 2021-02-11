@@ -1,7 +1,7 @@
 #include "main.h"
 #include "menu_root.h"
 #include "menu_bandwidth.h"
-#include "menu_calibrate.h"
+#include "menu_check_flash.h"
 #include "scene_single.h"
 
 #include "interface/interface.h"
@@ -16,7 +16,7 @@ enum
     MR_RETURN,
     MR_BANDWIDTH,
     MR_LINE2,
-    MR_CALIBRATE,
+    MR_CHECK_FLASH,
 };
 
 static int last_menu_index = 0;
@@ -28,7 +28,7 @@ void MenuRootStart()
     MenuAdd("..", MR_RETURN);
     MenuAdd("Bandwidth", MR_BANDWIDTH);
     MenuAdd("Line2", MR_LINE2);
-    MenuAdd("Calibrate", MR_CALIBRATE);
+    MenuAdd("Check flash", MR_CHECK_FLASH);
 
     MenuSetIndex(last_menu_index);
     MenuRedraw();
@@ -60,9 +60,9 @@ void MenuRootQuant()
         return;
     }
 
-    if(MenuData()==MR_CALIBRATE)
+    if(MenuData()==MR_CHECK_FLASH)
     {
-        MenuCalibrateStart();
+        MenuCheckFlashStart();
         return;
     }
 }

@@ -10,13 +10,13 @@ DEPS += \
 	output/base/Core/Src/system_stm32h7xx.d \
 	output/base/Core/Src/hardware/ADS1271_input.d \
 	output/base/Core/Src/hardware/delay.d \
-	output/base/Core/Src/hardware/flash_out_of_bound.d \
 	output/base/Core/Src/hardware/gpios.d \
 	output/base/Core/Src/hardware/hw_ili9481.d \
 	output/base/Core/Src/hardware/m25p16.d \
 	output/base/Core/Src/hardware/qspi.d \
 	output/base/Core/Src/hardware/qspi_mem.d \
 	output/base/Core/Src/hardware/quadrature_encoder.d \
+	output/base/Core/Src/hardware/vbat.d \
 	output/base/Core/Src/measure/calculate.d \
 	output/base/Core/Src/measure/iir_filter.d \
 	output/base/Core/Src/measure/mid_big_interval.d \
@@ -25,7 +25,7 @@ DEPS += \
 	output/base/Core/Src/measure/usb_communication.d \
 	output/base/Core/Src/gui/font_big_nums.d \
 	output/base/Core/Src/gui/menu_bandwidth.d \
-	output/base/Core/Src/gui/menu_calibrate.d \
+	output/base/Core/Src/gui/menu_check_flash.d \
 	output/base/Core/Src/gui/menu_root.d \
 	output/base/Core/Src/gui/scene_single.d \
 	output/base/Core/display/UTFT.d \
@@ -90,13 +90,13 @@ OBJS += \
 	output/base/Core/Src/system_stm32h7xx.o \
 	output/base/Core/Src/hardware/ADS1271_input.o \
 	output/base/Core/Src/hardware/delay.o \
-	output/base/Core/Src/hardware/flash_out_of_bound.o \
 	output/base/Core/Src/hardware/gpios.o \
 	output/base/Core/Src/hardware/hw_ili9481.o \
 	output/base/Core/Src/hardware/m25p16.o \
 	output/base/Core/Src/hardware/qspi.o \
 	output/base/Core/Src/hardware/qspi_mem.o \
 	output/base/Core/Src/hardware/quadrature_encoder.o \
+	output/base/Core/Src/hardware/vbat.o \
 	output/base/Core/Src/measure/calculate.o \
 	output/base/Core/Src/measure/iir_filter.o \
 	output/base/Core/Src/measure/mid_big_interval.o \
@@ -105,7 +105,7 @@ OBJS += \
 	output/base/Core/Src/measure/usb_communication.o \
 	output/base/Core/Src/gui/font_big_nums.o \
 	output/base/Core/Src/gui/menu_bandwidth.o \
-	output/base/Core/Src/gui/menu_calibrate.o \
+	output/base/Core/Src/gui/menu_check_flash.o \
 	output/base/Core/Src/gui/menu_root.o \
 	output/base/Core/Src/gui/scene_single.o \
 	output/base/Core/display/UTFT.o \
@@ -187,10 +187,6 @@ output/base/Core/Src/hardware/delay.o: ./Core/Src/hardware/delay.c
 	@echo 'Building target: delay.c'
 	@$(CC) $(C_FLAGS) -o "$@" "$<"
 
-output/base/Core/Src/hardware/flash_out_of_bound.o: ./Core/Src/hardware/flash_out_of_bound.c
-	@echo 'Building target: flash_out_of_bound.c'
-	@$(CC) $(C_FLAGS) -o "$@" "$<"
-
 output/base/Core/Src/hardware/gpios.o: ./Core/Src/hardware/gpios.c
 	@echo 'Building target: gpios.c'
 	@$(CC) $(C_FLAGS) -o "$@" "$<"
@@ -213,6 +209,10 @@ output/base/Core/Src/hardware/qspi_mem.o: ./Core/Src/hardware/qspi_mem.c
 
 output/base/Core/Src/hardware/quadrature_encoder.o: ./Core/Src/hardware/quadrature_encoder.c
 	@echo 'Building target: quadrature_encoder.c'
+	@$(CC) $(C_FLAGS) -o "$@" "$<"
+
+output/base/Core/Src/hardware/vbat.o: ./Core/Src/hardware/vbat.c
+	@echo 'Building target: vbat.c'
 	@$(CC) $(C_FLAGS) -o "$@" "$<"
 
 output/base/Core/Src/measure/calculate.o: ./Core/Src/measure/calculate.c
@@ -247,8 +247,8 @@ output/base/Core/Src/gui/menu_bandwidth.o: ./Core/Src/gui/menu_bandwidth.c
 	@echo 'Building target: menu_bandwidth.c'
 	@$(CC) $(C_FLAGS) -o "$@" "$<"
 
-output/base/Core/Src/gui/menu_calibrate.o: ./Core/Src/gui/menu_calibrate.c
-	@echo 'Building target: menu_calibrate.c'
+output/base/Core/Src/gui/menu_check_flash.o: ./Core/Src/gui/menu_check_flash.c
+	@echo 'Building target: menu_check_flash.c'
 	@$(CC) $(C_FLAGS) -o "$@" "$<"
 
 output/base/Core/Src/gui/menu_root.o: ./Core/Src/gui/menu_root.c
