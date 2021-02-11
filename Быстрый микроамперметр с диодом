@@ -542,8 +542,9 @@ https://www.keysight.com/ru/pd-2747858-pn-N6705C/dc-power-analyzer-modular-600-w
 	514 µs  на 1000 sinf, при частоте 400 МГц получается 200 тактов на синус
 
 
-- проверить работу с qspi flash
-	- проверить чтение/записть
+- проверить работу с qspi flash --ok
+	- не забыть вернуть нормальный, вместо hqspi.Init.ClockPrescaler = 32; --ok
+	- проверить чтение/запись
 	- erase 4k
 	- erase 64k
 	- erase all
@@ -551,9 +552,14 @@ https://www.keysight.com/ru/pd-2747858-pn-N6705C/dc-power-analyzer-modular-600-w
 	- чтение/записть не выровненное в начале
 	- чтение/записть не выровненное в конце
 
-	- не забыть вернуть нормлаьный hqspi.Init.ClockPrescaler = 32;
 
-	Erase 4k - 
+	Erase 4k - 96 ms
+	Erase 64k - 200 ms
+	Erase All - 7948 ms
+	Read 4k - 0.6 ms
+	Write 4k - 34 ms 
+	Write all - 35 seconds
+
 
 - предложение для отладки следующей
 	- дисплей таки по fsmc подключить, для скорости

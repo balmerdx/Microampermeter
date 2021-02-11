@@ -340,7 +340,6 @@ void SceneSingleQuant()
     uint32_t cur_time = TimeMs();
     if( (uint32_t)(cur_time-prev_draw_time) > 500)
     {
-        //DrawResultOld();
         DrawResult();
         prev_draw_time = cur_time;
     }
