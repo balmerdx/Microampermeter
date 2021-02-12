@@ -39,6 +39,7 @@
 #include "measure/usb_communication.h"
 #include "measure/mid_big_interval.h"
 #include "measure/my_filter.h"
+#include "measure/settings.h"
 
 /* Private variables ---------------------------------------------------------*/
 QSPI_HandleTypeDef hqspi;
@@ -91,7 +92,6 @@ bool CheckAllQspi(int idx, int* paddr)
 
 }
 
-
 /**
   * @brief  The application entry point.
   * @retval int
@@ -118,6 +118,12 @@ int main(void)
   QuadEncInit();
   GpiosInit();
   ADS1271_Init();
+
+  InitSettings();
+  LoadSettings();
+
+  InitSettingsPermanent();
+  LoadSettingsPermanent();
 
   SetResistor(RESISTOR_1_Kom);
   VBatInit();

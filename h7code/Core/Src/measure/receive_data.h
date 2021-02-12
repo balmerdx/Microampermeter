@@ -29,3 +29,8 @@ enum
 
 void SetReceiveDataFunc(int idx, ReceiveDataFunc fn);
 bool ContainsReceiveDataFunc(ReceiveDataFunc fn);
+
+//Разрешаем/запрещаем автоматическое переключение
+//диапазонов измерения в прерывании.
+void EnableAutoResistorSwitch(bool enable);
+bool IsEnabledAutoResistorSwitch();

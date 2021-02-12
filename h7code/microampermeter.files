@@ -10,6 +10,7 @@ Core/Src/hardware/m25p16.c
 Core/Src/hardware/qspi.c
 Core/Src/hardware/qspi_mem.c
 Core/Src/hardware/quadrature_encoder.c
+Core/Src/hardware/store_to_spi_flash.c
 Core/Src/hardware/vbat.c
 Core/Src/images/images.c
 Core/Src/measure/calculate.c
@@ -17,9 +18,13 @@ Core/Src/measure/iir_filter.c
 Core/Src/measure/mid_big_interval.c
 Core/Src/measure/my_filter.c
 Core/Src/measure/receive_data.c
+Core/Src/measure/settings.c
 Core/Src/measure/usb_communication.c
 Core/Src/gui/font_big_nums.c
 Core/Src/gui/menu_bandwidth.c
+Core/Src/gui/menu_calibration.c
+Core/Src/gui/menu_calibration_hard.c
+Core/Src/gui/menu_calibration_zero.c
 Core/Src/gui/menu_check_flash.c
 Core/Src/gui/menu_root.c
 Core/Src/gui/scene_single.c
@@ -37,6 +42,7 @@ Core/display/interface/menu.c
 Core/display/interface/plot.c
 Core/display/interface/progress_bar.c
 Core/display/interface/rect_utils.c
+Core/display/interface/scene_get_float.c
 Core/display/interface/statusbar.c
 USB_DEVICE/App/usb_device.c
 USB_DEVICE/App/usbd_cdc_if.c
@@ -87,6 +93,7 @@ Core/Src/hardware/m25p16.h
 Core/Src/hardware/qspi.h
 Core/Src/hardware/qspi_mem.h
 Core/Src/hardware/quadrature_encoder.h
+Core/Src/hardware/store_to_spi_flash.h
 Core/Src/hardware/vbat.h
 Core/Src/images/batery_empty.h
 Core/Src/images/batery_full.h
@@ -96,9 +103,13 @@ Core/Src/measure/iir_filter.h
 Core/Src/measure/mid_big_interval.h
 Core/Src/measure/my_filter.h
 Core/Src/measure/receive_data.h
+Core/Src/measure/settings.h
 Core/Src/measure/usb_communication.h
 Core/Src/gui/font_big_nums.h
 Core/Src/gui/menu_bandwidth.h
+Core/Src/gui/menu_calibration.h
+Core/Src/gui/menu_calibration_hard.h
+Core/Src/gui/menu_calibration_zero.h
 Core/Src/gui/menu_check_flash.h
 Core/Src/gui/menu_root.h
 Core/Src/gui/scene_single.h
@@ -117,6 +128,7 @@ Core/display/interface/menu.h
 Core/display/interface/plot.h
 Core/display/interface/progress_bar.h
 Core/display/interface/rect_utils.h
+Core/display/interface/scene_get_float.h
 Core/display/interface/statusbar.h
 USB_DEVICE/App/usb_device.h
 USB_DEVICE/App/usbd_cdc_if.h

@@ -19,6 +19,8 @@ typedef struct
 
 //Возвращает размер экрана.
 RectA R_DisplaySize();
+//Размер экрана без Statusbar & Header (вызывает внутри UTF_SetFont)
+RectA R_DisplaySizeWithoutHeaderAndStatusbar();
 
 //Разбивает прямоугольник in на два прямоугольника по горизонтали
 //Входной и выходной параметр могут совпадать по адресу.

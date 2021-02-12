@@ -16,6 +16,7 @@ DEPS += \
 	output/base/Core/Src/hardware/qspi.d \
 	output/base/Core/Src/hardware/qspi_mem.d \
 	output/base/Core/Src/hardware/quadrature_encoder.d \
+	output/base/Core/Src/hardware/store_to_spi_flash.d \
 	output/base/Core/Src/hardware/vbat.d \
 	output/base/Core/Src/images/images.d \
 	output/base/Core/Src/measure/calculate.d \
@@ -23,9 +24,13 @@ DEPS += \
 	output/base/Core/Src/measure/mid_big_interval.d \
 	output/base/Core/Src/measure/my_filter.d \
 	output/base/Core/Src/measure/receive_data.d \
+	output/base/Core/Src/measure/settings.d \
 	output/base/Core/Src/measure/usb_communication.d \
 	output/base/Core/Src/gui/font_big_nums.d \
 	output/base/Core/Src/gui/menu_bandwidth.d \
+	output/base/Core/Src/gui/menu_calibration.d \
+	output/base/Core/Src/gui/menu_calibration_hard.d \
+	output/base/Core/Src/gui/menu_calibration_zero.d \
 	output/base/Core/Src/gui/menu_check_flash.d \
 	output/base/Core/Src/gui/menu_root.d \
 	output/base/Core/Src/gui/scene_single.d \
@@ -43,6 +48,7 @@ DEPS += \
 	output/base/Core/display/interface/plot.d \
 	output/base/Core/display/interface/progress_bar.d \
 	output/base/Core/display/interface/rect_utils.d \
+	output/base/Core/display/interface/scene_get_float.d \
 	output/base/Core/display/interface/statusbar.d \
 	output/base/USB_DEVICE/App/usb_device.d \
 	output/base/USB_DEVICE/App/usbd_cdc_if.d \
@@ -97,6 +103,7 @@ OBJS += \
 	output/base/Core/Src/hardware/qspi.o \
 	output/base/Core/Src/hardware/qspi_mem.o \
 	output/base/Core/Src/hardware/quadrature_encoder.o \
+	output/base/Core/Src/hardware/store_to_spi_flash.o \
 	output/base/Core/Src/hardware/vbat.o \
 	output/base/Core/Src/images/images.o \
 	output/base/Core/Src/measure/calculate.o \
@@ -104,9 +111,13 @@ OBJS += \
 	output/base/Core/Src/measure/mid_big_interval.o \
 	output/base/Core/Src/measure/my_filter.o \
 	output/base/Core/Src/measure/receive_data.o \
+	output/base/Core/Src/measure/settings.o \
 	output/base/Core/Src/measure/usb_communication.o \
 	output/base/Core/Src/gui/font_big_nums.o \
 	output/base/Core/Src/gui/menu_bandwidth.o \
+	output/base/Core/Src/gui/menu_calibration.o \
+	output/base/Core/Src/gui/menu_calibration_hard.o \
+	output/base/Core/Src/gui/menu_calibration_zero.o \
 	output/base/Core/Src/gui/menu_check_flash.o \
 	output/base/Core/Src/gui/menu_root.o \
 	output/base/Core/Src/gui/scene_single.o \
@@ -124,6 +135,7 @@ OBJS += \
 	output/base/Core/display/interface/plot.o \
 	output/base/Core/display/interface/progress_bar.o \
 	output/base/Core/display/interface/rect_utils.o \
+	output/base/Core/display/interface/scene_get_float.o \
 	output/base/Core/display/interface/statusbar.o \
 	output/base/USB_DEVICE/App/usb_device.o \
 	output/base/USB_DEVICE/App/usbd_cdc_if.o \
@@ -213,6 +225,10 @@ output/base/Core/Src/hardware/quadrature_encoder.o: ./Core/Src/hardware/quadratu
 	@echo 'Building target: quadrature_encoder.c'
 	@$(CC) $(C_FLAGS) -o "$@" "$<"
 
+output/base/Core/Src/hardware/store_to_spi_flash.o: ./Core/Src/hardware/store_to_spi_flash.c
+	@echo 'Building target: store_to_spi_flash.c'
+	@$(CC) $(C_FLAGS) -o "$@" "$<"
+
 output/base/Core/Src/hardware/vbat.o: ./Core/Src/hardware/vbat.c
 	@echo 'Building target: vbat.c'
 	@$(CC) $(C_FLAGS) -o "$@" "$<"
@@ -241,6 +257,10 @@ output/base/Core/Src/measure/receive_data.o: ./Core/Src/measure/receive_data.c
 	@echo 'Building target: receive_data.c'
 	@$(CC) $(C_FLAGS) -o "$@" "$<"
 
+output/base/Core/Src/measure/settings.o: ./Core/Src/measure/settings.c
+	@echo 'Building target: settings.c'
+	@$(CC) $(C_FLAGS) -o "$@" "$<"
+
 output/base/Core/Src/measure/usb_communication.o: ./Core/Src/measure/usb_communication.c
 	@echo 'Building target: usb_communication.c'
 	@$(CC) $(C_FLAGS) -o "$@" "$<"
@@ -251,6 +271,18 @@ output/base/Core/Src/gui/font_big_nums.o: ./Core/Src/gui/font_big_nums.c
 
 output/base/Core/Src/gui/menu_bandwidth.o: ./Core/Src/gui/menu_bandwidth.c
 	@echo 'Building target: menu_bandwidth.c'
+	@$(CC) $(C_FLAGS) -o "$@" "$<"
+
+output/base/Core/Src/gui/menu_calibration.o: ./Core/Src/gui/menu_calibration.c
+	@echo 'Building target: menu_calibration.c'
+	@$(CC) $(C_FLAGS) -o "$@" "$<"
+
+output/base/Core/Src/gui/menu_calibration_hard.o: ./Core/Src/gui/menu_calibration_hard.c
+	@echo 'Building target: menu_calibration_hard.c'
+	@$(CC) $(C_FLAGS) -o "$@" "$<"
+
+output/base/Core/Src/gui/menu_calibration_zero.o: ./Core/Src/gui/menu_calibration_zero.c
+	@echo 'Building target: menu_calibration_zero.c'
 	@$(CC) $(C_FLAGS) -o "$@" "$<"
 
 output/base/Core/Src/gui/menu_check_flash.o: ./Core/Src/gui/menu_check_flash.c
@@ -319,6 +351,10 @@ output/base/Core/display/interface/progress_bar.o: ./Core/display/interface/prog
 
 output/base/Core/display/interface/rect_utils.o: ./Core/display/interface/rect_utils.c
 	@echo 'Building target: rect_utils.c'
+	@$(CC) $(C_FLAGS) -o "$@" "$<"
+
+output/base/Core/display/interface/scene_get_float.o: ./Core/display/interface/scene_get_float.c
+	@echo 'Building target: scene_get_float.c'
 	@$(CC) $(C_FLAGS) -o "$@" "$<"
 
 output/base/Core/display/interface/statusbar.o: ./Core/display/interface/statusbar.c

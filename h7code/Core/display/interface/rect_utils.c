@@ -134,7 +134,7 @@ void R_DrawStringJustify(const RectA* in, const char* str, UTF_JUSTIFY justify)
 void R_printNumI(const RectA* in, long num, UTF_JUSTIFY justify)
 {
     char st[27];
-    intToString(st, num, 0, ' ');
+    intToString(st, num, 0, NUM_SPACE);
     R_DrawStringJustify(in, st, justify);
 }
 

@@ -1,26 +1,24 @@
 #include "main.h"
 #include "calculate.h"
+#include "settings.h"
 
-int32_t current_zero_offset = -500;
 float current_mul = 1;
+const float voltage_mul_original =
+        1/10.f*//ОУ
+        1/0.027f*//Резистивный делитель
+        2.0f*//Напряжение Vref
+        1.f/(1<<23);
+float voltage_mul = voltage_mul_original*
+        1.222f/1.178f;
 
 static float VCurrentFromInt(int32_t measureData)
 {
     return measureData * current_mul;
 }
 
-static float VOutFromInt(int32_t measureData)
-{
-    float ku = 10; //ОУ
-    float ku1 = 0.027;//Резистивный делитель
-    float korr = 1.222f/1.178f; //Коррекция напряжения
-    float vmax = 2.0;
-    return measureData*vmax/(1<<23)/(ku*ku1)*korr;
-}
-
 float calculateCurrent(int32_t measureI, float RshuntInv)
 {
-    measureI += current_zero_offset; //adc0
+    measureI -= g_settings.offset_adc_I; //adc0
     float Vcurrent = VCurrentFromInt(measureI);
     return Vcurrent*RshuntInv;
 }
@@ -28,9 +26,7 @@ float calculateCurrent(int32_t measureI, float RshuntInv)
 void calculateRV(int32_t measureV, float current,
                float Rshunt, CalcResult* calc_result)
 {
-    measureV -= -100; //adc1
-
-    float Vout = VOutFromInt(measureV);
+    float Vout = (measureV-g_settings.offset_adc_V)*voltage_mul;
     calc_result->Vout = Vout;
 
     calc_result->current = current;

@@ -74,3 +74,21 @@ void HeaderRedraw()
     UTFT_setBackColor(STATUSBAR_BACKGROUND);
     UTF_DrawStringJustify(0, 0, g_header_text, UTFT_getDisplayXSize(), UTF_CENTER);
 }
+
+RectA R_DisplaySizeWithoutHeaderAndStatusbar()
+{
+    int ystart = HeaderYEnd();
+    int yend = StatusbarYMin();
+
+    RectA r = {
+        .x = 0,
+        .y = ystart,
+        .width = UTFT_getDisplayXSize(),
+        .height = yend-ystart,
+        .ascent = 0,
+        .back_color = VGA_BLACK
+        };
+
+    return r;
+
+}

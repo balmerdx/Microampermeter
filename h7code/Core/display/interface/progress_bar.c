@@ -50,6 +50,10 @@ void ProgressSetPos(float pos)
 
     int x_last = lround(g_pos*g_dx);
     int x_cur = lround(pos*g_dx);
+    if(x_last>=g_dx)
+        x_last = g_dx-1;
+    if(x_cur>=g_dx)
+        x_cur = g_dx-1;
 
     g_pos = pos;
 

@@ -46,6 +46,7 @@ static uint32_t sum_interrupt_time_us = 0; //Время суммарно про�
 static float percent_in_interrupt = 0; //Процент времени, проведённого в прерывании
 
 static ReceiveDataFunc data_func[RECEIVE_DATA_FUNC_COUNT] = {};
+static bool enable_auto_resistor_switch = true;
 
 static void SwitchUpResistor();
 static void SwitchDownResistor();
@@ -161,14 +162,17 @@ void ADS1271_ReceiveData(ADS1271_Data *data)
 
     ADS1271_FillSamplesR((uint8_t)r);
 
-    if(wait_before_new_switch_count>0)
-        wait_before_new_switch_count--;
-    else
-    if(switch_up)
-        SwitchUpResistor();
-    else
-    if(switch_down)
-        SwitchDownResistor();
+    if(enable_auto_resistor_switch)
+    {
+        if(wait_before_new_switch_count>0)
+            wait_before_new_switch_count--;
+        else
+        if(switch_up)
+            SwitchUpResistor();
+        else
+        if(switch_down)
+            SwitchDownResistor();
+    }
 
 
     uint16_t cur_end_time_us = TimeUs();
@@ -177,7 +181,7 @@ void ADS1271_ReceiveData(ADS1271_Data *data)
     prev_end_time_us = cur_end_time_us;
     count_interrupt++;
 
-    if(count_interrupt >=max_interrupt_to_stats )
+    if(count_interrupt >= max_interrupt_to_stats )
     {
         percent_in_interrupt = (100.0f*sum_interrupt_time_us)/sum_time_us;
 
@@ -323,4 +327,14 @@ bool ContainsReceiveDataFunc(ReceiveDataFunc fn)
         if(data_func[i] == fn)
             return true;
     return false;
+}
+
+void EnableAutoResistorSwitch(bool enable)
+{
+    enable_auto_resistor_switch = enable;
+}
+
+bool IsEnabledAutoResistorSwitch()
+{
+    return enable_auto_resistor_switch;
 }

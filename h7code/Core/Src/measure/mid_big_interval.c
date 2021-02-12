@@ -13,7 +13,6 @@
 //adc0 - I, adc1 - V
 static int32_t samples_V_count = 0;
 static int64_t adc_V_result = 0;
-static RESISTOR r_last = RESISTOR_1_Kom;
 static int32_t samples_current_count = 0;
 static double current_result = 0;
 static float current_min = CURRENT_MAX;

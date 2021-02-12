@@ -4,6 +4,7 @@
 // Header занимает одну верхнюю строку.
 
 #include "colors.h"
+#include "rect_utils.h"
 
 #define STATUSBAR_BACKGROUND COLOR_BACKGROUND_BLUE
 #define STATUSBAR_STR_LEN 60
@@ -30,3 +31,6 @@ int HeaderYEnd();
 void HeaderSetText(const char* text);
 void HeaderSetTextAndRedraw(const char* text);
 void HeaderRedraw();
+
+//Размер экрана без Statusbar & Header (вызывает внутри UTF_SetFont)
+RectA R_DisplaySizeWithoutHeaderAndStatusbar();
