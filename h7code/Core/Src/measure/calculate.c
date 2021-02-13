@@ -2,19 +2,14 @@
 #include "calculate.h"
 #include "settings.h"
 
-float current_mul_original = 1.f;
-float current_mul = 1.f;
-float voltage_mul_original = 1.f;
-float voltage_mul = 1.f;
-
 float calculateVoltage(int32_t measureV)
 {
-    return (measureV-g_settings.offset_adc_V)*voltage_mul;
+    return (measureV-g_settings.offset_adc_V) * g_settings_permanent.mul_V;
 }
 
 float calculateShuntVoltage(int32_t measureI)
 {
-    return (measureI-g_settings.offset_adc_I) * current_mul;
+    return (measureI-g_settings.offset_adc_I) * g_settings_permanent.mul_I;
 }
 
 float calculateCurrent(int32_t measureI, float RshuntInv)
@@ -45,20 +40,4 @@ void calculateRV(int32_t measureV, float current,
 
 void CorrectionInit()
 {
-    {//calculate currentMul
-        float ku = 10;
-        float vmax = 2.0;
-        //float korr = 1/0.9625f; //Коррекция тока
-        current_mul_original = vmax/(1<<23)/ku;//*korr;
-        current_mul = current_mul_original;
-    }
-
-    {
-        voltage_mul_original = 1/10.f*//ОУ
-            1/0.027f*//Резистивный делитель
-            2.0f*//Напряжение Vref
-            1.f/(1<<23);
-
-        voltage_mul = voltage_mul_original;
-    }
 }

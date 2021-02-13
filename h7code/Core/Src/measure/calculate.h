@@ -19,9 +19,3 @@ float calculateShuntVoltage(int32_t measureI);
 void calculateRV(int32_t measureV, float current,
                float Rshunt, CalcResult* calc_result);
 
-//Временно, потом в настройки перенесём.
-extern float voltage_mul_original;
-extern float voltage_mul;
-
-extern float current_mul_original;
-extern float current_mul;

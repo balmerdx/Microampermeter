@@ -159,12 +159,12 @@ void MenuCalibrationHardQuant()
     if(chs_state == CHS_GET_VOLTAGE && is_capture_complete)
     {
         //Считаем калибровку для коэффициента усиления напряжения
-        voltage_mul = measured_voltage/(CalibrationAdcV()-g_settings.offset_adc_V);
+        g_settings_permanent.mul_V = measured_voltage/(CalibrationAdcV()-g_settings.offset_adc_V);
 
         DrawAdcIV();
         char str[STATUSBAR_STR_LEN];
         strcpy(str, "corr voltage=");
-        catFloat(str, voltage_mul/voltage_mul_original, 3);
+        catFloat(str, g_settings_permanent.mul_V/mul_V_original, 3);
         StatusbarSetTextAndRedraw(str);
 
         R_DrawStringJustify(&r_info_str, "Connect resiztor 100Kom. Press key.", UTF_CENTER);
@@ -191,12 +191,12 @@ void MenuCalibrationHardQuant()
         float Rup = 100e3f;//100 KOm
         float I = Vout/(Rshunt+Rup);
 
-        current_mul = I / (adc_I-g_settings.offset_adc_I)*Rshunt;
+        g_settings_permanent.mul_I = I / (adc_I-g_settings.offset_adc_I)*Rshunt;
 
         DrawAdcIV();
         char str[STATUSBAR_STR_LEN];
         strcpy(str, "corr current=");
-        catFloat(str, current_mul/current_mul_original, 3);
+        catFloat(str, g_settings_permanent.mul_I/mul_I_original, 3);
         StatusbarSetTextAndRedraw(str);
 
         R_DrawStringJustify(&r_info_str, "Connect resistor 10Kom. Press key.", UTF_CENTER);

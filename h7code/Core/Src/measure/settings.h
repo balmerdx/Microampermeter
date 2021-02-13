@@ -36,3 +36,7 @@ bool SaveSettingsPermanent();
 
 float GetResistorValue(RESISTOR r);
 float GetResistorValueInv(RESISTOR r);
+
+//Пара констант коэффициентов усиления.
+extern float mul_V_original;
+extern float mul_I_original;

@@ -11,6 +11,9 @@ enum
 
 Settings g_settings;
 SettingsPermanent g_settings_permanent;
+
+float mul_V_original;
+float mul_I_original;
 static float resistor_value_inv[RESISTOR_1_Om+1];
 
 static void UpdateRinv();
@@ -24,8 +27,18 @@ void InitSettings()
 
 void InitSettingsPermanent()
 {
-    g_settings_permanent.mul_I = 1.f;
-    g_settings_permanent.mul_V = 1.f;
+    float ku = 10;
+    float Vref = 2.0;
+    //float korr = 1/0.9625f; //Коррекция тока
+    mul_I_original = Vref/(1<<23)/ku;//*korr;
+
+    mul_V_original = 1/ku*//ОУ
+        1/0.027f*//Резистивный делитель
+        Vref*//Напряжение Vref
+        1.f/(1<<23);
+
+    g_settings_permanent.mul_I = mul_I_original;
+    g_settings_permanent.mul_V = mul_V_original;
 
     g_settings_permanent.R_100_Om = GetResistorValueOriginal(RESISTOR_100_Om);
     g_settings_permanent.R_10_Om = GetResistorValueOriginal(RESISTOR_10_Om);
@@ -45,14 +58,14 @@ bool SaveSettings()
 
 bool LoadSettingsPermanent()
 {
-    bool ok = SpiFlashReadFromFlash(SETTINGS_SECTOR, sizeof(g_settings), &g_settings);
+    bool ok = SpiFlashReadFromFlash(SETTINGS_PERMANENT_SECTOR, sizeof(g_settings_permanent), &g_settings_permanent);
     UpdateRinv();
     return ok;
 }
 
 bool SaveSettingsPermanent()
 {
-    return SpiFlashWriteToFlash(SETTINGS_SECTOR, sizeof(g_settings), &g_settings);
+    return SpiFlashWriteToFlash(SETTINGS_PERMANENT_SECTOR, sizeof(g_settings_permanent), &g_settings_permanent);
 }
 
 static float PAR(float R1, float R2)
