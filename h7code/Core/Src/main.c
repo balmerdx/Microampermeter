@@ -119,6 +119,8 @@ int main(void)
   GpiosInit();
   ADS1271_Init();
 
+  CorrectionInit();//Shuld be before InitSettings, InitSettingsPermanent
+
   InitSettings();
   LoadSettings();
 
@@ -138,7 +140,6 @@ int main(void)
       while(1);
   }
 */
-  CorrectionInit();
   MyFilterInit();
 
   ADS1271_Start();

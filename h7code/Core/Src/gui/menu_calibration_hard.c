@@ -13,11 +13,26 @@
 #include "measure/calculate.h"
 #include "measure/settings.h"
 
+/*
+ * Как проходит калибровка коэффициентов усиления и номиналов резисторов.
+ * Перед этой калибровкой требуется offset откалибровать.
+ * Сначала отсоединяем все от прибора и выставляем напряжение питания в интервале 2.5-3 вольта.
+ * Измеряем его прибором и вводим энкодером.
+ * Коэффициент усиления напряжения откалиброван.
+ * Подключаем 100 КОм точный резистор. Предполагаем, что 1 КОм у нас достаточно точен.
+ * Получаем коэффициент усиления по току.
+ * Потом подключаем точный резистор 10 КОм и калибруем сопротивление 100 Ом.
+ * Потом подключаем точный резистор 1 КОм и калибруем сопротивление 10 Ом.
+ * Потом подключаем точный резистор 100 Ом и калибруем сопротивление 1 Ом.
+ * Всё, калибровка завершена.
+ */
 typedef enum
 {
     CHS_BEGIN,
     CHS_BEFORE_GET_VOLTAGE,
     CHS_GET_VOLTAGE,
+    CHS_BEFORE_GET_CURRENT_1K,
+    CHS_GET_CURRENT_1K,
     CHS_COMPLETE,
 } CalibrationHartdState;
 
@@ -101,7 +116,7 @@ void MenuCalibrationHardQuant()
 
     if(chs_state == CHS_BEGIN && pressed)
     {
-        SceneGetFloatStart("Enter Vout voltage", 0, 5, 4, 0, MenuCalibrationHardRestart);
+        SceneGetFloatStart("Enter Vout voltage (2.5-3.0 V)", 0, 5, 4, 0, MenuCalibrationHardRestart);
         chs_state = CHS_BEFORE_GET_VOLTAGE;
         return;
     }
@@ -116,18 +131,48 @@ void MenuCalibrationHardQuant()
 
     if(chs_state == CHS_GET_VOLTAGE && is_capture_complete)
     {
-        DrawAdcIV();
-
+        //Считаем калибровку для коэффициента усиления напряжения
         voltage_mul = measured_voltage/(CalibrationAdcV()-g_settings.offset_adc_V);
 
+        DrawAdcIV();
         char str[STATUSBAR_STR_LEN];
         strcpy(str, "corr voltage=");
         catFloat(str, voltage_mul/voltage_mul_original, 3);
-        strcat(str, " mv=");
-        catFloat(str, measured_voltage, 3);
-        R_DrawStringJustify(&r_info_str, str, UTF_CENTER);
+        StatusbarSetTextAndRedraw(str);
 
-        StatusbarSetTextAndRedraw("Press any key to exit");
+        R_DrawStringJustify(&r_info_str, "Connect resiztor 100Kom. Press key.", UTF_CENTER);
+        SetResistor(RESISTOR_1_Kom);
+        chs_state = CHS_BEFORE_GET_CURRENT_1K;
+        return;
+    }
+
+    if(chs_state == CHS_BEFORE_GET_CURRENT_1K && pressed)
+    {
+        CalibrationStartSum(CALIBRATION_CAPTURE_COUNT);
+        chs_state = CHS_GET_CURRENT_1K;
+        return;
+    }
+
+    if(chs_state == CHS_GET_CURRENT_1K && is_capture_complete)
+    {
+        //Считаем калибровку для коэффициента усиления тока
+        float Vout = calculateVoltage(CalibrationAdcV());
+        int32_t adc_I = CalibrationAdcI();
+
+        //Считаем, что резистор 1 КОм достаточно точен
+        float Rlow = GetResistorValue(GetResistor());
+        float Rup = 100e3f;//100 KOm
+        float I = Vout/(Rlow+Rup);
+
+        current_mul = I / (adc_I-g_settings.offset_adc_I)*Rlow;
+
+        DrawAdcIV();
+        char str[STATUSBAR_STR_LEN];
+        strcpy(str, "corr current=");
+        catFloat(str, current_mul/current_mul_original, 3);
+        StatusbarSetTextAndRedraw(str);
+
+        R_DrawStringJustify(&r_info_str, "Press key to exit", UTF_CENTER);
         chs_state = CHS_COMPLETE;
         return;
     }

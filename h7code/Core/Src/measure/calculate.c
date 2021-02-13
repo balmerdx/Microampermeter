@@ -2,31 +2,31 @@
 #include "calculate.h"
 #include "settings.h"
 
-float current_mul = 1;
-const float voltage_mul_original =
-        1/10.f*//ОУ
-        1/0.027f*//Резистивный делитель
-        2.0f*//Напряжение Vref
-        1.f/(1<<23);
-float voltage_mul = voltage_mul_original*
-        1.222f/1.178f;
+float current_mul_original = 1.f;
+float current_mul = 1.f;
+float voltage_mul_original = 1.f;
+float voltage_mul = 1.f;
 
 static float VCurrentFromInt(int32_t measureData)
 {
-    return measureData * current_mul;
+    return (measureData-g_settings.offset_adc_I) * current_mul;
 }
 
 float calculateCurrent(int32_t measureI, float RshuntInv)
 {
-    measureI -= g_settings.offset_adc_I; //adc0
     float Vcurrent = VCurrentFromInt(measureI);
     return Vcurrent*RshuntInv;
+}
+
+float calculateVoltage(int32_t measureV)
+{
+    return (measureV-g_settings.offset_adc_V)*voltage_mul;
 }
 
 void calculateRV(int32_t measureV, float current,
                float Rshunt, CalcResult* calc_result)
 {
-    float Vout = (measureV-g_settings.offset_adc_V)*voltage_mul;
+    float Vout = calculateVoltage(measureV);
     calc_result->Vout = Vout;
 
     calc_result->current = current;
@@ -47,8 +47,17 @@ void CorrectionInit()
     {//calculate currentMul
         float ku = 10;
         float vmax = 2.0;
-        float korr = 1/0.9625f; //Коррекция тока
-        current_mul = vmax/(1<<23)/ku*korr;
+        //float korr = 1/0.9625f; //Коррекция тока
+        current_mul_original = vmax/(1<<23)/ku;//*korr;
+        current_mul = current_mul_original;
     }
 
+    {
+        voltage_mul_original = 1/10.f*//ОУ
+            1/0.027f*//Резистивный делитель
+            2.0f*//Напряжение Vref
+            1.f/(1<<23);
+
+        voltage_mul = voltage_mul_original;
+    }
 }
