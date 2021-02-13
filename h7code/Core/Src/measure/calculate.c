@@ -7,21 +7,22 @@ float current_mul = 1.f;
 float voltage_mul_original = 1.f;
 float voltage_mul = 1.f;
 
-static float VCurrentFromInt(int32_t measureData)
-{
-    return (measureData-g_settings.offset_adc_I) * current_mul;
-}
-
-float calculateCurrent(int32_t measureI, float RshuntInv)
-{
-    float Vcurrent = VCurrentFromInt(measureI);
-    return Vcurrent*RshuntInv;
-}
-
 float calculateVoltage(int32_t measureV)
 {
     return (measureV-g_settings.offset_adc_V)*voltage_mul;
 }
+
+float calculateShuntVoltage(int32_t measureI)
+{
+    return (measureI-g_settings.offset_adc_I) * current_mul;
+}
+
+float calculateCurrent(int32_t measureI, float RshuntInv)
+{
+    float Vcurrent = calculateShuntVoltage(measureI);
+    return Vcurrent*RshuntInv;
+}
+
 
 void calculateRV(int32_t measureV, float current,
                float Rshunt, CalcResult* calc_result)

@@ -31,8 +31,14 @@ typedef enum
     CHS_BEGIN,
     CHS_BEFORE_GET_VOLTAGE,
     CHS_GET_VOLTAGE,
-    CHS_BEFORE_GET_CURRENT_1K,
-    CHS_GET_CURRENT_1K,
+    CHS_BEFORE_GET_CURRENT_1KOm,
+    CHS_GET_CURRENT_1KOm,
+    CHS_BEFORE_GET_CURRENT_100Om,
+    CHS_GET_CURRENT_100Om,
+    CHS_BEFORE_GET_CURRENT_10Om,
+    CHS_GET_CURRENT_10Om,
+    CHS_BEFORE_GET_CURRENT_1Om,
+    CHS_GET_CURRENT_1Om,
     CHS_COMPLETE,
 } CalibrationHartdState;
 
@@ -71,6 +77,27 @@ static void DrawAdcIV()
     strcpy(str, "adc_V=");
     catInt(str, CalibrationAdcV());
     R_DrawStringJustify(&r_adc_V, str, UTF_CENTER);
+}
+
+static float CalculateRShuntAndPrint(float Rup)
+{
+    float Vout = calculateVoltage(CalibrationAdcV());
+    float Vshunt = calculateShuntVoltage(CalibrationAdcI());
+    //I = Vout/(Rup + Rshunt) = Vshunt/Rshunt
+    //Vout*Rshunt = Vshunt*(Rup + Rshunt)
+    //(Vout-Vshunt)*Rshunt = Vshunt*Rup
+    float Rshunt = Rup*Vshunt/(Vout-Vshunt);
+
+    DrawAdcIV();
+    char str[STATUSBAR_STR_LEN];
+    strcpy(str, "Rshunt=");
+    catFloat(str, Rshunt, 3);
+    strcat(str, " Vshunt=");
+    catFloat(str, Vshunt*1e3f, 3);
+    strcat(str, " mV");
+    StatusbarSetTextAndRedraw(str);
+
+    return Rshunt;
 }
 
 void MenuCalibrationHardRestart()
@@ -142,29 +169,29 @@ void MenuCalibrationHardQuant()
 
         R_DrawStringJustify(&r_info_str, "Connect resiztor 100Kom. Press key.", UTF_CENTER);
         SetResistor(RESISTOR_1_Kom);
-        chs_state = CHS_BEFORE_GET_CURRENT_1K;
+        chs_state = CHS_BEFORE_GET_CURRENT_1KOm;
         return;
     }
 
-    if(chs_state == CHS_BEFORE_GET_CURRENT_1K && pressed)
+    if(chs_state == CHS_BEFORE_GET_CURRENT_1KOm && pressed)
     {
         CalibrationStartSum(CALIBRATION_CAPTURE_COUNT);
-        chs_state = CHS_GET_CURRENT_1K;
+        chs_state = CHS_GET_CURRENT_1KOm;
         return;
     }
 
-    if(chs_state == CHS_GET_CURRENT_1K && is_capture_complete)
+    if(chs_state == CHS_GET_CURRENT_1KOm && is_capture_complete)
     {
         //Считаем калибровку для коэффициента усиления тока
         float Vout = calculateVoltage(CalibrationAdcV());
         int32_t adc_I = CalibrationAdcI();
 
         //Считаем, что резистор 1 КОм достаточно точен
-        float Rlow = GetResistorValue(GetResistor());
+        float Rshunt = GetResistorValue(GetResistor());
         float Rup = 100e3f;//100 KOm
-        float I = Vout/(Rlow+Rup);
+        float I = Vout/(Rshunt+Rup);
 
-        current_mul = I / (adc_I-g_settings.offset_adc_I)*Rlow;
+        current_mul = I / (adc_I-g_settings.offset_adc_I)*Rshunt;
 
         DrawAdcIV();
         char str[STATUSBAR_STR_LEN];
@@ -172,6 +199,65 @@ void MenuCalibrationHardQuant()
         catFloat(str, current_mul/current_mul_original, 3);
         StatusbarSetTextAndRedraw(str);
 
+        R_DrawStringJustify(&r_info_str, "Connect resistor 10Kom. Press key.", UTF_CENTER);
+        SetResistor(RESISTOR_100_Om);
+        chs_state = CHS_BEFORE_GET_CURRENT_100Om;
+        return;
+    }
+
+    if(chs_state == CHS_BEFORE_GET_CURRENT_100Om && pressed)
+    {
+        CalibrationStartSum(CALIBRATION_CAPTURE_COUNT);
+        chs_state = CHS_GET_CURRENT_100Om;
+        return;
+    }
+
+    if(chs_state == CHS_GET_CURRENT_100Om && is_capture_complete)
+    {
+        float Rup = 10e3f;
+        g_settings_permanent.R_100_Om  = CalculateRShuntAndPrint(Rup);
+        /*
+        R_DrawStringJustify(&r_info_str, "Press key to exit", UTF_CENTER);
+        chs_state = CHS_COMPLETE;
+        */
+        R_DrawStringJustify(&r_info_str, "Connect resistor 1Kom. Press key.", UTF_CENTER);
+        SetResistor(RESISTOR_10_Om);
+        chs_state = CHS_BEFORE_GET_CURRENT_10Om;
+        return;
+    }
+
+    if(chs_state == CHS_BEFORE_GET_CURRENT_10Om && pressed)
+    {
+        CalibrationStartSum(CALIBRATION_CAPTURE_COUNT);
+        chs_state = CHS_GET_CURRENT_10Om;
+        return;
+    }
+
+    if(chs_state == CHS_GET_CURRENT_10Om && is_capture_complete)
+    {
+        float Rup = 1e3f;
+        g_settings_permanent.R_10_Om  = CalculateRShuntAndPrint(Rup);
+        /*
+        R_DrawStringJustify(&r_info_str, "Press key to exit", UTF_CENTER);
+        chs_state = CHS_COMPLETE;
+        */
+        R_DrawStringJustify(&r_info_str, "Connect resistor 100 Оm. Press key.", UTF_CENTER);
+        SetResistor(RESISTOR_1_Om);
+        chs_state = CHS_BEFORE_GET_CURRENT_1Om;
+        return;
+    }
+
+    if(chs_state == CHS_BEFORE_GET_CURRENT_1Om && pressed)
+    {
+        CalibrationStartSum(CALIBRATION_CAPTURE_COUNT);
+        chs_state = CHS_GET_CURRENT_1Om;
+        return;
+    }
+
+    if(chs_state == CHS_GET_CURRENT_1Om && is_capture_complete)
+    {
+        float Rup = 100.f;
+        g_settings_permanent.R_1_Om  = CalculateRShuntAndPrint(Rup);
         R_DrawStringJustify(&r_info_str, "Press key to exit", UTF_CENTER);
         chs_state = CHS_COMPLETE;
         return;
@@ -179,6 +265,7 @@ void MenuCalibrationHardQuant()
 
     if(chs_state == CHS_COMPLETE && pressed)
     {
+        SaveSettingsPermanent();
         CalibrationHardComplete();
         MenuCalibrationStart();
         return;
