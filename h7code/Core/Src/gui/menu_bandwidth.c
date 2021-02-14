@@ -4,6 +4,7 @@
 
 #include "interface/interface.h"
 #include "interface/menu.h"
+#include "measure/settings.h"
 
 static void MenuBandwidthQuant();
 
@@ -41,6 +42,7 @@ void MenuBandwidthQuant()
         return;
 
     g_filterX = MenuData();
+    SaveSettings();
 
     SceneSingleStart();
 }

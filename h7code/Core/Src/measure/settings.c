@@ -2,6 +2,8 @@
 
 #include "settings.h"
 #include "hardware/store_to_spi_flash.h"
+#include "my_filter.h"
+#include "gui/scene_single.h"
 
 enum
 {
@@ -23,6 +25,11 @@ void InitSettings()
 {
     g_settings.offset_adc_I = 0;
     g_settings.offset_adc_V = 0;
+
+    g_settings.line2_type = line2_type;
+    g_settings.filterX = g_filterX;
+    g_settings.dummy2 = 0;
+    g_settings.dummy3 = 0;
 }
 
 void InitSettingsPermanent()
@@ -48,11 +55,19 @@ void InitSettingsPermanent()
 
 bool LoadSettings()
 {
-    return SpiFlashReadFromFlash(SETTINGS_SECTOR, sizeof(g_settings), &g_settings);
+    bool ok = SpiFlashReadFromFlash(SETTINGS_SECTOR, sizeof(g_settings), &g_settings);
+    if(ok)
+    {
+        line2_type = g_settings.line2_type;
+        g_filterX = g_settings.filterX;
+    }
+    return ok;
 }
 
 bool SaveSettings()
 {
+    g_settings.line2_type = line2_type;
+    g_settings.filterX = g_filterX;
     return SpiFlashWriteToFlash(SETTINGS_SECTOR, sizeof(g_settings), &g_settings);
 }
 

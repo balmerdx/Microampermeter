@@ -7,6 +7,7 @@
 
 #include "interface/interface.h"
 #include "interface/menu.h"
+#include "measure/settings.h"
 
 static void MenuLine2Start();
 static void MenuLine2Quant();
@@ -95,5 +96,6 @@ void MenuLine2Quant()
         return;
 
     line2_type = MenuData();
+    SaveSettings();
     SceneSingleStart();
 }

@@ -8,6 +8,10 @@ typedef struct Settings
     //Предполагаем, что их можно перекалибровывать достаточно часто
     int32_t offset_adc_I;
     int32_t offset_adc_V;
+    uint8_t line2_type;
+    uint8_t filterX;
+    uint8_t dummy2;
+    uint8_t dummy3;
 } Settings;
 
 

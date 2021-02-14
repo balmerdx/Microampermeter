@@ -579,9 +579,10 @@ https://www.keysight.com/ru/pd-2747858-pn-N6705C/dc-power-analyzer-modular-600-w
 		Калибровку по напряжениям достаточно произвести один раз, 
 		По offset - можно часто проводить.
 
-	- вывести на экране все калибровочные коэффициенты
+	- вывести на экране все калибровочные коэффициенты --ok
 
-- запоминаем настройку line2
+- запоминаем настройку line2 --ok
+- запоминаем настройку FilterX --ok
 
 - fastlog2 может пригодиться
 	https://github.com/izenecloud/izenelib/blob/9d5958100e2ce763fc75f27217adf982d7c9d902/include/util/math.h
