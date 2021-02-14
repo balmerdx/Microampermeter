@@ -1,6 +1,8 @@
 #include "main.h"
 
 #include <math.h>
+#include <string.h>
+#include "float_to_string.h"
 #include "histogram_plot.h"
 #include "fonts/font_8x15.h"
 #include "interface/colors.h"
@@ -71,15 +73,17 @@ void HistogramPlot(float* data)
 
     mul_y = g_inner_rect.height/(max_y-min_y);
 
+    HistogramPlotSetFont();
     UTFT_setColor(g_front_color);
     UTFT_setBackColor(g_back_color);
     int y2 = g_inner_rect.y + g_inner_rect.height - 1;
     for(int i=0; i<g_baskets; i++)
     {
         int x1 = g_inner_rect.x + i * mul_x;
-        int x2 = x1 + mul_x - 1;
+        //int x2 = x1 + mul_x - 1;
+        int x2 = x1 + mul_x - 2;
         float yf = data[i];
-        int y = g_inner_rect.y + g_inner_rect.height  - ceilf((yf-min_y)*mul_y);
+        int y = g_inner_rect.y + g_inner_rect.height  - lroundf((yf-min_y)*mul_y);
 
         if(y > g_inner_rect.y)
             UTFT_fillRectBack(x1, g_inner_rect.y, x2, y-1);
@@ -141,12 +145,14 @@ void DrawVerticalTicks(float min_y, float max_y)
     float lg = log10f(max_y);
     float digits = floorf(lg);
     float dy = powf(10.f, digits);
+    float ykoeff = 1.f/dy;
     if(max_y > 5*dy)
     {
         //ok
     } else
     {
         dy *= 0.1f;
+        ykoeff *= 10;
         if(max_y > 20*dy)
         {
             dy *= 5;
@@ -157,14 +163,25 @@ void DrawVerticalTicks(float min_y, float max_y)
         }
     }
 
+    HistogramPlotSetFont();
+    UTFT_setBackColor(g_back_color);
     R_FillRectBack(&g_left_tick);
+
     int x1 = g_left_tick.x;
     int x2 = x1 + g_left_tick.width - 1;
     for(float yf=0; yf<max_y; yf += dy)
     {
         UTFT_setColor(g_outline_color);
         int y = g_inner_rect.y + g_inner_rect.height  - ceilf((yf-min_y)*mul_y);
-        UTFT_drawLine(x1, y, x2, y);
+        //UTFT_drawLine(x1, y, x2, y);
+        if(yf>0)
+        {
+            char str[8];
+            intToString(str, lroundf(yf*ykoeff), 0, NUM_SPACE);
+            //floatToString(str, sizeof(str), yf*ykoeff, 1, 0, false);
+            UTFT_setColor(g_front_color);
+            UTF_DrawStringJustify(x1, y, str, g_left_tick.width, UTF_LEFT);
+        }
     }
 }
 

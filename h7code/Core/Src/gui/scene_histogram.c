@@ -32,6 +32,6 @@ void SceneHistogramQuant()
     phase += 0.01f;
 
     for(int i=0; i<HISTOGRAMM_BASKETS; i++)
-        data[i] = sinf(i*0.1f+phase)+1;
+        data[i] = sinf(i*0.03f+phase)+1;
     HistogramPlot(data);
 }
