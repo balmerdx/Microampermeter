@@ -63,6 +63,8 @@ endif
 C_FLAGS += -fdata-sections -ffunction-sections
 LDFLAGS += -Wl,--gc-sections 
 
+C_FLAGS += -ffast-math
+
 #C_FLAGS += -std=gnu11
 #C_FLAGS += -funsigned-char
 C_DEFINES+= \

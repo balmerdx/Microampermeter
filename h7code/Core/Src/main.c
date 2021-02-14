@@ -33,6 +33,7 @@
 #include "interface/interface.h"
 
 #include "gui/scene_single.h"
+#include "gui/scene_histogram.h"
 
 #include "measure/calculate.h"
 #include "measure/receive_data.h"
@@ -54,43 +55,6 @@ static void MX_GPIO_Init(void);
 static void VREF_Init();
 static void MX_QUADSPI_Init(void);
 static void MX_SAI1_Init(void);
-
-#define QBUFFER_SIZE 2500
-#define QBUFFER_ADDR ((1<<QSPI_MEM_BITS)-1-QBUFFER_SIZE)
-static uint32_t buffer_qspi[QBUFFER_SIZE];
-
-bool WriteAllQspi(int idx)
-{
-    //Пишем почти всю память, только кусочек в конце не дописываем
-    for(int addr = 0; addr+sizeof(buffer_qspi)-1 < (1<<QSPI_MEM_BITS); addr+= sizeof(buffer_qspi))
-    {
-        for(int i=0; i<QBUFFER_SIZE; i++)
-            buffer_qspi[i] = idx++;
-        if(!QspiMemWrite(&hqspi, addr, sizeof(buffer_qspi), (uint8_t*)buffer_qspi))
-            return false;
-    }
-
-    return true;
-}
-
-bool CheckAllQspi(int idx, int* paddr)
-{
-    for(int addr = 0; addr+sizeof(buffer_qspi)-1 < (1<<QSPI_MEM_BITS); addr+= sizeof(buffer_qspi))
-    {
-        if(!QspiMemRead(&hqspi, addr, sizeof(buffer_qspi), (uint8_t*)buffer_qspi))
-            return false;
-
-        for(int i=0; i<QBUFFER_SIZE; i++)
-            if(buffer_qspi[i] != idx++)
-            {
-                *paddr = addr + i*4;
-                return false;
-            }
-    }
-
-    return true;
-
-}
 
 /**
   * @brief  The application entry point.
@@ -133,13 +97,6 @@ int main(void)
   UTFT_InitLCD(UTFT_LANDSCAPE);
   UTFT_fillScr(VGA_BLACK);
   UTFT_setColor(VGA_WHITE);
-/*
-  if(!QspiMemInit(&hqspi))
-  {
-      UTF_DrawString(0, 100, "QspiMemInit fail");
-      while(1);
-  }
-*/
   MyFilterInit();
 
   ADS1271_Start();
@@ -148,7 +105,8 @@ int main(void)
 
   SetReceiveDataFunc(0, ReceiveDataFunc_Mid);
 
-  SceneSingleStart();
+  //SceneSingleStart();
+  SceneHistogramStart();
 
   while (1)
   {

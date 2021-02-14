@@ -8,6 +8,9 @@
 #include "interface/interface.h"
 #include "interface/menu.h"
 #include "measure/settings.h"
+#include <string.h>
+#include "float_to_string.h"
+#include "histogram/histogram_data.h"
 
 static void MenuLine2Start();
 static void MenuLine2Quant();
@@ -20,6 +23,7 @@ enum
     MR_LINE2,
     MR_CHECK_FLASH,
     MR_CALIBRATION,
+    MR_LOG2,
 };
 
 static int last_menu_index = 0;
@@ -32,6 +36,7 @@ void MenuRootStart()
     MenuAdd("Line2", MR_LINE2);
     MenuAdd("Check flash", MR_CHECK_FLASH);
     MenuAdd("Calibration", MR_CALIBRATION);
+    MenuAdd("Test log2", MR_LOG2);
 
     MenuSetIndex(last_menu_index);
     MenuRedraw();
@@ -72,6 +77,32 @@ void MenuRootQuant()
     if(MenuData()==MR_CALIBRATION)
     {
         MenuCalibrationStart();
+        return;
+    }
+
+    if(MenuData()==MR_LOG2)
+    {
+        char str[60];
+
+        //Test error
+        /*
+        strcpy(str, "norm=");
+        catFloat(str, TestFastLog2(TEST_LOG2_NORMAL)*1e4, 4);
+        strcat(str, "e-4 fast=");
+        catFloat(str, TestFastLog2(TEST_LOG2_FAST), 4);
+        strcat(str, " faster=");
+        catFloat(str, TestFastLog2(TEST_LOG2_FASTER), 4);
+        */
+
+        //Test speed
+        strcpy(str, "speed(us) norm=");
+        catInt(str, TestFastLogSpeed(TEST_LOG2_NORMAL));
+        strcat(str, "fast=");
+        catInt(str, TestFastLogSpeed(TEST_LOG2_FAST));
+        strcat(str, " faster=");
+        catInt(str, TestFastLogSpeed(TEST_LOG2_FASTER));
+
+        StatusbarSetTextAndRedraw(str);
         return;
     }
 

@@ -18,6 +18,8 @@ DEPS += \
 	output/base/Core/Src/hardware/quadrature_encoder.d \
 	output/base/Core/Src/hardware/store_to_spi_flash.d \
 	output/base/Core/Src/hardware/vbat.d \
+	output/base/Core/Src/histogram/histogram_data.d \
+	output/base/Core/Src/histogram/histogram_plot.d \
 	output/base/Core/Src/images/images.d \
 	output/base/Core/Src/measure/calculate.d \
 	output/base/Core/Src/measure/iir_filter.d \
@@ -33,6 +35,7 @@ DEPS += \
 	output/base/Core/Src/gui/menu_calibration_zero.d \
 	output/base/Core/Src/gui/menu_check_flash.d \
 	output/base/Core/Src/gui/menu_root.d \
+	output/base/Core/Src/gui/scene_histogram.d \
 	output/base/Core/Src/gui/scene_single.d \
 	output/base/Core/display/UTFT.d \
 	output/base/Core/display/float_to_string.d \
@@ -105,6 +108,8 @@ OBJS += \
 	output/base/Core/Src/hardware/quadrature_encoder.o \
 	output/base/Core/Src/hardware/store_to_spi_flash.o \
 	output/base/Core/Src/hardware/vbat.o \
+	output/base/Core/Src/histogram/histogram_data.o \
+	output/base/Core/Src/histogram/histogram_plot.o \
 	output/base/Core/Src/images/images.o \
 	output/base/Core/Src/measure/calculate.o \
 	output/base/Core/Src/measure/iir_filter.o \
@@ -120,6 +125,7 @@ OBJS += \
 	output/base/Core/Src/gui/menu_calibration_zero.o \
 	output/base/Core/Src/gui/menu_check_flash.o \
 	output/base/Core/Src/gui/menu_root.o \
+	output/base/Core/Src/gui/scene_histogram.o \
 	output/base/Core/Src/gui/scene_single.o \
 	output/base/Core/display/UTFT.o \
 	output/base/Core/display/float_to_string.o \
@@ -233,6 +239,14 @@ output/base/Core/Src/hardware/vbat.o: ./Core/Src/hardware/vbat.c
 	@echo 'Building target: vbat.c'
 	@$(CC) $(C_FLAGS) -o "$@" "$<"
 
+output/base/Core/Src/histogram/histogram_data.o: ./Core/Src/histogram/histogram_data.c
+	@echo 'Building target: histogram_data.c'
+	@$(CC) $(C_FLAGS) -o "$@" "$<"
+
+output/base/Core/Src/histogram/histogram_plot.o: ./Core/Src/histogram/histogram_plot.c
+	@echo 'Building target: histogram_plot.c'
+	@$(CC) $(C_FLAGS) -o "$@" "$<"
+
 output/base/Core/Src/images/images.o: ./Core/Src/images/images.c
 	@echo 'Building target: images.c'
 	@$(CC) $(C_FLAGS) -o "$@" "$<"
@@ -291,6 +305,10 @@ output/base/Core/Src/gui/menu_check_flash.o: ./Core/Src/gui/menu_check_flash.c
 
 output/base/Core/Src/gui/menu_root.o: ./Core/Src/gui/menu_root.c
 	@echo 'Building target: menu_root.c'
+	@$(CC) $(C_FLAGS) -o "$@" "$<"
+
+output/base/Core/Src/gui/scene_histogram.o: ./Core/Src/gui/scene_histogram.c
+	@echo 'Building target: scene_histogram.c'
 	@$(CC) $(C_FLAGS) -o "$@" "$<"
 
 output/base/Core/Src/gui/scene_single.o: ./Core/Src/gui/scene_single.c

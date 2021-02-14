@@ -19,6 +19,7 @@ sources = [
 		"Core/Inc",
 		"Core/Src",
 		"Core/Src/hardware",
+		"Core/Src/histogram",
 		"Core/Src/images",
 		"Core/Src/measure",
 		"Core/Src/gui",

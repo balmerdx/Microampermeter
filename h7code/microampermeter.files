@@ -12,6 +12,8 @@ Core/Src/hardware/qspi_mem.c
 Core/Src/hardware/quadrature_encoder.c
 Core/Src/hardware/store_to_spi_flash.c
 Core/Src/hardware/vbat.c
+Core/Src/histogram/histogram_data.c
+Core/Src/histogram/histogram_plot.c
 Core/Src/images/images.c
 Core/Src/measure/calculate.c
 Core/Src/measure/iir_filter.c
@@ -27,6 +29,7 @@ Core/Src/gui/menu_calibration_hard.c
 Core/Src/gui/menu_calibration_zero.c
 Core/Src/gui/menu_check_flash.c
 Core/Src/gui/menu_root.c
+Core/Src/gui/scene_histogram.c
 Core/Src/gui/scene_single.c
 Core/display/UTFT.c
 Core/display/float_to_string.c
@@ -95,6 +98,9 @@ Core/Src/hardware/qspi_mem.h
 Core/Src/hardware/quadrature_encoder.h
 Core/Src/hardware/store_to_spi_flash.h
 Core/Src/hardware/vbat.h
+Core/Src/histogram/fastmath.h
+Core/Src/histogram/histogram_data.h
+Core/Src/histogram/histogram_plot.h
 Core/Src/images/batery_empty.h
 Core/Src/images/batery_full.h
 Core/Src/images/images.h
@@ -112,8 +118,10 @@ Core/Src/gui/menu_calibration_hard.h
 Core/Src/gui/menu_calibration_zero.h
 Core/Src/gui/menu_check_flash.h
 Core/Src/gui/menu_root.h
+Core/Src/gui/scene_histogram.h
 Core/Src/gui/scene_single.h
 Core/display/UTFT.h
+Core/display/UTFT_low_level.h
 Core/display/float_to_string.h
 Core/display/utf_font.h
 Core/display/fonts/font_8x15.h

@@ -9,11 +9,10 @@
     Speed up
 */
 
-uint32_t* utf_current_font = 0;
+#include "UTFT.h"
+#include "UTFT_low_level.h"
 
 #ifdef DISPLAY_ILI9481
-#include "hardware/hw_ili9481.h"
-
 enum ENUM_ILI9481
 {
     ENTER_SLEEP_MODE = 0x10,
@@ -77,8 +76,6 @@ enum ENUM_ILI9481
 static int disp_x_size=320-1, disp_y_size=480-1;
 
 #else
-#include "hardware/hw_ili9341.h"
-
 enum ENUM_ILI9341
 {
     ENTER_SLEEP_MODE = 0x10,
@@ -113,7 +110,6 @@ enum ENUM_ILI9341
 static int disp_x_size=239, disp_y_size=319;
 
 #endif
-#include "UTFT.h"
 
 #define swap(type, i, j) {type t = i; i = j; j = t;}
 
@@ -137,7 +133,7 @@ static uint16_t back_color;
 void UTFT_drawHLine(int x, int y, int l);
 void UTFT_drawVLine(int x, int y, int l);
 
-void delay(uint32_t nTime)
+static void delay(uint32_t nTime)
 {
 	if(nTime==0)
 		nTime = 1;
@@ -176,8 +172,6 @@ void TFTBeginData()
     HwLcdPinDC(1);
     HwLcdPinCE(0);
 }
-
-#define TFTWriteData(data) HwLcdSend16NoWait(data)
 
 void TFTEndData()
 {

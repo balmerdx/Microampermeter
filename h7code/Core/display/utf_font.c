@@ -43,7 +43,7 @@ const char* UTF_UTF8to16(const char* in, uint16_t* out_symbol);
 void UTF_CalcPalette2bit(uint16_t palette[4]);
 static int UTF_DrawStringInternal(int x, int y, const char* str, int max_x);
 
-extern uint32_t* utf_current_font;//defined in UTFT
+static uint32_t* utf_current_font = 0;
 
 UtfFontCharInfo* UTF_FindInfo(uint16_t symbol)
 {
