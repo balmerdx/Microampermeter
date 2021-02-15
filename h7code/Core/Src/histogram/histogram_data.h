@@ -18,16 +18,3 @@ struct HistogramData
 int HistogramCurrentToBasketIndex(float current);
 float HistogramBasketMaxCurrent(int basketIndex);
 
-
-typedef enum
-{
-    TEST_LOG2_NORMAL,
-    TEST_LOG2_FAST,
-    TEST_LOG2_FASTER,
-} TestLog2Type;
-
-float TestFastLog2(TestLog2Type type);
-int TestFastLogSpeed(TestLog2Type type);
-
-
-

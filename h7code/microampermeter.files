@@ -98,7 +98,6 @@ Core/Src/hardware/qspi_mem.h
 Core/Src/hardware/quadrature_encoder.h
 Core/Src/hardware/store_to_spi_flash.h
 Core/Src/hardware/vbat.h
-Core/Src/histogram/fastmath.h
 Core/Src/histogram/histogram_data.h
 Core/Src/histogram/histogram_plot.h
 Core/Src/images/batery_empty.h

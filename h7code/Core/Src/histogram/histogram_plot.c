@@ -133,6 +133,41 @@ void DrawHorizontalTicks()
     }
 }
 
+//Рисуем одну рисочку с числом.
+//Она рисуется всегда прямоугольником по ширине g_left_tick.width
+//Если цифра выходит за пределы разрешенного прямоугольника, то она не рисуется.
+static void DrawVerticalTick(int y, int number, int* out_ymin, int* out_ymax)
+{
+    int x2 = g_left_tick.x + g_left_tick.width - 1;
+    int x1 = x2 - tick_len;
+    UTFT_setColor(g_outline_color);
+    UTFT_drawLine(x1, y, x2, y);
+
+    int ymin = y - UTF_Height()/2;
+    int ymax = ymin + UTF_Height()-1;
+    if(ymin>=g_inner_rect.y && ymax<g_inner_rect.y+g_inner_rect.height)
+    {
+        //Заполняем пространство сверху и снизу от tick
+        UTFT_fillRectBack(x1, ymin, x2, y-1);
+        UTFT_fillRectBack(x1, y+1, x2, ymax);
+
+        int text_width = g_left_tick.width - tick_len - 1;
+        char str[8];
+        intToString(str, number, 0, NUM_SPACE);
+        //Тонкая линия после текста
+        UTFT_fillRectBack(g_left_tick.x+text_width, ymin, g_left_tick.x+text_width, ymax);
+        UTF_DrawStringJustify(g_left_tick.x, ymin, str, text_width, UTF_RIGHT);
+    } else
+    {
+        //Однопиксельная высота
+        ymax = ymin = y;
+        UTFT_fillRectBack(g_left_tick.x, ymin, x1-1, ymin);
+    }
+
+    *out_ymin = ymin;
+    *out_ymax = ymax;
+}
+
 void DrawVerticalTicks(float min_y, float max_y)
 {
     //Предполагаем, что min_y==0
@@ -165,23 +200,26 @@ void DrawVerticalTicks(float min_y, float max_y)
 
     HistogramPlotSetFont();
     UTFT_setBackColor(g_back_color);
-    R_FillRectBack(&g_left_tick);
+    int last_ymax = g_inner_rect.y + g_inner_rect.height - 1;
 
-    int x1 = g_left_tick.x;
-    int x2 = x1 + g_left_tick.width - 1;
     for(float yf=0; yf<max_y; yf += dy)
     {
-        UTFT_setColor(g_outline_color);
         int y = g_inner_rect.y + g_inner_rect.height  - ceilf((yf-min_y)*mul_y);
-        //UTFT_drawLine(x1, y, x2, y);
-        if(yf>0)
+        int number = lroundf(yf*ykoeff);
+        int ymin, ymax;
+        DrawVerticalTick(y, number, &ymin, &ymax);
+
+        if(ymax < last_ymax)
         {
-            char str[8];
-            intToString(str, lroundf(yf*ykoeff), 0, NUM_SPACE);
-            //floatToString(str, sizeof(str), yf*ykoeff, 1, 0, false);
-            UTFT_setColor(g_front_color);
-            UTF_DrawStringJustify(x1, y, str, g_left_tick.width, UTF_LEFT);
+            UTFT_fillRectBack(g_left_tick.x, ymax, g_left_tick.x+g_left_tick.width-1, last_ymax);
+            last_ymax = ymin - 1;
         }
     }
+
+    if(g_left_tick.y < last_ymax)
+    {
+        UTFT_fillRectBack(g_left_tick.x, g_left_tick.y, g_left_tick.x+g_left_tick.width-1, last_ymax);
+    }
+
 }
 
