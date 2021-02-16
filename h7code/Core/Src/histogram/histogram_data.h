@@ -10,11 +10,13 @@
 #define HISTOGRAMM_BASKET_PER_DECADE 8
 #define HISTOGRAMM_MIN_CURRENT 10e-9f
 #define HISTOGRAMM_MAX_CURRENT 100e-3f
-struct HistogramData
+typedef struct HistogramData
 {
     float data[HISTOGRAMM_BASKETS];
-};
+} HistogramData;
 
 int HistogramCurrentToBasketIndex(float current);
 float HistogramBasketMaxCurrent(int basketIndex);
+
+void HistogramDataClear(HistogramData* data);
 

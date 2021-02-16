@@ -27,6 +27,7 @@ static volatile float current_min_stored = 0;
 static volatile float current_max_stored = 0;
 
 static void OnFilterNextSample(float current);
+void OnFilterNextSampleHistogramm(float current);
 
 void ReceiveDataFunc_Mid(DataNoError* data)
 {
@@ -68,6 +69,8 @@ void OnFilterNextSample(float current)
     current_result += current;
     current_min = fminf(current_min, current);
     current_max = fmaxf(current_max, current);
+
+    OnFilterNextSampleHistogramm(current);
 }
 
 MidData GetMidData()

@@ -19,3 +19,9 @@ float HistogramBasketMaxCurrent(int basketIndex)
 {
     return powf(10.f, basketIndex/(float)HISTOGRAMM_BASKET_PER_DECADE)*HISTOGRAMM_MIN_CURRENT;
 }
+
+void HistogramDataClear(HistogramData* data)
+{
+    for(int i=0; i<HISTOGRAMM_BASKETS; i++)
+        data->data[i] = 0.f;
+}

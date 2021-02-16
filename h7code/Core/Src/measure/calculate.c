@@ -18,7 +18,6 @@ float calculateCurrent(int32_t measureI, float RshuntInv)
     return Vcurrent*RshuntInv;
 }
 
-
 void calculateRV(int32_t measureV, float current,
                float Rshunt, CalcResult* calc_result)
 {

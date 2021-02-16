@@ -21,6 +21,8 @@ static uint16_t g_left_axe_chars = 3;
 static int g_baskets;
 static int mul_x = 1;
 static float mul_y = 1;
+static float min_y = 1;
+static float max_y = 1;
 
 static const char* const str_tick_bottom[] = {
     "10 nA",
@@ -34,7 +36,7 @@ static const char* const str_tick_bottom[] = {
 };
 
 static void DrawHorizontalTicks();
-static void DrawVerticalTicks(float min_y, float max_y);
+static void DrawVerticalTicks();
 
 static void HistogramPlotSetFont()
 {
@@ -60,8 +62,18 @@ void HistogramPlotInit(RectA* rect, int baskets)
     DrawHorizontalTicks();
 }
 
+void HistogramSetAxisY(float in_min_y, float in_max_y)
+{
+    min_y = in_min_y;
+    max_y = in_max_y;
+    mul_y = g_inner_rect.height/(max_y-min_y);
+
+    DrawVerticalTicks();
+}
+
 void HistogramPlot(float* data)
 {
+/*
     float max_y = 1e-9f;
     float min_y = 0;
     for(int i=0; i<g_baskets; i++)
@@ -70,8 +82,7 @@ void HistogramPlot(float* data)
         if(y > max_y)
             max_y = y;
     }
-
-    mul_y = g_inner_rect.height/(max_y-min_y);
+*/
 
     HistogramPlotSetFont();
     UTFT_setColor(g_front_color);
@@ -83,6 +94,8 @@ void HistogramPlot(float* data)
         //int x2 = x1 + mul_x - 1;
         int x2 = x1 + mul_x - 2;
         float yf = data[i];
+        yf = fmaxf(yf, min_y);
+        yf = fminf(yf, max_y);
         int y = g_inner_rect.y + g_inner_rect.height  - lroundf((yf-min_y)*mul_y);
 
         if(y > g_inner_rect.y)
@@ -94,14 +107,12 @@ void HistogramPlot(float* data)
 
     int xlast = g_inner_rect.x + g_baskets * mul_x;
     UTFT_fillRectBack(xlast, g_inner_rect.y, g_inner_rect.x+g_inner_rect.width-1, y2);
-
-    DrawVerticalTicks(min_y, max_y);
 }
 
 void DrawHorizontalTicks()
 {
     UTFT_setColor(g_outline_color);
-    UTFT_drawLine(g_bottom_tick.x, g_bottom_tick.y, g_bottom_tick.y+g_bottom_tick.width-1, g_bottom_tick.y);
+    UTFT_drawLine(g_bottom_tick.x, g_bottom_tick.y, g_bottom_tick.x+g_bottom_tick.width-1, g_bottom_tick.y);
     int y1 = g_bottom_tick.y+1;
     int y2 = y1 + tick_len - 1;
     int ystr = y2 + 1;
@@ -138,7 +149,7 @@ void DrawHorizontalTicks()
 //Если цифра выходит за пределы разрешенного прямоугольника, то она не рисуется.
 static void DrawVerticalTick(int y, int number, int* out_ymin, int* out_ymax)
 {
-    int x2 = g_left_tick.x + g_left_tick.width - 1;
+    int x2 = g_left_tick.x + g_left_tick.width - 2;
     int x1 = x2 - tick_len;
     UTFT_setColor(g_outline_color);
     UTFT_drawLine(x1, y, x2, y);
@@ -168,7 +179,7 @@ static void DrawVerticalTick(int y, int number, int* out_ymin, int* out_ymax)
     *out_ymax = ymax;
 }
 
-void DrawVerticalTicks(float min_y, float max_y)
+void DrawVerticalTicks()
 {
     //Предполагаем, что min_y==0
     //mul_y - определено при вызова DrawVerticalTicks
@@ -177,48 +188,58 @@ void DrawVerticalTicks(float min_y, float max_y)
     //Стараемся нарисовать не менее двух и не более 15-ти чисел.
     //Числа от 1 до 9. На сколько они должны умножаться - пишется где-то в отдельном месте.
 
-    float lg = log10f(max_y);
+    if(max_y <= min_y)
+        return;
+
+    bool use_ycoeff = false;
+
+    float diapazon = fabsf(max_y - min_y);
+    float lg = log10f(diapazon);
     float digits = floorf(lg);
     float dy = powf(10.f, digits);
     float ykoeff = 1.f/dy;
-    if(max_y > 5*dy)
+    if(diapazon > 5*dy)
     {
         //ok
     } else
     {
         dy *= 0.1f;
         ykoeff *= 10;
-        if(max_y > 20*dy)
+        if(diapazon > 20*dy)
         {
             dy *= 5;
         } else
-        if(max_y > 10*dy)
+        if(diapazon > 10*dy)
         {
             dy *= 2;
         }
     }
 
+    int last_xmax = g_left_tick.x + g_left_tick.width - 1;
+    int last_ymax = g_left_tick.y + g_left_tick.height - 1;
     HistogramPlotSetFont();
+    UTFT_setColor(g_outline_color);
     UTFT_setBackColor(g_back_color);
-    int last_ymax = g_inner_rect.y + g_inner_rect.height - 1;
+    UTFT_drawLine(last_xmax, g_inner_rect.y, last_xmax, last_ymax);
 
-    for(float yf=0; yf<max_y; yf += dy)
+    float yf_min = ceilf(min_y/dy)*dy;
+    for(float yf=yf_min; yf<max_y; yf += dy)
     {
         int y = g_inner_rect.y + g_inner_rect.height  - ceilf((yf-min_y)*mul_y);
-        int number = lroundf(yf*ykoeff);
+        int number = use_ycoeff?lroundf(yf*ykoeff):lroundf(yf);
         int ymin, ymax;
         DrawVerticalTick(y, number, &ymin, &ymax);
 
         if(ymax < last_ymax)
         {
-            UTFT_fillRectBack(g_left_tick.x, ymax, g_left_tick.x+g_left_tick.width-1, last_ymax);
+            UTFT_fillRectBack(g_left_tick.x, ymax, last_xmax-1, last_ymax);
             last_ymax = ymin - 1;
         }
     }
 
     if(g_left_tick.y < last_ymax)
     {
-        UTFT_fillRectBack(g_left_tick.x, g_left_tick.y, g_left_tick.x+g_left_tick.width-1, last_ymax);
+        UTFT_fillRectBack(g_left_tick.x, g_left_tick.y, last_xmax-1, last_ymax);
     }
 
 }
