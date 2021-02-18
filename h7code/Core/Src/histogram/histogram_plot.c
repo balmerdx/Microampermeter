@@ -55,6 +55,7 @@ void HistogramPlotInit(RectA* rect, int baskets)
     g_baskets = baskets;
     mul_x = g_inner_rect.width / g_baskets;
 
+    R_FillRectBack(&g_inner_rect);
     g_left_tick.back_color = VGA_NAVY;
     R_FillRectBack(&g_left_tick);
     R_FillRectBack(&g_bottom_tick);

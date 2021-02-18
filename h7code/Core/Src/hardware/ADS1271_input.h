@@ -6,6 +6,8 @@ void ADS1271_Start();
 //Количество сэмплов, которые мы получаем в функции ADS1271_ReceiveData
 #define ADS1271_RECEIVE_DATA_SIZE 16
 
+extern float ADS1271_SPS; //Количество сэмплов в секунду
+
 typedef struct
 {
     //Младшие 24 бита - данные. Старшие 8 бит - пустые

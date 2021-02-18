@@ -8,6 +8,7 @@
 #define ADS1271_NOT_PDWN_PORT GPIOE
 #define ADS1271_NOT_PDWN_PIN GPIO_PIN_1
 
+float ADS1271_SPS = 27e6f/256;
 
 #define AUDIO_BUFFER_SIZE (ADS1271_RECEIVE_DATA_SIZE*2)
 ADS1271_Data audio_buf[ADS1271_RECEIVE_DATA_SIZE*2] __attribute__((section(".d2_data"))) __attribute__ ((aligned (32)));

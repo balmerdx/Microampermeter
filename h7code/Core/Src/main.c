@@ -62,58 +62,60 @@ static void MX_SAI1_Init(void);
   */
 int main(void)
 {
-  /* MCU Configuration--------------------------------------------------------*/
+    /* MCU Configuration--------------------------------------------------------*/
 
-  /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
-  HAL_Init();
+    /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
+    HAL_Init();
 
-  /* Configure the system clock */
-  SystemClock_Config400MHz();
+    /* Configure the system clock */
+    SystemClock_Config400MHz();
 
-  DelayInit();
-  VREF_Init();
-  /* Initialize all configured peripherals */
-  MX_GPIO_Init();
-  MX_DMA_Init();
-  MX_SAI1_Init();
-  MX_USB_DEVICE_Init();
-  MX_QUADSPI_Init();
+    DelayInit();
+    VREF_Init();
+    /* Initialize all configured peripherals */
+    MX_GPIO_Init();
+    MX_DMA_Init();
+    MX_SAI1_Init();
+    MX_USB_DEVICE_Init();
+    MX_QUADSPI_Init();
 
-  QuadEncInit();
-  GpiosInit();
-  ADS1271_Init();
+    QuadEncInit();
+    GpiosInit();
+    ADS1271_Init();
 
-  CorrectionInit();//Shuld be before InitSettings, InitSettingsPermanent
+    CorrectionInit();//Shuld be before InitSettings, InitSettingsPermanent
 
-  InitSettings();
-  LoadSettings();
+    InitSettings();
+    LoadSettings();
 
-  InitSettingsPermanent();
-  LoadSettingsPermanent();
+    InitSettingsPermanent();
+    LoadSettingsPermanent();
 
-  SetResistor(RESISTOR_1_Kom);
-  VBatInit();
+    SetResistor(RESISTOR_1_Kom);
+    VBatInit();
 
-  UTFT_InitLCD(UTFT_LANDSCAPE);
-  UTFT_fillScr(VGA_BLACK);
-  UTFT_setColor(VGA_WHITE);
-  MyFilterInit();
+    UTFT_InitLCD(UTFT_LANDSCAPE);
+    UTFT_fillScr(VGA_BLACK);
+    UTFT_setColor(VGA_WHITE);
+    MyFilterInit();
 
-  ADS1271_Start();
-  g_default_font = font_condensed30;
-  InterfaceStart();
+    ADS1271_Start();
+    g_default_font = font_condensed30;
+    InterfaceStart();
 
-  SetReceiveDataFunc(0, ReceiveDataFunc_Mid);
+    SetReceiveDataFunc(0, ReceiveDataFunc_Mid);
 
-  //SceneSingleStart();
-  SceneHistogramStart();
+    if(g_settings.is_histogramm)
+        SceneHistogramStart();
+    else
+        SceneSingleStart();
 
-  while (1)
-  {
-      InterfaceQuant();
-      UsbCommandsQuant();
-      DelayMs(1);
-  }
+    while (1)
+    {
+        InterfaceQuant();
+        UsbCommandsQuant();
+        DelayMs(1);
+    }
 }
 
 

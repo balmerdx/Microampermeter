@@ -1,6 +1,7 @@
 #include "main.h"
 #include "my_filter.h"
 #include "iir_filter.h"
+#include "hardware/ADS1271_input.h"
 
 FilterX g_filterX = FilterX_16;
 
@@ -114,4 +115,20 @@ void FilterNextSample(float sample, FilterNextSampleCallback callback)
             }
         }
     }
+}
+
+float FilterSPS()
+{
+    float f = 1.0f;
+    switch(g_filterX)
+    {
+    case FilterX_1: f = 1.0f; break;
+    case FilterX_4: f = 1.0f/4; break;
+    case FilterX_16: f = 1.0f/16; break;
+    case FilterX_64: f = 1.0f/64; break;
+    case FilterX_256: f = 1.0f/256; break;
+    case FilterX_1024: f = 1.0f/1024; break;
+    }
+
+    return ADS1271_SPS * f;
 }

@@ -5,13 +5,13 @@
 #include "scene_single.h"
 #include "menu_root.h"
 #include "menu_bandwidth.h"
+#include "gui_settings.h"
 
 #include "UTFT.h"
 #include "float_to_string.h"
 #include "fonts/font_condensed30.h"
 #include "font_big_nums.h"
 #include "interface/interface.h"
-#include "interface/rect_utils.h"
 #include "interface/statusbar.h"
 #include "images/images.h"
 
@@ -22,7 +22,6 @@
 
 #define COLOR_BACK1 VGA_TEAL
 #define COLOR_BACK2 VGA_NAVY
-const int X_MARGIN = 2; //Столько места желательно оставлять справа/слева от надписи
 
 const bool enable_percent_view = true;
 
@@ -46,7 +45,7 @@ static RectA r_current_min;
 static RectA r_current_max;
 
 static void SceneSingleQuant();
-static void UpdateVbatLow();
+
 
 static uint32_t prev_draw_time;
 
@@ -168,6 +167,8 @@ void SceneSingleStart()
             R_FillRectBack(&r_current_max);
         }
     }
+
+    UpdateVbatLow(&r_battery);
 
     prev_draw_time = TimeMs();
     InterfaceGoto(SceneSingleQuant);
@@ -332,7 +333,7 @@ void DrawResult()
         R_DrawStringJustify(&r_percent, buf, UTF_RIGHT);
     }
 
-    UpdateVbatLow();
+    UpdateVbatLow(&r_battery);
 }
 
 void SceneSingleQuant()
@@ -352,7 +353,7 @@ void SceneSingleQuant()
     }
 }
 
-void UpdateVbatLow()
+void UpdateVbatLow(RectA* r)
 {
-    UTFT_drawBitmap4(r_battery.x, r_battery.y, VBatIsLow()?&batery_empty_img:&batery_full_img);
+    UTFT_drawBitmap4(r->x, r->y, VBatIsLow()?&batery_empty_img:&batery_full_img);
 }

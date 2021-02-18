@@ -35,6 +35,8 @@ DEPS += \
 	output/base/Core/Src/gui/menu_calibration_zero.d \
 	output/base/Core/Src/gui/menu_check_flash.d \
 	output/base/Core/Src/gui/menu_root.d \
+	output/base/Core/Src/gui/menu_root_histogram.d \
+	output/base/Core/Src/gui/menu_time_histogram.d \
 	output/base/Core/Src/gui/scene_histogram.d \
 	output/base/Core/Src/gui/scene_single.d \
 	output/base/Core/display/UTFT.d \
@@ -125,6 +127,8 @@ OBJS += \
 	output/base/Core/Src/gui/menu_calibration_zero.o \
 	output/base/Core/Src/gui/menu_check_flash.o \
 	output/base/Core/Src/gui/menu_root.o \
+	output/base/Core/Src/gui/menu_root_histogram.o \
+	output/base/Core/Src/gui/menu_time_histogram.o \
 	output/base/Core/Src/gui/scene_histogram.o \
 	output/base/Core/Src/gui/scene_single.o \
 	output/base/Core/display/UTFT.o \
@@ -305,6 +309,14 @@ output/base/Core/Src/gui/menu_check_flash.o: ./Core/Src/gui/menu_check_flash.c
 
 output/base/Core/Src/gui/menu_root.o: ./Core/Src/gui/menu_root.c
 	@echo 'Building target: menu_root.c'
+	@$(CC) $(C_FLAGS) -o "$@" "$<"
+
+output/base/Core/Src/gui/menu_root_histogram.o: ./Core/Src/gui/menu_root_histogram.c
+	@echo 'Building target: menu_root_histogram.c'
+	@$(CC) $(C_FLAGS) -o "$@" "$<"
+
+output/base/Core/Src/gui/menu_time_histogram.o: ./Core/Src/gui/menu_time_histogram.c
+	@echo 'Building target: menu_time_histogram.c'
 	@$(CC) $(C_FLAGS) -o "$@" "$<"
 
 output/base/Core/Src/gui/scene_histogram.o: ./Core/Src/gui/scene_histogram.c

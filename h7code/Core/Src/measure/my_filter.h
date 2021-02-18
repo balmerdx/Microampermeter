@@ -19,3 +19,6 @@ typedef void (*FilterNextSampleCallback)(float current);
 extern FilterX g_filterX;
 //В зависимости от g_filterX может вызываться не каждый квант.
 void FilterNextSample(float sample, FilterNextSampleCallback callback);
+
+//Количество сэмплов в секунду (вызовов функеции FilterNextSampleCallback)
+float FilterSPS();

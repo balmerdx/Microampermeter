@@ -29,6 +29,8 @@ Core/Src/gui/menu_calibration_hard.c
 Core/Src/gui/menu_calibration_zero.c
 Core/Src/gui/menu_check_flash.c
 Core/Src/gui/menu_root.c
+Core/Src/gui/menu_root_histogram.c
+Core/Src/gui/menu_time_histogram.c
 Core/Src/gui/scene_histogram.c
 Core/Src/gui/scene_single.c
 Core/display/UTFT.c
@@ -111,12 +113,15 @@ Core/Src/measure/receive_data.h
 Core/Src/measure/settings.h
 Core/Src/measure/usb_communication.h
 Core/Src/gui/font_big_nums.h
+Core/Src/gui/gui_settings.h
 Core/Src/gui/menu_bandwidth.h
 Core/Src/gui/menu_calibration.h
 Core/Src/gui/menu_calibration_hard.h
 Core/Src/gui/menu_calibration_zero.h
 Core/Src/gui/menu_check_flash.h
 Core/Src/gui/menu_root.h
+Core/Src/gui/menu_root_histogram.h
+Core/Src/gui/menu_time_histogram.h
 Core/Src/gui/scene_histogram.h
 Core/Src/gui/scene_single.h
 Core/display/UTFT.h

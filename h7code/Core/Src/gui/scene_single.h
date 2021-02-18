@@ -1,4 +1,5 @@
 #pragma once
+#include "interface/rect_utils.h"
 
 typedef enum
 {
@@ -12,3 +13,5 @@ extern LINE2_TYPE line2_type;
 //Показывает на экране одно значение усреднённое
 //ток или сопротивление. И кучу дебаговой информации по краям.
 void SceneSingleStart();
+
+void UpdateVbatLow(RectA* r);
