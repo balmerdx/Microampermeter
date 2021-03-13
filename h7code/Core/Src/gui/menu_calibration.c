@@ -13,7 +13,8 @@
 enum
 {
     MC_RETURN,
-    MC_OFFSET_ZERO,
+    MC_OFFSET_ZERO_I,
+    MC_OFFSET_ZERO_V,
     MC_CALIBRATION_HARD,
     MC_VIEW_CALIBRATION,
 };
@@ -26,7 +27,8 @@ void MenuCalibrationStart()
 {
     MenuReset("Calibration");
     MenuAdd("..", MC_RETURN);
-    MenuAdd("Offset zero", MC_OFFSET_ZERO);
+    MenuAdd("Offset zero current", MC_OFFSET_ZERO_I);
+    MenuAdd("Offset zero voltage", MC_OFFSET_ZERO_V);
     MenuAdd("System calibration", MC_CALIBRATION_HARD);
     MenuAdd("View last calibration", MC_VIEW_CALIBRATION);
     MenuRedraw();
@@ -46,9 +48,15 @@ void MenuCalibrationQuant()
         return;
     }
 
-    if(MenuData()==MC_OFFSET_ZERO)
+    if(MenuData()==MC_OFFSET_ZERO_I)
     {
-        MenuCalibrationZeroStart();
+        MenuCalibrationZeroStart(true);
+        return;
+    }
+
+    if(MenuData()==MC_OFFSET_ZERO_V)
+    {
+        MenuCalibrationZeroStart(false);
         return;
     }
 

@@ -2,7 +2,7 @@
 #include "measure/receive_data.h"
 #include "interface/rect_utils.h"
 
-void MenuCalibrationZeroStart();
+void MenuCalibrationZeroStart(bool calibrateI);
 
 //Интерфейс для калибровочной функции
 enum {

@@ -202,16 +202,33 @@ void catFloatFixed(char* outstr, int outstr_size, float value, int digits)
 //places - общее количество символов
 void PrintFixedSizeFloat(const RectA* in, float value, int digits, UTF_JUSTIFY justify)
 {
-/*
-    char st[27];
-    floatToString(st, 27, value, places, 0, false);
-    st[places] = 0;
-*/
     char st[27];
     st[0] = 0;
     catFloatFixed(st, sizeof(st), value, digits);
-
     R_DrawStringJustify(in, st, justify);
+}
+
+char* CurrentSuffix(float current, float* mul)
+{
+    *mul = 1;
+    char* suffix = "";
+    current = fabsf(current);
+    if(current > 1e-3f)
+    {
+        *mul = 1e3f;
+        suffix = "mA";
+    } else
+    if(current > 1e-6f)
+    {
+        *mul = 1e6f;
+        suffix = "uA";
+    } else
+    {
+        *mul = 1e9f;
+        suffix = "nA";
+    }
+
+    return suffix;
 }
 
 void DrawResult()
@@ -261,23 +278,8 @@ void DrawResult()
     }
 
     {
-        float mul = 1;
-        char* suffix = "";
-        if(calc_result.current > 1e-3f)
-        {
-            mul = 1e3f;
-            suffix = "mA";
-        } else
-        if(calc_result.current > 1e-6f)
-        {
-            mul = 1e6f;
-            suffix = "uA";
-        } else
-        {
-            mul = 1e9f;
-            suffix = "nA";
-        }
-
+        float mul;
+        char* suffix = CurrentSuffix(calc_result.current, &mul);
         R_DrawStringJustify(&r_param_current, suffix, UTF_LEFT);
         UTF_SetFont(font_big_nums);
         PrintFixedSizeFloat(&r_num_current, calc_result.current*mul, places, UTF_RIGHT);

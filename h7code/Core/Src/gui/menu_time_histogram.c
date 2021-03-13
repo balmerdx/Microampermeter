@@ -9,11 +9,13 @@
 enum
 {
     TH_100MS,
-    TH_300MS,
+    TH_200MS,
+    TH_500MS,
     TH_1S,
-    TH_3S,
+    TH_2S,
+    TH_5S,
     TH_10S,
-    TH_30S,
+    TH_20S,
 };
 
 static void MenuTimeHistogramQuant();
@@ -23,11 +25,13 @@ void MenuTimeHistogramStart()
     MenuReset2("Histogram sum time");
 
     MenuAdd("100 ms", TH_100MS);
-    MenuAdd("300 ms", TH_300MS);
+    MenuAdd("200 ms", TH_200MS);
+    MenuAdd("500 ms", TH_500MS);
     MenuAdd("1 s", TH_1S);
-    MenuAdd("3 s", TH_3S);
+    MenuAdd("2 s", TH_2S);
+    MenuAdd("5 s", TH_5S);
     MenuAdd("10 s", TH_10S);
-    MenuAdd("30 s", TH_30S);
+    MenuAdd("20 s", TH_20S);
 
     MenuSetIndex(g_settings.sum_histogramm_time);
     MenuRedraw();
@@ -50,11 +54,13 @@ float GetTimeHistogram()
     switch(g_settings.sum_histogramm_time)
     {
     case TH_100MS: return 0.1f;
-    case TH_300MS: return 0.3f;
+    case TH_200MS: return 0.2f;
+    case TH_500MS: return 0.5f;
     case TH_1S: return 1.f;
-    case TH_3S: return 3.f;
+    case TH_2S: return 2.f;
+    case TH_5S: return 5.f;
     case TH_10S: return 10.f;
-    case TH_30S: return 30.f;
+    case TH_20S: return 20.f;
     }
 
     return 1.f;

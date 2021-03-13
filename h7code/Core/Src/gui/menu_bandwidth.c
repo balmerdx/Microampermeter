@@ -1,6 +1,7 @@
 #include "main.h"
 #include "menu_bandwidth.h"
 #include "scene_single.h"
+#include "scene_histogram.h"
 
 #include "interface/interface.h"
 #include "interface/menu.h"
@@ -44,5 +45,8 @@ void MenuBandwidthQuant()
     g_filterX = MenuData();
     SaveSettings();
 
-    SceneSingleStart();
+    if(g_settings.is_histogramm)
+        SceneHistogramStart();
+    else
+        SceneSingleStart();
 }

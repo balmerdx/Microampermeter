@@ -1,5 +1,6 @@
 #include "main.h"
 #include <sys/param.h>
+#include <string.h>
 
 #include "scene_histogram.h"
 #include "scene_single.h"
@@ -8,8 +9,11 @@
 #include "menu_bandwidth.h"
 #include "menu_time_histogram.h"
 #include "gui_settings.h"
+#include "measure/mid_big_interval.h"
+#include "measure/calculate.h"
 
 #include "UTFT.h"
+#include "float_to_string.h"
 #include "interface/interface.h"
 #include "interface/statusbar.h"
 #include "images/images.h"
@@ -17,8 +21,8 @@
 static void SceneHistogramQuant();
 
 static RectA r_battery;
-
-static float data[HISTOGRAMM_BASKETS];
+static RectA r_current;
+static RectA r_voltage;
 
 static float ymin = 0, ymax = 105;
 
@@ -54,8 +58,10 @@ void OnFilterNextSampleHistogramm(float current)
 
 void SceneHistogramStart()
 {
-    for(int i=0; i<HISTOGRAMM_BASKETS; i++)
-        data[i] = i*i;
+    {
+        float sum_time = GetTimeHistogram();
+        samples_to_complete = lroundf(FilterSPS() * sum_time);
+    }
 
     RectA r_tmp = R_DisplaySize();
     RectA r_hist;
@@ -83,25 +89,52 @@ void SceneHistogramStart()
         R_DrawStringJustify(&r_bandwidth, FilterXBandwidth(g_filterX), UTF_CENTER);
     }
 
-    R_DrawStringJustify(&r_bottom, "Statusbar", UTF_CENTER);
+    R_SplitX1(&r_bottom, r_bottom.width/2, &r_current, &r_voltage);
+
+    R_DrawStringJustify(&r_current, "Current", UTF_CENTER);
+    R_DrawStringJustify(&r_voltage, "Voltage", UTF_CENTER);
     UpdateVbatLow(&r_battery);
 
     HistogramPlotInit(&r_hist, HISTOGRAMM_BASKETS);
     HistogramSetAxisY(ymin, ymax);
-    HistogramPlot(data);
 
     HistogramDataClear(&g_cur_data);
     HistogramDataClear(&g_complete_data);
 
     samples_to_complete = GetTimeHistogram() * FilterSPS();
     samples_to_complete_inv_percent = 100.f/samples_to_complete;
-    enable_histogramm = true;
 
+    g_complete_data_filed = false;
+    enable_histogramm = true;
 
     InterfaceGoto(SceneHistogramQuant);
 }
 
-float phase = 0;
+void DrawMid()
+{
+    MidData d = GetMidData();
+    CalcResult calc_result;
+    calculateRV(d.adc_V, d.current,
+                   GetResistorValue(GetResistor()), &calc_result);
+
+    int places = 4;
+    char st[50];
+    st[0] = 0;
+    float mul;
+    char* suffix = CurrentSuffix(calc_result.current, &mul);
+    catFloatFixed(st, sizeof(st), calc_result.current*mul, places);
+    strcat(st, " ");
+    strcat(st, suffix);
+
+    UTF_SetFont(g_default_font);
+    R_DrawStringJustify(&r_current, st, UTF_CENTER);
+
+
+    floatToString(st, 27, calc_result.Vout, 4, 0, false);
+    strcat(st, " V");
+    R_DrawStringJustify(&r_voltage, st, UTF_CENTER);
+}
+
 void SceneHistogramQuant()
 {
     if(EncButtonPressed())
@@ -110,16 +143,11 @@ void SceneHistogramQuant()
         return;
     }
 
-    if(0)
-    {
-        phase += 0.01f;
-        for(int i=0; i<HISTOGRAMM_BASKETS; i++)
-            data[i] = (sinf(i*0.03f+phase)+1)*0.5f*(ymax-ymin)+ymin;
-        HistogramPlot(data);
-    } else
+    if(g_complete_data_filed)
     {
         g_complete_data_filed = false;
         HistogramPlot(g_complete_data.data);
+        DrawMid();
     }
 
     UpdateVbatLow(&r_battery);

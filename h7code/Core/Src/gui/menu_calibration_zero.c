@@ -24,7 +24,8 @@
 */
 typedef enum
 {
-    CZS_BEGIN,
+    CZS_BEGIN_CALIBRATE_I,
+    CZS_BEGIN_CALIBRATE_V,
     CZS_BEFORE_OPEN_FIXTURE,
     CZS_OPEN_FIXTURE,
     CZS_BEFORE_SHORT_FIXTURE,
@@ -175,8 +176,20 @@ static void DrawAdcIV()
     R_DrawStringJustify(&r_adc_V, str, UTF_CENTER);
 }
 
+static void SaveAndDraw()
+{
+    if(SaveSettings())
+    {
+        UTFT_setColor(VGA_WHITE);
+        R_DrawStringJustify(&r_info_str, "Saved. Press key to exit.", UTF_CENTER);
+    } else
+    {
+        UTFT_setColor(VGA_RED);
+        R_DrawStringJustify(&r_info_str, "Save fail. Press key to exit.", UTF_CENTER);
+    }
+}
 
-void MenuCalibrationZeroStart()
+void MenuCalibrationZeroStart(bool calibrateI)
 {
     HeaderSetTextAndRedraw("Calibration zero offset");
     StatusbarSetTextAndRedraw("Calibration zero offset");
@@ -209,7 +222,7 @@ void MenuCalibrationZeroStart()
     //Вызывать функцию суммирования специальную.
     CalibrationZeroStart();
 
-    czs_state = CZS_BEGIN;
+    czs_state = calibrateI ? CZS_BEGIN_CALIBRATE_I : CZS_BEGIN_CALIBRATE_V;
 
     InterfaceGoto(MenuCalibrationZeroQuant);
 }
@@ -219,10 +232,18 @@ static void MenuCalibrationZeroQuant()
     bool pressed = EncButtonPressed();
     bool is_capture_complete = CalibrationIsSumCompleteQuant();
 
-    if(czs_state == CZS_BEGIN)
+    if(czs_state == CZS_BEGIN_CALIBRATE_I)
     {
         UTFT_setColor(VGA_WHITE);
         R_DrawStringJustify(&r_info_str, "Open fixture and press key", UTF_CENTER);
+        czs_state = CZS_BEFORE_OPEN_FIXTURE;
+        return;
+    }
+
+    if(czs_state == CZS_BEGIN_CALIBRATE_V)
+    {
+        UTFT_setColor(VGA_WHITE);
+        R_DrawStringJustify(&r_info_str, "Short Vout & Isense fixture and press key.", UTF_CENTER);
         czs_state = CZS_BEFORE_OPEN_FIXTURE;
         return;
     }
@@ -239,12 +260,10 @@ static void MenuCalibrationZeroQuant()
 
     if(czs_state==CZS_OPEN_FIXTURE && is_capture_complete)
     {
-        UTFT_setColor(VGA_WHITE);
-        R_DrawStringJustify(&r_info_str, "Short Vout & Isense fixture and press key.", UTF_CENTER);
         g_settings.offset_adc_I = CalibrationAdcI();
         DrawAdcIV();
-
-        czs_state = CZS_BEFORE_SHORT_FIXTURE;
+        SaveAndDraw();
+        czs_state = CZS_COMPLETE;
         return;
     }
 
@@ -261,19 +280,8 @@ static void MenuCalibrationZeroQuant()
     if(czs_state==CZS_SHORT_FIXTURE && is_capture_complete)
     {
         g_settings.offset_adc_V = CalibrationAdcV();
-
         DrawAdcIV();
-
-        if(SaveSettings())
-        {
-            UTFT_setColor(VGA_WHITE);
-            R_DrawStringJustify(&r_info_str, "Saved. Press key to exit.", UTF_CENTER);
-        } else
-        {
-            UTFT_setColor(VGA_RED);
-            R_DrawStringJustify(&r_info_str, "Save fail. Press key to exit.", UTF_CENTER);
-        }
-
+        SaveAndDraw();
         czs_state = CZS_COMPLETE;
         return;
     }

@@ -20,5 +20,5 @@ extern FilterX g_filterX;
 //В зависимости от g_filterX может вызываться не каждый квант.
 void FilterNextSample(float sample, FilterNextSampleCallback callback);
 
-//Количество сэмплов в секунду (вызовов функеции FilterNextSampleCallback)
+//Количество сэмплов в секунду (вызовов функции FilterNextSampleCallback)
 float FilterSPS();

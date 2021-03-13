@@ -15,3 +15,6 @@ extern LINE2_TYPE line2_type;
 void SceneSingleStart();
 
 void UpdateVbatLow(RectA* r);
+
+char* CurrentSuffix(float current, float* mul);
+void catFloatFixed(char* outstr, int outstr_size, float value, int digits);
