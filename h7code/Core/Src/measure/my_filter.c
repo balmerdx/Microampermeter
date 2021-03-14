@@ -2,6 +2,7 @@
 #include "my_filter.h"
 #include "iir_filter.h"
 #include "hardware/ADS1271_input.h"
+#include "calculate.h"
 
 FilterX g_filterX = FilterX_16;
 
@@ -56,6 +57,26 @@ FilterData data4 = {
 
 static int current_index;
 
+//Сумма напряжения для boxcar фильтра
+static int64_t voltage_sum;
+static int voltage_count;
+
+static inline void AddVoltage(int32_t sampleV)
+{
+    voltage_sum += sampleV;
+    voltage_count++;
+}
+
+//Эту функцию можно вызывать только 1 раз после заполнения данных.
+//Потом будет падение.
+static float GetNextVoltage()
+{
+    float mid = calculateVoltage((voltage_sum+(voltage_count>>1))/voltage_count);
+    voltage_sum = 0;
+    voltage_count = 0;
+    return mid;
+}
+
 void MyFilterInit()
 {
     SosFilterInit(&data0);
@@ -65,6 +86,8 @@ void MyFilterInit()
     SosFilterInit(&data4);
 
     current_index = 0;
+    voltage_sum = 0;
+    voltage_count = 0;
 }
 
 float SosFilterProcess_x4_0(float newX)
@@ -78,38 +101,39 @@ float SosFilterProcess_x4_1(float newX)
     return SosFilterProcess(&data1, newX);
 }
 
-void FilterNextSample(float sample, FilterNextSampleCallback callback)
+void FilterNextSample(float sampleI, int32_t adcV, FilterNextSampleCallback callback)
 {
+    AddVoltage(adcV);
     if(g_filterX==FilterX_1)
-        callback(sample);
+        callback(sampleI, GetNextVoltage());
     current_index++;
 
-    float sample1 = SosFilterProcess(&data0, sample);
+    float sample1 = SosFilterProcess(&data0, sampleI);
     if((current_index&(4-1))==0)
     {
         if(g_filterX==FilterX_4)
-            callback(sample1);
+            callback(sample1, GetNextVoltage());
 
         float sample2 = SosFilterProcess(&data1, sample1);
         if((current_index&(16-1))==0)
         {
             if(g_filterX==FilterX_16)
-                callback(sample2);
+                callback(sample2, GetNextVoltage());
             float sample3 = SosFilterProcess(&data2, sample2);
             if((current_index&(64-1))==0)
             {
                 if(g_filterX==FilterX_64)
-                    callback(sample3);
+                    callback(sample3, GetNextVoltage());
                 float sample4 = SosFilterProcess(&data3, sample3);
                 if((current_index&(256-1))==0)
                 {
                     if(g_filterX==FilterX_256)
-                        callback(sample4);
+                        callback(sample4, GetNextVoltage());
                     float sample5 = SosFilterProcess(&data4, sample4);
                     if((current_index&(1024-1))==0)
                     {
                         if(g_filterX==FilterX_1024)
-                            callback(sample5);
+                            callback(sample5, GetNextVoltage());
                     }
                 }
             }

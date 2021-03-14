@@ -18,11 +18,10 @@ float calculateCurrent(int32_t measureI, float RshuntInv)
     return Vcurrent*RshuntInv;
 }
 
-void calculateRV(int32_t measureV, float current,
+void calculateRV(float voltage, float current,
                float Rshunt, CalcResult* calc_result)
 {
-    float Vout = calculateVoltage(measureV);
-    calc_result->Vout = Vout;
+    calc_result->Vout = voltage;
 
     calc_result->current = current;
 
@@ -31,7 +30,7 @@ void calculateRV(int32_t measureV, float current,
     if(current>1e-10)
     {
         calc_result->infinity_resistance = false;
-        resistance = Vout/current - Rshunt;
+        resistance = voltage/current - Rshunt;
     }
 
     calc_result->resistance = resistance;

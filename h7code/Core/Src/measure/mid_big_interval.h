@@ -7,8 +7,7 @@
 
 typedef struct
 {
-    int32_t adc_V;
-    uint32_t samples_V_count;
+    float voltage;
     uint32_t samples_current_count;
 
     float current;

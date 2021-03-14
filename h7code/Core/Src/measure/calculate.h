@@ -16,6 +16,6 @@ float calculateCurrent(int32_t measureI, float RshuntInv);
 float calculateVoltage(int32_t measureV);
 float calculateShuntVoltage(int32_t measureI);
 
-void calculateRV(int32_t measureV, float current,
+void calculateRV(float voltage, float current,
                float Rshunt, CalcResult* calc_result);
 

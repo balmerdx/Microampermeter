@@ -14,11 +14,11 @@ typedef enum
 
 //Следующий сэмпл, получаемый от фильтра.
 //В зависимости от частоты это может быть
-typedef void (*FilterNextSampleCallback)(float current);
+typedef void (*FilterNextSampleCallback)(float current, float voltage);
 
 extern FilterX g_filterX;
 //В зависимости от g_filterX может вызываться не каждый квант.
-void FilterNextSample(float sample, FilterNextSampleCallback callback);
+void FilterNextSample(float sampleI, int32_t adcV, FilterNextSampleCallback callback);
 
 //Количество сэмплов в секунду (вызовов функции FilterNextSampleCallback)
 float FilterSPS();

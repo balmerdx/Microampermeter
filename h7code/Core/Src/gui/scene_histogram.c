@@ -114,7 +114,7 @@ void DrawMid()
 {
     MidData d = GetMidData();
     CalcResult calc_result;
-    calculateRV(d.adc_V, d.current,
+    calculateRV(d.voltage, d.current,
                    GetResistorValue(GetResistor()), &calc_result);
 
     int places = 4;
