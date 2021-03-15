@@ -2,6 +2,7 @@
 #include "menu_root_histogram.h"
 #include "menu_bandwidth.h"
 #include "menu_time_histogram.h"
+#include "menu_switch_scene.h"
 
 #include "interface/interface.h"
 #include "interface/menu.h"
@@ -14,7 +15,7 @@ static void MenuRootHistogramQuant();
 enum
 {
     MR_RETURN,
-    MR_SWITCH_TO_MICROAMPERMETER,
+    MR_SWITCH_TO,
     MR_BANDWIDTH,
     MR_SUM_TIME,
 };
@@ -25,7 +26,7 @@ void MenuRootHistogramStart()
 {
     MenuReset("Histogram menu");
     MenuAdd("..", MR_RETURN);
-    MenuAdd("Switch to microampermeter", MR_SWITCH_TO_MICROAMPERMETER);
+    MenuAdd("Switch to...", MR_SWITCH_TO);
     MenuAdd("Bandwidth", MR_BANDWIDTH);
     MenuAdd("Sum time", MR_SUM_TIME);
     MenuSetIndex(last_menu_index);
@@ -47,11 +48,9 @@ void MenuRootHistogramQuant()
         return;
     }
 
-    if(MenuData()==MR_SWITCH_TO_MICROAMPERMETER)
+    if(MenuData()==MR_SWITCH_TO)
     {
-        g_settings.is_histogramm = 0;
-        SaveSettings();
-        SceneSingleStart();
+        MenuSwitchSceneStart();
         return;
     }
 

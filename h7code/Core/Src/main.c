@@ -32,8 +32,7 @@
 #include "fonts/font_condensed59.h"
 #include "interface/interface.h"
 
-#include "gui/scene_single.h"
-#include "gui/scene_histogram.h"
+#include "gui/menu_switch_scene.h"
 
 #include "measure/calculate.h"
 #include "measure/receive_data.h"
@@ -105,10 +104,7 @@ int main(void)
 
     SetReceiveDataFunc(0, ReceiveDataFunc_Mid);
 
-    if(g_settings.is_histogramm)
-        SceneHistogramStart();
-    else
-        SceneSingleStart();
+    SwitchToScene(g_settings.scene_id);
 
     while (1)
     {

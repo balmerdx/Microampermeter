@@ -28,7 +28,7 @@ void InitSettings()
 
     g_settings.line2_type = line2_type;
     g_settings.filterX = g_filterX;
-    g_settings.is_histogramm = 0;
+    g_settings.scene_id = 0;
     g_settings.sum_histogramm_time = 0;
 }
 

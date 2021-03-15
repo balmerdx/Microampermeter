@@ -3,6 +3,7 @@
 #include "menu_bandwidth.h"
 #include "menu_check_flash.h"
 #include "menu_calibration.h"
+#include "menu_switch_scene.h"
 #include "scene_single.h"
 #include "scene_histogram.h"
 
@@ -19,7 +20,7 @@ static void MenuRootQuant();
 enum
 {
     MR_RETURN,
-    MR_SWITCH_TO_HISTOGRAM,
+    MR_SWITCH_TO,
     MR_BANDWIDTH,
     MR_LINE2,
     MR_CHECK_FLASH,
@@ -32,7 +33,7 @@ void MenuRootStart()
 {
     MenuReset("Microampermeter menu");
     MenuAdd("..", MR_RETURN);
-    MenuAdd("Switch to histogram", MR_SWITCH_TO_HISTOGRAM);
+    MenuAdd("Switch to...", MR_SWITCH_TO);
     MenuAdd("Bandwidth", MR_BANDWIDTH);
     MenuAdd("Line2", MR_LINE2);
     //MenuAdd("Check flash", MR_CHECK_FLASH);
@@ -56,11 +57,9 @@ void MenuRootQuant()
         return;
     }
 
-    if(MenuData()==MR_SWITCH_TO_HISTOGRAM)
+    if(MenuData()==MR_SWITCH_TO)
     {
-        g_settings.is_histogramm = 1;
-        SaveSettings();
-        SceneHistogramStart();
+        MenuSwitchSceneStart();
         return;
     }
 

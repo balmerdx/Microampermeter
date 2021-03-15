@@ -22,6 +22,7 @@ DEPS += \
 	output/base/Core/Src/histogram/histogram_plot.d \
 	output/base/Core/Src/images/images.d \
 	output/base/Core/Src/measure/calculate.d \
+	output/base/Core/Src/measure/circle_buf.d \
 	output/base/Core/Src/measure/iir_filter.d \
 	output/base/Core/Src/measure/mid_big_interval.d \
 	output/base/Core/Src/measure/my_filter.d \
@@ -36,8 +37,10 @@ DEPS += \
 	output/base/Core/Src/gui/menu_check_flash.d \
 	output/base/Core/Src/gui/menu_root.d \
 	output/base/Core/Src/gui/menu_root_histogram.d \
+	output/base/Core/Src/gui/menu_switch_scene.d \
 	output/base/Core/Src/gui/menu_time_histogram.d \
 	output/base/Core/Src/gui/scene_histogram.d \
+	output/base/Core/Src/gui/scene_oscilloscope.d \
 	output/base/Core/Src/gui/scene_single.d \
 	output/base/Core/display/UTFT.d \
 	output/base/Core/display/float_to_string.d \
@@ -114,6 +117,7 @@ OBJS += \
 	output/base/Core/Src/histogram/histogram_plot.o \
 	output/base/Core/Src/images/images.o \
 	output/base/Core/Src/measure/calculate.o \
+	output/base/Core/Src/measure/circle_buf.o \
 	output/base/Core/Src/measure/iir_filter.o \
 	output/base/Core/Src/measure/mid_big_interval.o \
 	output/base/Core/Src/measure/my_filter.o \
@@ -128,8 +132,10 @@ OBJS += \
 	output/base/Core/Src/gui/menu_check_flash.o \
 	output/base/Core/Src/gui/menu_root.o \
 	output/base/Core/Src/gui/menu_root_histogram.o \
+	output/base/Core/Src/gui/menu_switch_scene.o \
 	output/base/Core/Src/gui/menu_time_histogram.o \
 	output/base/Core/Src/gui/scene_histogram.o \
+	output/base/Core/Src/gui/scene_oscilloscope.o \
 	output/base/Core/Src/gui/scene_single.o \
 	output/base/Core/display/UTFT.o \
 	output/base/Core/display/float_to_string.o \
@@ -259,6 +265,10 @@ output/base/Core/Src/measure/calculate.o: ./Core/Src/measure/calculate.c
 	@echo 'Building target: calculate.c'
 	@$(CC) $(C_FLAGS) -o "$@" "$<"
 
+output/base/Core/Src/measure/circle_buf.o: ./Core/Src/measure/circle_buf.c
+	@echo 'Building target: circle_buf.c'
+	@$(CC) $(C_FLAGS) -o "$@" "$<"
+
 output/base/Core/Src/measure/iir_filter.o: ./Core/Src/measure/iir_filter.c
 	@echo 'Building target: iir_filter.c'
 	@$(CC) $(C_FLAGS) -o "$@" "$<"
@@ -315,12 +325,20 @@ output/base/Core/Src/gui/menu_root_histogram.o: ./Core/Src/gui/menu_root_histogr
 	@echo 'Building target: menu_root_histogram.c'
 	@$(CC) $(C_FLAGS) -o "$@" "$<"
 
+output/base/Core/Src/gui/menu_switch_scene.o: ./Core/Src/gui/menu_switch_scene.c
+	@echo 'Building target: menu_switch_scene.c'
+	@$(CC) $(C_FLAGS) -o "$@" "$<"
+
 output/base/Core/Src/gui/menu_time_histogram.o: ./Core/Src/gui/menu_time_histogram.c
 	@echo 'Building target: menu_time_histogram.c'
 	@$(CC) $(C_FLAGS) -o "$@" "$<"
 
 output/base/Core/Src/gui/scene_histogram.o: ./Core/Src/gui/scene_histogram.c
 	@echo 'Building target: scene_histogram.c'
+	@$(CC) $(C_FLAGS) -o "$@" "$<"
+
+output/base/Core/Src/gui/scene_oscilloscope.o: ./Core/Src/gui/scene_oscilloscope.c
+	@echo 'Building target: scene_oscilloscope.c'
 	@$(CC) $(C_FLAGS) -o "$@" "$<"
 
 output/base/Core/Src/gui/scene_single.o: ./Core/Src/gui/scene_single.c

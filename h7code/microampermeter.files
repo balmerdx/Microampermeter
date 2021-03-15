@@ -16,6 +16,7 @@ Core/Src/histogram/histogram_data.c
 Core/Src/histogram/histogram_plot.c
 Core/Src/images/images.c
 Core/Src/measure/calculate.c
+Core/Src/measure/circle_buf.c
 Core/Src/measure/iir_filter.c
 Core/Src/measure/mid_big_interval.c
 Core/Src/measure/my_filter.c
@@ -30,8 +31,10 @@ Core/Src/gui/menu_calibration_zero.c
 Core/Src/gui/menu_check_flash.c
 Core/Src/gui/menu_root.c
 Core/Src/gui/menu_root_histogram.c
+Core/Src/gui/menu_switch_scene.c
 Core/Src/gui/menu_time_histogram.c
 Core/Src/gui/scene_histogram.c
+Core/Src/gui/scene_oscilloscope.c
 Core/Src/gui/scene_single.c
 Core/display/UTFT.c
 Core/display/float_to_string.c
@@ -106,6 +109,7 @@ Core/Src/images/batery_empty.h
 Core/Src/images/batery_full.h
 Core/Src/images/images.h
 Core/Src/measure/calculate.h
+Core/Src/measure/circle_buf.h
 Core/Src/measure/iir_filter.h
 Core/Src/measure/mid_big_interval.h
 Core/Src/measure/my_filter.h
@@ -121,8 +125,10 @@ Core/Src/gui/menu_calibration_zero.h
 Core/Src/gui/menu_check_flash.h
 Core/Src/gui/menu_root.h
 Core/Src/gui/menu_root_histogram.h
+Core/Src/gui/menu_switch_scene.h
 Core/Src/gui/menu_time_histogram.h
 Core/Src/gui/scene_histogram.h
+Core/Src/gui/scene_oscilloscope.h
 Core/Src/gui/scene_single.h
 Core/display/UTFT.h
 Core/display/UTFT_low_level.h

@@ -10,7 +10,7 @@ typedef struct Settings
     int32_t offset_adc_V;
     uint8_t line2_type;
     uint8_t filterX;
-    uint8_t is_histogramm; //0 - microampermeter, 1 - histogramm
+    uint8_t scene_id; //0-microampermeter, 1-histogramm, 2-oscilloscope
     uint8_t sum_histogramm_time; //See menu_time_histogram.c
 } Settings;
 

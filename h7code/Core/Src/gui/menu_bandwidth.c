@@ -6,6 +6,7 @@
 #include "interface/interface.h"
 #include "interface/menu.h"
 #include "measure/settings.h"
+#include "menu_switch_scene.h"
 
 static void MenuBandwidthQuant();
 
@@ -45,8 +46,5 @@ void MenuBandwidthQuant()
     g_filterX = MenuData();
     SaveSettings();
 
-    if(g_settings.is_histogramm)
-        SceneHistogramStart();
-    else
-        SceneSingleStart();
+    SwitchToScene(g_settings.scene_id);
 }
