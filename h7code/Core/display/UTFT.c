@@ -639,21 +639,23 @@ void UTFT_drawVLine(int x, int y, int l)
 	TFTEndData();
 }
 
-void UTFT_drawBitmap(int x, int y, const Bitmap16bit* bitmap)
+void UTFT_drawData(int x, int y, int width, int height, const uint16_t* colors)
 {
-    int sx = bitmap->width;
-    int sy = bitmap->height;
-    const uint16_t* data = bitmap->colors;
-
-    UTFT_setXY(x, y, x+sx-1, y+sy-1);
+    UTFT_setXY(x, y, x+width-1, y+height-1);
     TFTBeginData();
-    int sxy = sx*sy;
+    int sxy = width*height;
     for (int tc=0; tc<sxy; tc++)
     {
-        uint16_t col=data[tc];
+        uint16_t col = colors[tc];
         TFTWriteData(col);
     }
     TFTEndData();
+
+}
+
+void UTFT_drawBitmap(int x, int y, const Bitmap16bit* bitmap)
+{
+    UTFT_drawData(x, y, bitmap->width, bitmap->height, bitmap->colors);
 }
 
 void UTFT_drawBitmapS(int x, int y, const Bitmap16bit* bitmap, int scale)

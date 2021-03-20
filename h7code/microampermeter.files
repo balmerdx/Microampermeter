@@ -14,6 +14,7 @@ Core/Src/hardware/store_to_spi_flash.c
 Core/Src/hardware/vbat.c
 Core/Src/histogram/histogram_data.c
 Core/Src/histogram/histogram_plot.c
+Core/Src/oscilloscope/oscilloscope.c
 Core/Src/images/images.c
 Core/Src/measure/calculate.c
 Core/Src/measure/circle_buf.c
@@ -106,6 +107,7 @@ Core/Src/hardware/store_to_spi_flash.h
 Core/Src/hardware/vbat.h
 Core/Src/histogram/histogram_data.h
 Core/Src/histogram/histogram_plot.h
+Core/Src/oscilloscope/oscilloscope.h
 Core/Src/images/batery_empty.h
 Core/Src/images/batery_full.h
 Core/Src/images/images.h

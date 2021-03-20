@@ -20,6 +20,7 @@ sources = [
 		"Core/Src",
 		"Core/Src/hardware",
 		"Core/Src/histogram",
+		"Core/Src/oscilloscope",
 		"Core/Src/images",
 		"Core/Src/measure",
 		"Core/Src/gui",

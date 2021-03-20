@@ -20,6 +20,7 @@ DEPS += \
 	output/base/Core/Src/hardware/vbat.d \
 	output/base/Core/Src/histogram/histogram_data.d \
 	output/base/Core/Src/histogram/histogram_plot.d \
+	output/base/Core/Src/oscilloscope/oscilloscope.d \
 	output/base/Core/Src/images/images.d \
 	output/base/Core/Src/measure/calculate.d \
 	output/base/Core/Src/measure/circle_buf.d \
@@ -116,6 +117,7 @@ OBJS += \
 	output/base/Core/Src/hardware/vbat.o \
 	output/base/Core/Src/histogram/histogram_data.o \
 	output/base/Core/Src/histogram/histogram_plot.o \
+	output/base/Core/Src/oscilloscope/oscilloscope.o \
 	output/base/Core/Src/images/images.o \
 	output/base/Core/Src/measure/calculate.o \
 	output/base/Core/Src/measure/circle_buf.o \
@@ -257,6 +259,10 @@ output/base/Core/Src/histogram/histogram_data.o: ./Core/Src/histogram/histogram_
 
 output/base/Core/Src/histogram/histogram_plot.o: ./Core/Src/histogram/histogram_plot.c
 	@echo 'Building target: histogram_plot.c'
+	@$(CC) $(C_FLAGS) -o "$@" "$<"
+
+output/base/Core/Src/oscilloscope/oscilloscope.o: ./Core/Src/oscilloscope/oscilloscope.c
+	@echo 'Building target: oscilloscope.c'
 	@$(CC) $(C_FLAGS) -o "$@" "$<"
 
 output/base/Core/Src/images/images.o: ./Core/Src/images/images.c
