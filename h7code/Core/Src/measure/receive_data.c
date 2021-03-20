@@ -6,14 +6,14 @@
 #include "usbd_cdc_if.h"
 #include "calculate.h"
 
-//SAMPLES_R - структуры, для учета сдвига данных происходящих при переключении предела измерения.
-//На столько сэмплов запаздывают данные относительно
-#define SAMPLES_R_OFFSET (38+9)
-//Размер буфера должен быть степенью двойки и больше SAMPLES_R_OFFSET
-#define SAMPLES_R_OFFSET_SIZE 64
-#define SAMPLES_R_OFFSET_MASK (SAMPLES_R_OFFSET_SIZE-1)
 //Столько сэмплов до переключения невалидные (естественно уже после сдвига на R_OFFSET)
 #define SAMPLES_R_ERROR 9
+//SAMPLES_R - структуры, для учета сдвига данных происходящих при переключении предела измерения.
+//На столько сэмплов запаздывают данные относительно
+#define SAMPLES_R_OFFSET (42+SAMPLES_R_ERROR)
+//Размер буфера должен быть степенью двойки и больше SAMPLES_R_OFFSET
+#define SAMPLES_R_OFFSET_SIZE 128
+#define SAMPLES_R_OFFSET_MASK (SAMPLES_R_OFFSET_SIZE-1)
 static uint8_t samples_r_buffer[SAMPLES_R_OFFSET_SIZE];
 static int samples_r_buffer_offset = 0;
 static uint32_t g_prev_adc0 = 0; //Предыдущее значение в adc0 используемое для невалидных данных
@@ -24,8 +24,7 @@ static volatile ADS1271_Data big_buf[BIG_BUFFER_SIZE] __attribute__((section(".d
 static volatile uint32_t big_buf_current_offset = 0; //Текущее записываемое положение в big_buf
 static volatile uint32_t big_buf_required = 0; //требуемое количество сэмплов
 
-#define USB_PACKET_SIZE_INTS 500
-static int32_t usb_send_buffer[USB_PACKET_SIZE_INTS];
+int32_t usb_send_buffer[USB_PACKET_SIZE_INTS];
 
 static int32_t I_max = 0x400000;
 static int32_t I_min = 0x40000;//I_max/16
@@ -34,7 +33,7 @@ static int32_t wait_before_new_switch_count = 0;
 
 //Временно захардкодили, после превышения этого порога мы начинаем заполнять большой буффер
 static bool capturing_enable = false;
-static int32_t capturing_I_start = 150000;
+static int32_t capturing_I_start = 400000;//150000;
 static RESISTOR capturing_r = RESISTOR_1_Kom;
 
 //Статистика по используемому времени
@@ -106,26 +105,24 @@ void ADS1271_ReceiveData(ADS1271_Data *data)
         } else
         {
             g_prev_adc0 = data[i].adc0;
+            int32_t adc_I =  data[i].adc0;
+            if(adc_I<I_min)
+                switch_up = true;
+            if(adc_I>I_max)
+                switch_down = true;
         }
 
         data_no_error[i].adc_I = Convert24(g_prev_adc0);
+        //data_no_error[i].adc_I = Convert24(data[i].adc0);
         data_no_error[i].adc_V = Convert24(data[i].adc1);
         data_no_error[i].r = cur_r;
+        //data_no_error[i].r = r;
     }
 
     for(int i=0; i<RECEIVE_DATA_FUNC_COUNT; i++)
     {
         if(data_func[i])
             data_func[i](data_no_error);
-    }
-
-    for(int i=0; i<ADS1271_RECEIVE_DATA_SIZE; i++)
-    {
-        int32_t adc_I = data_no_error[i].adc_I;
-        if(adc_I<I_min)
-            switch_up = true;
-        if(adc_I>I_max)
-            switch_down = true;
     }
 
     if(capturing_enable)
@@ -153,7 +150,7 @@ void ADS1271_ReceiveData(ADS1271_Data *data)
         volatile ADS1271_Data* ptr = big_buf + big_buf_current_offset;
         for(int i=0; i<ADS1271_RECEIVE_DATA_SIZE; i++)
         {
-            ptr[i].adc0 = data_no_error[i].adc_I | (((uint32_t)data_no_error[i].r)<<24);
+            ptr[i].adc0 = ((uint32_t)data_no_error[i].adc_I&0xFFFFFF) | (((uint32_t)data_no_error[i].r)<<24);
             ptr[i].adc1 = data_no_error[i].adc_V;
         }
 

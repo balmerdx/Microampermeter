@@ -3,6 +3,7 @@
 #include "receive_data.h"
 #include "UTFT.h"
 #include "fonts/font_condensed30.h"
+#include "store_and_trigger.h"
 
 #include "usb_device.h"
 #include "usbd_cdc_if.h"
@@ -15,6 +16,8 @@
 #define USB_COMMAND_ADC_BUFFER_STATUS 0x6BDE0003u
 
 #define USB_COMMAND_NANOAMPERS 0x6BDE0004u
+#define USB_COMMAND_ST_INFO 0x6BDE0005u
+#define USB_COMMAND_ST_DATA 0x6BDE0006u
 
 
 #define USB_RECEIVED_DATA_SIZE 32
@@ -91,6 +94,16 @@ void UsbCommandsQuant()
         if(command == USB_COMMAND_NANOAMPERS)
         {
             SendAdcCurrentNanoampers();
+        }
+
+        if(command == USB_COMMAND_ST_INFO)
+        {
+            STSendInfo();
+        }
+
+        if(command == USB_COMMAND_ST_DATA)
+        {
+            STSendData();
         }
     }
 

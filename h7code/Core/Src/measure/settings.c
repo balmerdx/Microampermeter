@@ -58,8 +58,12 @@ bool LoadSettings()
     bool ok = SpiFlashReadFromFlash(SETTINGS_SECTOR, sizeof(g_settings), &g_settings);
     if(ok)
     {
+        if(g_settings.filterX > FilterX_1024)
+            g_settings.filterX = FilterX_1;
+
         line2_type = g_settings.line2_type;
         g_filterX = g_settings.filterX;
+
     }
     return ok;
 }

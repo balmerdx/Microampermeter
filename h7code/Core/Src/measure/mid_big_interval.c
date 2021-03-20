@@ -4,6 +4,7 @@
 #include "hardware/gpios.h"
 #include "my_filter.h"
 #include "calculate.h"
+#include "store_and_trigger.h"
 
 #include <limits.h>
 #include <sys/param.h>
@@ -62,6 +63,7 @@ void OnFilterNextSample(float current, float voltage)
     }
 
     OnFilterNextSampleHistogramm(current);
+    OnFilterNextSampleCircleBuffer(current, voltage);
 }
 
 MidData GetMidData()

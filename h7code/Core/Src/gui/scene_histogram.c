@@ -26,7 +26,7 @@ static RectA r_voltage;
 
 static float ymin = 0, ymax = 105;
 
-static bool enable_histogramm = false;
+bool enable_histogramm = false;
 static int samples_to_complete = 1000;
 static float samples_to_complete_inv_percent = 0;
 static int samples_current = 0;
@@ -103,6 +103,7 @@ void SceneHistogramStart()
 
     samples_to_complete = GetTimeHistogram() * FilterSPS();
     samples_to_complete_inv_percent = 100.f/samples_to_complete;
+    samples_current = 0;
 
     g_complete_data_filed = false;
     enable_histogramm = true;

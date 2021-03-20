@@ -28,6 +28,7 @@ DEPS += \
 	output/base/Core/Src/measure/my_filter.d \
 	output/base/Core/Src/measure/receive_data.d \
 	output/base/Core/Src/measure/settings.d \
+	output/base/Core/Src/measure/store_and_trigger.d \
 	output/base/Core/Src/measure/usb_communication.d \
 	output/base/Core/Src/gui/font_big_nums.d \
 	output/base/Core/Src/gui/menu_bandwidth.d \
@@ -123,6 +124,7 @@ OBJS += \
 	output/base/Core/Src/measure/my_filter.o \
 	output/base/Core/Src/measure/receive_data.o \
 	output/base/Core/Src/measure/settings.o \
+	output/base/Core/Src/measure/store_and_trigger.o \
 	output/base/Core/Src/measure/usb_communication.o \
 	output/base/Core/Src/gui/font_big_nums.o \
 	output/base/Core/Src/gui/menu_bandwidth.o \
@@ -287,6 +289,10 @@ output/base/Core/Src/measure/receive_data.o: ./Core/Src/measure/receive_data.c
 
 output/base/Core/Src/measure/settings.o: ./Core/Src/measure/settings.c
 	@echo 'Building target: settings.c'
+	@$(CC) $(C_FLAGS) -o "$@" "$<"
+
+output/base/Core/Src/measure/store_and_trigger.o: ./Core/Src/measure/store_and_trigger.c
+	@echo 'Building target: store_and_trigger.c'
 	@$(CC) $(C_FLAGS) -o "$@" "$<"
 
 output/base/Core/Src/measure/usb_communication.o: ./Core/Src/measure/usb_communication.c

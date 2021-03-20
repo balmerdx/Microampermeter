@@ -62,6 +62,7 @@ endif
 
 C_FLAGS += -fdata-sections -ffunction-sections
 LDFLAGS += -Wl,--gc-sections 
+LDFLAGS += -Wl,--print-memory-usage
 
 C_FLAGS += -ffast-math
 
@@ -73,8 +74,6 @@ C_DEFINES+= \
 -DHSE_VALUE=8000000 \
 -DARM_MATH_CM7 \
 -DDISPLAY_ILI9481
-
-C_DEFINES+= -DPCB_V3
 
 C_FLAGS+= -Wall -c -MMD $(C_INCLIDES) $(C_DEFINES) $(M_CPU) ${M_CPU_ADDITIONAL}
 

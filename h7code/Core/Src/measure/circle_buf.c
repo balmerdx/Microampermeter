@@ -26,6 +26,11 @@ uint32_t CircleBufferSamples(CircleBuffer* buffer)
     return buffer->samples_stored;
 }
 
+uint32_t CircleBufferCapacity(CircleBuffer* buffer)
+{
+    return buffer->data_size_in_samples;
+}
+
 void CircleBufferAdd(CircleBuffer* buffer, const void * const sample)
 {
     memcpy(buffer->data + buffer->end_sample_offset, sample, buffer->sample_size);
@@ -54,4 +59,26 @@ bool CircleBufferGetSample(CircleBuffer* buffer, uint32_t index, void* sample)
         offset -= buffer->data_size;
     memcpy(sample, buffer->data + offset, buffer->sample_size);
     return true;
+}
+
+
+uint32_t CircleBufferGetAbsoluteOffset(CircleBuffer* buffer, uint32_t index)
+{
+    return (buffer->first_sample_offset/buffer->sample_size + index) % buffer->data_size_in_samples;
+}
+
+uint32_t CircleBufferGetRelativeOffset(CircleBuffer* buffer, uint32_t abs_index)
+{
+    if(abs_index >= buffer->data_size_in_samples)
+        return 0;
+
+    uint32_t first_offset_in_samples = buffer->first_sample_offset/buffer->sample_size;
+    if(abs_index < first_offset_in_samples)
+        return abs_index + buffer->data_size_in_samples - first_offset_in_samples;
+    return abs_index - first_offset_in_samples;
+}
+
+uint32_t CircleBufferGetAbsoluteEndOffset(CircleBuffer* buffer)
+{
+    return CircleBufferGetAbsoluteOffset(buffer, buffer->samples_stored);
 }

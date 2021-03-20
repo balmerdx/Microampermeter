@@ -44,6 +44,19 @@ def readDataInt(filename, na):
 			data_y.append(ToIntFrom24bit(y))
 	return (data_x, data_y)
 
+def readDataFloat(filename):
+	'''
+		na = nanoamter format
+	'''
+	data_x = []
+	f = open(filename, "rb")
+	data = f.read()
+	f.close()
+
+	for x in iter_unpack("f", data):
+		data_x.append(x[0])
+	return np.asarray(data_x, dtype=np.float32)
+
 
 def readData(filename, na):
 	(data_x, data_y) = readDataInt(filename, na)
@@ -80,19 +93,24 @@ def plotColors(data_x, data_y, xlabel = "T(ms)", ylabel="I(µA)"):
 	if ylabel:
 		ax.set_ylabel(ylabel)
 
-	colors = ['red', 'green', 'blue', 'black']
+	colors = ['red', 'green', 'blue', 'black', 'orange']
 
 	cur_y = data_y[0]
 	start_i = 0
 	for i in range(len(timeList)):
 		if data_y[i]!=cur_y:
 			end_i= i+1
-			ax.plot(timeList[start_i:end_i], data_x[start_i:end_i], color=colors[cur_y])
+			print(len(timeList), start_i, end_i, cur_y)
+			if cur_y==255:
+				cur_y = 4
+
+			ax.plot(timeList[start_i:end_i], data_x[start_i:end_i], ".", color=colors[cur_y])
 			start_i = i
 			cur_y = data_y[i]
 
 	if start_i < len(timeList):
-		ax.plot(timeList[start_i:len(timeList)], data_x[start_i:len(timeList)], color=colors[cur_y])
+		ax.plot(timeList[start_i:len(timeList)], data_x[start_i:len(timeList)], '.', color=colors[cur_y])
+		pass
 
 	plt.show()
 
@@ -216,10 +234,18 @@ def ViewDataBin(filename, na):
 	#plotFFT(data_y, color = 'blue')
 	#plotFFT2(data_x, data_y)
 
+def ViewDataBinFloat(filename):
+	data_x = readDataFloat(filename)
+	#data_y = makeTimeList(data_x, xmin=0, xstep=1/105468.75)
+	#print(data_x[0])
+	#print(len(data_x))
+	plotXY(data_x)
+
+
 if len(sys.argv)>1:
 	filename = sys.argv[1]
 else:
-	filename = "data.na"
+	filename = "out.a"
 
 ext = splitext(filename)[1]
 print("ext=", ext)
@@ -227,3 +253,6 @@ if ext == ".bin":
 	ViewDataBin(filename, na = False)
 if ext == ".na":
 	ViewDataBin(filename, na = True)
+if ext == ".a":
+	ViewDataBinFloat(filename)
+

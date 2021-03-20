@@ -8,6 +8,8 @@ typedef struct
     RESISTOR r;
 } DataNoError;
 
+#define USB_PACKET_SIZE_INTS 500
+extern int32_t usb_send_buffer[USB_PACKET_SIZE_INTS];
 
 void StartAdcBufferFilling();
 bool SendAdcBuffer();

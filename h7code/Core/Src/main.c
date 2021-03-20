@@ -40,6 +40,7 @@
 #include "measure/mid_big_interval.h"
 #include "measure/my_filter.h"
 #include "measure/settings.h"
+#include "measure/store_and_trigger.h"
 
 /* Private variables ---------------------------------------------------------*/
 QSPI_HandleTypeDef hqspi;
@@ -97,6 +98,7 @@ int main(void)
     UTFT_fillScr(VGA_BLACK);
     UTFT_setColor(VGA_WHITE);
     MyFilterInit();
+    STInit();
 
     ADS1271_Start();
     g_default_font = font_condensed30;

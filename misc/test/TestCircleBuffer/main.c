@@ -2,7 +2,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <assert.h>
-#include "../../../h7code/Core/Src/measure/circle_buf.h"
+#include "circle_buf.h"
 
 void Test0(CircleBuffer* buffer)
 {

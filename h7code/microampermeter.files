@@ -22,6 +22,7 @@ Core/Src/measure/mid_big_interval.c
 Core/Src/measure/my_filter.c
 Core/Src/measure/receive_data.c
 Core/Src/measure/settings.c
+Core/Src/measure/store_and_trigger.c
 Core/Src/measure/usb_communication.c
 Core/Src/gui/font_big_nums.c
 Core/Src/gui/menu_bandwidth.c
@@ -115,6 +116,7 @@ Core/Src/measure/mid_big_interval.h
 Core/Src/measure/my_filter.h
 Core/Src/measure/receive_data.h
 Core/Src/measure/settings.h
+Core/Src/measure/store_and_trigger.h
 Core/Src/measure/usb_communication.h
 Core/Src/gui/font_big_nums.h
 Core/Src/gui/gui_settings.h

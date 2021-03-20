@@ -35,6 +35,3 @@ bool EncButtonPressed();
 //Складывает value+=add
 //Значение после сложения помещается в интервал 0..max-1
 void AddSaturated(int* value, int add, int max);
-
-//Квант, который необходимо вызывать внутри диалогов
-void DefaultQuant();

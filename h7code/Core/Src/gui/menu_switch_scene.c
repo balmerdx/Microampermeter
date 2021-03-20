@@ -35,11 +35,18 @@ void MenuSwitchSceneQuant()
 
 void SwitchToScene(SwitchToEnum data)
 {
+    if(data>=_MAX_SWITCH_TO)
+    {
+        data = SWITCH_TO_MICROAMPERMETER;
+    }
+
     if(g_settings.scene_id != data)
     {
         g_settings.scene_id = data;
         SaveSettings();
     }
+
+    enable_histogramm = false;
 
     if(data==SWITCH_TO_MICROAMPERMETER)
     {
