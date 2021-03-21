@@ -125,15 +125,20 @@ char* SecondsPerLineInfo(int idx)
 
 void OscilloscopeStartTest(OscilloscopeData* data)
 {
-
+    data->line_special_x = 0;
+    data->line_special_y = (data->pos.height/data->lines_dy)*data->lines_dy;
 }
 
-int OscilloscopeValueTest(OscilloscopeData* data, int x)
+static OscilloscopeValue OscilloscopeValueTest(OscilloscopeData* data, int x)
 {
-    return sinf(x/(float)data->pos.width*2*M_PI*3+phase)*data->pos.height/2.f+data->pos.height/2;
+    OscilloscopeValue ret;
+    ret.y = sinf(x/(float)data->pos.width*2*M_PI*3+phase)*data->pos.height/2.f+data->pos.height/2;
+    ret.y_min = ret.y - 5;
+    ret.y_max = ret.y + 3;
+    return ret;
 }
 
-void OscilloscopeStartSum(OscilloscopeData* data)
+static void OscilloscopeStartSum(OscilloscopeData* data)
 {
     seconds_per_line = SecondsPerLineCurrent(g_settings.seconds_per_line_idx);
     amper_per_line = AmperPerLineCurrent(g_settings.ampers_per_line_idx);
@@ -146,19 +151,43 @@ void OscilloscopeStartSum(OscilloscopeData* data)
 }
 
 static float cur_value;
+static float cur_min;
+static float cur_max;
 static int cur_count;
-void IterateIntervalCallback(float sample, void* param)
+static void IterateIntervalCallback(float sample, void* param)
 {
+    if(cur_count==0)
+    {
+        cur_min = cur_max = sample;
+    } else
+    {
+        if(sample < cur_min)
+            cur_min = sample;
+        if(sample > cur_max)
+            cur_max = sample;
+    }
+
     cur_value += sample;
     cur_count++;
 }
 
-int PixelToBufferOffset(int x)
+static int PixelToBufferOffset(int x)
 {
     return lroundf(STTriggerOffset() + x*samples_per_pixel);
 }
 
-int OscilloscopeValueSum(OscilloscopeData* data, int x)
+static int YValueToPixel(OscilloscopeData* data, float y)
+{
+    y  *= y_mul;
+    if(y<0)
+        y = -1;
+    if(y>data->pos.height)
+        y = data->pos.height+1;
+
+    return (data->pos.height-1) - y;
+}
+
+static OscilloscopeValue OscilloscopeValueSum(OscilloscopeData* data, int x)
 {
     cur_value = 0;
     cur_count = 0;
@@ -169,13 +198,12 @@ int OscilloscopeValueSum(OscilloscopeData* data, int x)
 
     STIterate(istart, iend, IterateIntervalCallback, 0);
     float y = cur_count? (cur_value/cur_count) : 0;
-    y  *= y_mul;
-    if(y<0)
-        y = -1;
-    if(y>data->pos.height)
-        y = data->pos.height+1;
 
-    return (data->pos.height-1) - y;
+    OscilloscopeValue ret;
+    ret.y = YValueToPixel(data, y);
+    ret.y_min = YValueToPixel(data, cur_max);
+    ret.y_max = YValueToPixel(data, cur_min);
+    return ret;
 }
 
 void OscilloscopeTriggerStart()
@@ -241,7 +269,19 @@ void SceneOscilloscopeStart()
     InterfaceGoto(SceneOscilloscopeQuant);
 }
 
-void SceneOscilloscopeQuant()
+static void SceneOscilloscopeUpdateInfo()
+{
+    char str[32];
+    strcpy(str, AmperPerLineInfo(g_settings.ampers_per_line_idx));
+    strcat(str, "/div");
+    R_DrawStringJustify(&r_ampers_per_line, str, UTF_CENTER);
+
+    strcpy(str, SecondsPerLineInfo(g_settings.seconds_per_line_idx));
+    strcat(str, "/div");
+    R_DrawStringJustify(&r_seconds_per_line, str, UTF_CENTER);
+}
+
+static void SceneOscilloscopeQuant()
 {
     if(use_test)
     {
@@ -255,20 +295,11 @@ void SceneOscilloscopeQuant()
         StatusbarSetTextAndRedraw(str);
     } else
     {
-        if(enable_redraw)
+        if(enable_redraw && STCaptureCompleted())
         {
             enable_redraw = false;
-            char str[32];
-            strcpy(str, AmperPerLineInfo(g_settings.ampers_per_line_idx));
-            strcat(str, "/div");
-            R_DrawStringJustify(&r_ampers_per_line, str, UTF_CENTER);
-
-            strcpy(str, SecondsPerLineInfo(g_settings.seconds_per_line_idx));
-            strcat(str, "/div");
-            R_DrawStringJustify(&r_seconds_per_line, str, UTF_CENTER);
-
-            if(STCaptureCompleted())
-                OscilloscopeDraw(&osc);
+            OscilloscopeDraw(&osc);
+            SceneOscilloscopeUpdateInfo();
         }
     }
 
@@ -320,6 +351,8 @@ void OscilloscopeEncoderQuant(int delta)
         AddSaturated(&value, delta, SecondsPerLineCount());
         g_settings.seconds_per_line_idx = value;
     }
+
+    SceneOscilloscopeUpdateInfo();
 
     enable_redraw = true;
 }

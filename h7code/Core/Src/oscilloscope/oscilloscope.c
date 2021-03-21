@@ -8,8 +8,24 @@
 static uint16_t osc_colors[320];
 static uint16_t osc_back_color = VGA_BLACK;
 static uint16_t osc_line_color = VGA_OLIVE;
-static uint16_t osc_line_special_color = VGA_YELLOW; //Выделенная линия, обычно какой-то 0
+static uint16_t osc_line_special_color = UTFT_COLOR(190, 190, 0); //Выделенная линия, обычно какой-то 0
 static uint16_t osc_graph_color = VGA_WHITE;
+static uint16_t osc_graph_back_color = VGA_BLUE;
+static int height;
+
+static void DrawHLine(int y1, int y2, uint16_t color)
+{
+    int y_min = MIN(y1, y2);
+    int y_max = MAX(y1, y2);
+
+    if((y_min>=0 && y_min<height) || (y_max>=0 && y_max<height))
+    {
+        y_min = MAX(y_min, 0);
+        y_max = MIN(y_max, height-1);
+        for(int y=y_min; y<=y_max; y++)
+            osc_colors[y] = color;
+    }
+}
 
 void OscilloscopeDraw(OscilloscopeData* data)
 {
@@ -17,13 +33,13 @@ void OscilloscopeDraw(OscilloscopeData* data)
         return;
 
     int width = data->pos.width;
-    int height = data->pos.height;
+    height = data->pos.height;
 
     int line_special_x = (width/data->lines_dx/2)*data->lines_dx;
     int line_special_y = (height/data->lines_dy)*data->lines_dy;
 
     data->start(data);
-    int cur_y = data->value(data, 0);
+    OscilloscopeValue cur = data->value(data, 0);
     int line_x = 0;
     for(int x=0; x<width; x++)
     {
@@ -48,20 +64,15 @@ void OscilloscopeDraw(OscilloscopeData* data)
                 line_y += data->lines_dy;
         }
 
+        {//Рисуем фон
+            if(cur.y_max>=cur.y_min)
+                DrawHLine(cur.y_min, cur.y_max, osc_graph_back_color);
+        }
+
         {//Рисуем одну строчку линии
-            int next_y = data->value(data, x+1);
-            int y_min = MIN(cur_y, next_y);
-            int y_max = MAX(cur_y, next_y);
-
-            if((y_min>=0 && y_min<height) || (y_max>=0 && y_max<height))
-            {
-                y_min = MAX(y_min, 0);
-                y_max = MIN(y_max, height-1);
-                for(int y=y_min; y<=y_max; y++)
-                    osc_colors[y] = osc_graph_color;
-            }
-
-            cur_y = next_y;
+            OscilloscopeValue next = data->value(data, x+1);
+            DrawHLine(cur.y, next.y, osc_graph_color);
+            cur = next;
         }
 
         UTFT_drawData(data->pos.x+x, data->pos.y, 1, height, osc_colors);

@@ -3,8 +3,15 @@
 
 typedef struct OscilloscopeData OscilloscopeData;
 
+typedef struct OscilloscopeValue
+{
+    int y;
+    int y_min;
+    int y_max;
+} OscilloscopeValue;
+
 typedef void (*OscilloscopeStartCallback)(OscilloscopeData* data);
-typedef int (*OscilloscopeValueCallback)(OscilloscopeData* data, int x);
+typedef OscilloscopeValue (*OscilloscopeValueCallback)(OscilloscopeData* data, int x);
 
 
 typedef struct OscilloscopeData
