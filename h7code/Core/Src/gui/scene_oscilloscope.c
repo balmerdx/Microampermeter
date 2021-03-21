@@ -20,6 +20,8 @@ static RectA r_triggered;
 static RectA r_buffer_samples;
 static OscilloscopeData osc;
 
+static bool enable_redraw = false;
+static bool use_test = false;
 static float phase = 0;
 
 void OscilloscopeStartTest(OscilloscopeData* data)
@@ -30,6 +32,42 @@ void OscilloscopeStartTest(OscilloscopeData* data)
 int OscilloscopeValueTest(OscilloscopeData* data, int x)
 {
     return sinf(x/(float)data->pos.width*2*M_PI*3+phase)*data->pos.height/2.f+data->pos.height/2;
+}
+
+static int sum_interval = 10;
+static float sum_amper_per_square = 1e-3f;
+static float y_mul;
+
+
+void OscilloscopeStartSum(OscilloscopeData* data)
+{
+    y_mul = osc.lines_dy / sum_amper_per_square;
+}
+
+static float cur_value;
+static int cur_count;
+void IterateIntervalCallback(float sample, void* param)
+{
+    cur_value += sample;
+    cur_count++;
+
+}
+
+int OscilloscopeValueSum(OscilloscopeData* data, int x)
+{
+    cur_value = 0;
+    cur_count = 0;
+    uint32_t istart = STTriggerOffset() + x*sum_interval;
+
+    STIterate(istart, istart +sum_interval, IterateIntervalCallback, 0);
+    float y = cur_count? (cur_value/cur_count) : 0;
+    y  *= y_mul;
+    if(y<0)
+        y = -1;
+    if(y>data->pos.height)
+        y = data->pos.height+1;
+
+    return (data->pos.height-1) - y;
 }
 
 
@@ -54,8 +92,15 @@ void SceneOscilloscopeStart()
     {
         osc.lines_dx = 36;
         osc.lines_dy = 36;
-        osc.start = OscilloscopeStartTest;
-        osc.value = OscilloscopeValueTest;
+        if(use_test)
+        {
+            osc.start = OscilloscopeStartTest;
+            osc.value = OscilloscopeValueTest;
+        } else
+        {
+            osc.start = OscilloscopeStartSum;
+            osc.value = OscilloscopeValueSum;
+        }
 
         int width = osc.lines_dx*12+1;
         int height = osc.lines_dx*6+1;
@@ -74,15 +119,31 @@ void SceneOscilloscopeStart()
 
 void SceneOscilloscopeQuant()
 {
-    phase += 0.01f;
-    uint16_t start_us = TimeUs();
-    OscilloscopeDraw(&osc);
-    uint16_t delta_us = TimeUs() - start_us;
+    if(use_test)
+    {
+        phase += 0.01f;
+        uint16_t start_us = TimeUs();
+        OscilloscopeDraw(&osc);
+        uint16_t delta_us = TimeUs() - start_us;
+        char str[32];
+        strcpy(str, "draw(us)=");
+        catInt(str, delta_us);
+        StatusbarSetTextAndRedraw(str);
+    } else
+    {
+        if(STCaptureCompleted() && enable_redraw)
+        {
+            enable_redraw = false;
+            uint16_t start_us = TimeUs();
+            OscilloscopeDraw(&osc);
+            uint16_t delta_us = TimeUs() - start_us;
+            char str[32];
+            strcpy(str, "draw(us)=");
+            catInt(str, delta_us);
+            StatusbarSetTextAndRedraw(str);
+        }
+    }
 
-    char str[32];
-    strcpy(str, "draw(us)=");
-    catInt(str, delta_us);
-    StatusbarSetTextAndRedraw(str);
 
     if(EncButtonPressed())
     {
@@ -99,6 +160,7 @@ void SceneOscilloscopeQuant()
             {
                 STCaptureStart();
                 EnableCapturingTrigger(); //test
+                enable_redraw = true;
             }
         }
     }

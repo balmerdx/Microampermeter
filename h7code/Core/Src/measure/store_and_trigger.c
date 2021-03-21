@@ -90,6 +90,12 @@ uint32_t STSamplesCaptured()
     return CircleBufferSamples(&circle_buffer);
 }
 
+float STFilterSPS()
+{
+    return FilterSPSLocal(cb_filterX);
+}
+
+
 typedef struct {
     uint32_t status;
     float filter_sps;
@@ -108,7 +114,7 @@ void STSendInfo()
     if(cb_trigger_triggered)
         s.status |= 4;
 
-    s.filter_sps = FilterSPS();
+    s.filter_sps = STFilterSPS();
 
     if(cb_capture_completed)
     {
@@ -148,4 +154,27 @@ void STSendData()
 
         offset += samples_to_send;
     }
+}
+
+
+bool STIterate(uint32_t istart, uint32_t iend, STIterateIntervalCallback callback, void* param)
+{
+    if(!cb_capture_completed)
+        return false;
+    if(iend > CircleBufferSamples(&circle_buffer))
+        return false;
+
+    for(uint32_t i = istart; i<iend; i++)
+    {
+        float sample;
+        CircleBufferGetSample(&circle_buffer, i, &sample);
+        callback(sample, param);
+    }
+
+    return true;
+}
+
+uint32_t STTriggerOffset()
+{
+    return CircleBufferGetRelativeOffset(&circle_buffer, cb_trigger_abs_value);
 }

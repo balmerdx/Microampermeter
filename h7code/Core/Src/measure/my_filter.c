@@ -141,10 +141,10 @@ void FilterNextSample(float sampleI, int32_t adcV, FilterNextSampleCallback call
     }
 }
 
-float FilterSPS()
+float FilterSPSLocal(FilterX filter)
 {
     float f = 1.0f;
-    switch(g_filterX)
+    switch(filter)
     {
     case FilterX_1: f = 1.0f; break;
     case FilterX_4: f = 1.0f/4; break;
@@ -155,4 +155,10 @@ float FilterSPS()
     }
 
     return ADS1271_SPS * f;
+
+}
+
+float FilterSPS()
+{
+    return FilterSPSLocal(g_filterX);
 }

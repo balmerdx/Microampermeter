@@ -22,3 +22,5 @@ void FilterNextSample(float sampleI, int32_t adcV, FilterNextSampleCallback call
 
 //Количество сэмплов в секунду (вызовов функции FilterNextSampleCallback)
 float FilterSPS();
+
+float FilterSPSLocal(FilterX filter);
