@@ -17,6 +17,11 @@ typedef struct OscilloscopeData
 
     OscilloscopeStartCallback start;
     OscilloscopeValueCallback value;
+
+    //internal data (заполняется при start, либо раньше)
+    int line_special_x;
+    int line_special_y;
+
 } OscilloscopeData;
 
 

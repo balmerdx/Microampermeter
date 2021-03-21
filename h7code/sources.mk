@@ -37,6 +37,7 @@ DEPS += \
 	output/base/Core/Src/gui/menu_calibration_hard.d \
 	output/base/Core/Src/gui/menu_calibration_zero.d \
 	output/base/Core/Src/gui/menu_check_flash.d \
+	output/base/Core/Src/gui/menu_oscilloscope.d \
 	output/base/Core/Src/gui/menu_root.d \
 	output/base/Core/Src/gui/menu_root_histogram.d \
 	output/base/Core/Src/gui/menu_switch_scene.d \
@@ -134,6 +135,7 @@ OBJS += \
 	output/base/Core/Src/gui/menu_calibration_hard.o \
 	output/base/Core/Src/gui/menu_calibration_zero.o \
 	output/base/Core/Src/gui/menu_check_flash.o \
+	output/base/Core/Src/gui/menu_oscilloscope.o \
 	output/base/Core/Src/gui/menu_root.o \
 	output/base/Core/Src/gui/menu_root_histogram.o \
 	output/base/Core/Src/gui/menu_switch_scene.o \
@@ -327,6 +329,10 @@ output/base/Core/Src/gui/menu_calibration_zero.o: ./Core/Src/gui/menu_calibratio
 
 output/base/Core/Src/gui/menu_check_flash.o: ./Core/Src/gui/menu_check_flash.c
 	@echo 'Building target: menu_check_flash.c'
+	@$(CC) $(C_FLAGS) -o "$@" "$<"
+
+output/base/Core/Src/gui/menu_oscilloscope.o: ./Core/Src/gui/menu_oscilloscope.c
+	@echo 'Building target: menu_oscilloscope.c'
 	@$(CC) $(C_FLAGS) -o "$@" "$<"
 
 output/base/Core/Src/gui/menu_root.o: ./Core/Src/gui/menu_root.c

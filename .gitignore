@@ -30,3 +30,5 @@ misc/3d/microampermeter.blend1
 misc/test/TestCircleBuffer/CMakeLists.txt.user
 
 py/old/
+
+py/out.a

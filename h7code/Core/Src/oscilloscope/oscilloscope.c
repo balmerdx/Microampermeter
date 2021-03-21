@@ -1,14 +1,14 @@
 #include "main.h"
 #include "oscilloscope.h"
 
-#include "sys/param.h"
+#include <sys/param.h>
 
 #include "UTFT.h"
 
 static uint16_t osc_colors[320];
 static uint16_t osc_back_color = VGA_BLACK;
 static uint16_t osc_line_color = VGA_OLIVE;
-static uint16_t osc_line_center_color = VGA_YELLOW;
+static uint16_t osc_line_special_color = VGA_YELLOW; //Выделенная линия, обычно какой-то 0
 static uint16_t osc_graph_color = VGA_WHITE;
 
 void OscilloscopeDraw(OscilloscopeData* data)
@@ -19,8 +19,8 @@ void OscilloscopeDraw(OscilloscopeData* data)
     int width = data->pos.width;
     int height = data->pos.height;
 
-    int line_center_x = (width/data->lines_dx/2)*data->lines_dx;
-    int line_center_y = (height/data->lines_dy/2)*data->lines_dy;
+    int line_special_x = (width/data->lines_dx/2)*data->lines_dx;
+    int line_special_y = (height/data->lines_dy)*data->lines_dy;
 
     data->start(data);
     int cur_y = data->value(data, 0);
@@ -30,8 +30,8 @@ void OscilloscopeDraw(OscilloscopeData* data)
         uint16_t back_color = osc_back_color;
         if(x==line_x)
             back_color = osc_line_color;
-        if(x==line_center_x)
-            back_color = osc_line_center_color;
+        if(x==line_special_x)
+            back_color = osc_line_special_color;
 
         int line_y = 0;
         for(int y=0; y<height; y++)
@@ -39,8 +39,8 @@ void OscilloscopeDraw(OscilloscopeData* data)
             uint16_t color = back_color;
             if(y==line_y)
                 color = osc_line_color;
-            if(y==line_center_y)
-                color = osc_line_center_color;
+            if(y==line_special_y)
+                color = osc_line_special_color;
 
             osc_colors[y] = color;
 

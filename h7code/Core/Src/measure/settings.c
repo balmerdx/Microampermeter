@@ -30,6 +30,9 @@ void InitSettings()
     g_settings.filterX = g_filterX;
     g_settings.scene_id = 0;
     g_settings.sum_histogramm_time = 0;
+    g_settings.seconds_per_line_idx = 0;
+    g_settings.ampers_per_line_idx = 0;
+    g_settings.oscilloscope_encoder = 0;
 }
 
 void InitSettingsPermanent()

@@ -12,6 +12,9 @@ typedef struct Settings
     uint8_t filterX;
     uint8_t scene_id; //0-microampermeter, 1-histogramm, 2-oscilloscope
     uint8_t sum_histogramm_time; //See menu_time_histogram.c
+    uint8_t seconds_per_line_idx; //See coeff_seconds_per_line
+    uint8_t ampers_per_line_idx; //See coeff_ampers_per_line
+    uint8_t oscilloscope_encoder;//See OscilloscopeEncoderEnum
 } Settings;
 
 
