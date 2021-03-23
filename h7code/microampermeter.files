@@ -36,6 +36,7 @@ Core/Src/gui/menu_root.c
 Core/Src/gui/menu_root_histogram.c
 Core/Src/gui/menu_switch_scene.c
 Core/Src/gui/menu_time_histogram.c
+Core/Src/gui/mul_coeff_per_line.c
 Core/Src/gui/scene_histogram.c
 Core/Src/gui/scene_oscilloscope.c
 Core/Src/gui/scene_single.c
@@ -133,6 +134,7 @@ Core/Src/gui/menu_root.h
 Core/Src/gui/menu_root_histogram.h
 Core/Src/gui/menu_switch_scene.h
 Core/Src/gui/menu_time_histogram.h
+Core/Src/gui/mul_coeff_per_line.h
 Core/Src/gui/scene_histogram.h
 Core/Src/gui/scene_oscilloscope.h
 Core/Src/gui/scene_single.h

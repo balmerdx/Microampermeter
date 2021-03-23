@@ -1,4 +1,5 @@
 #pragma once
+
 void SceneOscilloscopeStart();
 
 typedef enum OscilloscopeEncoderEnum

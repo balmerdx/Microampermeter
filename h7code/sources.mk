@@ -42,6 +42,7 @@ DEPS += \
 	output/base/Core/Src/gui/menu_root_histogram.d \
 	output/base/Core/Src/gui/menu_switch_scene.d \
 	output/base/Core/Src/gui/menu_time_histogram.d \
+	output/base/Core/Src/gui/mul_coeff_per_line.d \
 	output/base/Core/Src/gui/scene_histogram.d \
 	output/base/Core/Src/gui/scene_oscilloscope.d \
 	output/base/Core/Src/gui/scene_single.d \
@@ -140,6 +141,7 @@ OBJS += \
 	output/base/Core/Src/gui/menu_root_histogram.o \
 	output/base/Core/Src/gui/menu_switch_scene.o \
 	output/base/Core/Src/gui/menu_time_histogram.o \
+	output/base/Core/Src/gui/mul_coeff_per_line.o \
 	output/base/Core/Src/gui/scene_histogram.o \
 	output/base/Core/Src/gui/scene_oscilloscope.o \
 	output/base/Core/Src/gui/scene_single.o \
@@ -349,6 +351,10 @@ output/base/Core/Src/gui/menu_switch_scene.o: ./Core/Src/gui/menu_switch_scene.c
 
 output/base/Core/Src/gui/menu_time_histogram.o: ./Core/Src/gui/menu_time_histogram.c
 	@echo 'Building target: menu_time_histogram.c'
+	@$(CC) $(C_FLAGS) -o "$@" "$<"
+
+output/base/Core/Src/gui/mul_coeff_per_line.o: ./Core/Src/gui/mul_coeff_per_line.c
+	@echo 'Building target: mul_coeff_per_line.c'
 	@$(CC) $(C_FLAGS) -o "$@" "$<"
 
 output/base/Core/Src/gui/scene_histogram.o: ./Core/Src/gui/scene_histogram.c

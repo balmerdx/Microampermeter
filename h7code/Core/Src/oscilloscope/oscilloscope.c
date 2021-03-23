@@ -35,8 +35,8 @@ void OscilloscopeDraw(OscilloscopeData* data)
     int width = data->pos.width;
     height = data->pos.height;
 
-    int line_special_x = (width/data->lines_dx/2)*data->lines_dx;
-    int line_special_y = (height/data->lines_dy)*data->lines_dy;
+    //int line_special_x = (width/data->lines_dx/2)*data->lines_dx;
+    //int line_special_y = (height/data->lines_dy)*data->lines_dy;
 
     data->start(data);
     OscilloscopeValue cur = data->value(data, 0);
@@ -46,7 +46,7 @@ void OscilloscopeDraw(OscilloscopeData* data)
         uint16_t back_color = osc_back_color;
         if(x==line_x)
             back_color = osc_line_color;
-        if(x==line_special_x)
+        if(x==data->line_special_x)
             back_color = osc_line_special_color;
 
         int line_y = 0;
@@ -55,7 +55,7 @@ void OscilloscopeDraw(OscilloscopeData* data)
             uint16_t color = back_color;
             if(y==line_y)
                 color = osc_line_color;
-            if(y==line_special_y)
+            if(y==data->line_special_y)
                 color = osc_line_special_color;
 
             osc_colors[y] = color;
