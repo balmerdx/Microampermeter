@@ -178,3 +178,20 @@ uint32_t STTriggerOffset()
 {
     return CircleBufferGetRelativeOffset(&circle_buffer, cb_trigger_abs_value);
 }
+
+void STTestAdd(float current)
+{
+    CircleBufferAdd(&circle_buffer, &current);
+}
+
+uint32_t STBufferCapacity()
+{
+    return CircleBufferCapacity(&circle_buffer);
+}
+
+void STTestSetCaptureCompleted()
+{
+    cb_trigger_abs_value = STBufferCapacity()/4;
+    cb_end_abs_value = 0;
+    cb_capture_completed = true;
+}

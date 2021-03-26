@@ -28,8 +28,6 @@ static RectA r_seconds_offset;
 static OscilloscopeData osc;
 
 static bool enable_redraw = false;
-static bool use_test = false;
-static float phase = 0;
 
 //Коэффициент масштабирования по оси X (секунд на lines_dx)
 static float seconds_per_line = 1e-2f;
@@ -44,19 +42,15 @@ static float samples_per_pixel;// ось X
 static int samples_trigger_offset;
 static float y_mul; //ampers per pixel
 
-void OscilloscopeStartTest(OscilloscopeData* data)
+static void TestFill()
 {
-    data->line_special_x = 0;
-    data->line_special_y = (data->pos.height/data->lines_dy)*data->lines_dy;
-}
+    uint32_t size = STBufferCapacity();
+    for(uint32_t i=0; i<size; i++)
+    {
+        STTestAdd(sinf(i*0.01f)*50e-6f);
+    }
 
-static OscilloscopeValue OscilloscopeValueTest(OscilloscopeData* data, int x)
-{
-    OscilloscopeValue ret;
-    ret.y = sinf(x/(float)data->pos.width*2*M_PI*3+phase)*data->pos.height/2.f+data->pos.height/2;
-    ret.y_min = ret.y - 5;
-    ret.y_max = ret.y + 3;
-    return ret;
+    STTestSetCaptureCompleted();
 }
 
 static int PixelToBufferOffset(int x)
@@ -77,6 +71,15 @@ static void OscilloscopeStartSum(OscilloscopeData* data)
     half_oscillograph_width = (data->pos.width/data->lines_dx/2)*data->lines_dx;
     samples_per_pixel = STFilterSPS() * seconds_per_line / osc.lines_dx;
     samples_trigger_offset = STFilterSPS() * seconds_trigger_offset;
+
+    if(false)
+    {
+        //Сдвигаем изначальное положение влево
+        //Т.к. типично нас не очень интересует, что происходило до момента триггера
+        int offset_to_left = (half_oscillograph_width - data->lines_dx)*samples_per_pixel;
+        samples_trigger_offset += offset_to_left;
+    }
+
     y_mul = osc.lines_dy / amper_per_line;
 
     data->line_special_x = BufferOffsetToPixel(STTriggerOffset());
@@ -175,15 +178,18 @@ void SceneOscilloscopeStart()
     {
         osc.lines_dx = 36;
         osc.lines_dy = 36;
-        if(use_test)
+\
         {
-            osc.start = OscilloscopeStartTest;
-            osc.value = OscilloscopeValueTest;
-        } else
-        {
-            osc.start = OscilloscopeStartSum;
-            osc.value = OscilloscopeValueSum;
+            static bool first = true;
+            if(first)
+            {
+                first = false;
+                TestFill();
+            }
         }
+
+        osc.start = OscilloscopeStartSum;
+        osc.value = OscilloscopeValueSum;
 
         int width = osc.lines_dx*12+1;
         int height = osc.lines_dx*6+1;
@@ -226,24 +232,11 @@ static void SceneOscilloscopeUpdateInfo()
 
 static void SceneOscilloscopeQuant()
 {
-    if(use_test)
+    if(enable_redraw && STCaptureCompleted())
     {
-        phase += 0.01f;
-        uint16_t start_us = TimeUs();
+        enable_redraw = false;
         OscilloscopeDraw(&osc);
-        uint16_t delta_us = TimeUs() - start_us;
-        char str[32];
-        strcpy(str, "draw(us)=");
-        catInt(str, delta_us);
-        StatusbarSetTextAndRedraw(str);
-    } else
-    {
-        if(enable_redraw && STCaptureCompleted())
-        {
-            enable_redraw = false;
-            OscilloscopeDraw(&osc);
-            SceneOscilloscopeUpdateInfo();
-        }
+        SceneOscilloscopeUpdateInfo();
     }
 
 

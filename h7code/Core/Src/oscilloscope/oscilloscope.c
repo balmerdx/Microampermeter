@@ -18,7 +18,7 @@ static void DrawHLine(int y1, int y2, uint16_t color)
     int y_min = MIN(y1, y2);
     int y_max = MAX(y1, y2);
 
-    if((y_min>=0 && y_min<height) || (y_max>=0 && y_max<height))
+    if(y_min<height || y_max>=0)
     {
         y_min = MAX(y_min, 0);
         y_max = MIN(y_max, height-1);
@@ -34,9 +34,6 @@ void OscilloscopeDraw(OscilloscopeData* data)
 
     int width = data->pos.width;
     height = data->pos.height;
-
-    //int line_special_x = (width/data->lines_dx/2)*data->lines_dx;
-    //int line_special_y = (height/data->lines_dy)*data->lines_dy;
 
     data->start(data);
     OscilloscopeValue cur = data->value(data, 0);

@@ -28,3 +28,7 @@ typedef void (*STIterateIntervalCallback)(float sample, void* param);
 //Итерируемся по полученным данным. В пределах [0..STSamplesCaptured)
 //Пока только после STCaptureCompleted()==true
 bool STIterate(uint32_t istart, uint32_t iend, STIterateIntervalCallback callback, void* param);
+
+void STTestAdd(float current);
+uint32_t STBufferCapacity();
+void STTestSetCaptureCompleted();
