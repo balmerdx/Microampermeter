@@ -4,6 +4,7 @@
 #include "hardware/store_to_spi_flash.h"
 #include "my_filter.h"
 #include "gui/scene_single.h"
+#include "gui/menu_trigger_level.h"
 
 enum
 {
@@ -33,6 +34,7 @@ void InitSettings()
     g_settings.seconds_per_line_idx = 0;
     g_settings.ampers_per_line_idx = 0;
     g_settings.oscilloscope_encoder = 0;
+    g_settings.trigger_level = TRIGGER_LEVEL_10uA;
 }
 
 void InitSettingsPermanent()
@@ -64,9 +66,11 @@ bool LoadSettings()
         if(g_settings.filterX > FilterX_1024)
             g_settings.filterX = FilterX_1;
 
+        if(g_settings.trigger_level >= TRIGGER_LEVEL_COUNT)
+            g_settings.trigger_level = TRIGGER_LEVEL_10uA;
+
         line2_type = g_settings.line2_type;
         g_filterX = g_settings.filterX;
-
     }
     return ok;
 }
@@ -137,4 +141,26 @@ void UpdateRinv()
     resistor_value_inv[RESISTOR_100_Om] = 1.f/g_settings_permanent.R_100_Om;
     resistor_value_inv[RESISTOR_10_Om] = 1.f/g_settings_permanent.R_10_Om;
     resistor_value_inv[RESISTOR_1_Om] = 1.f/g_settings_permanent.R_1_Om;
+}
+
+float TriggerLevelAmpers()
+{
+    switch(g_settings.trigger_level)
+    {
+    case TRIGGER_LEVEL_1uA: return 1e-6f;
+    case TRIGGER_LEVEL_2uA: return 2e-6f;
+    case TRIGGER_LEVEL_5uA: return 5e-6f;
+    case TRIGGER_LEVEL_10uA: return 10e-6f;
+    case TRIGGER_LEVEL_20uA: return 20e-6f;
+    case TRIGGER_LEVEL_50uA: return 50e-6f;
+    case TRIGGER_LEVEL_100uA: return 100e-6f;
+    case TRIGGER_LEVEL_200uA: return 200e-6f;
+    case TRIGGER_LEVEL_500uA: return 500e-6f;
+    case TRIGGER_LEVEL_1mA: return 1e-3f;
+    case TRIGGER_LEVEL_2mA: return 2e-3f;
+    case TRIGGER_LEVEL_5mA: return 5e-3f;
+    case TRIGGER_LEVEL_10mA: return 10e-3f;
+    }
+
+    return 10e-6f;
 }

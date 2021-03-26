@@ -1,6 +1,7 @@
 #include "main.h"
 #include "menu_oscilloscope.h"
 #include "menu_switch_scene.h"
+#include "menu_trigger_level.h"
 #include "scene_oscilloscope.h"
 
 #include "interface/interface.h"
@@ -57,6 +58,7 @@ void MenuOscilloscopeQuant()
 
     if(MenuIndex()==MO_TRIGGER_LEVEL)
     {
+        MenuTriggerLevelStart();
         return;
     }
 

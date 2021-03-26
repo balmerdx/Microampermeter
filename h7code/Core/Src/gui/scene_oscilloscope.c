@@ -71,15 +71,6 @@ static void OscilloscopeStartSum(OscilloscopeData* data)
     half_oscillograph_width = (data->pos.width/data->lines_dx/2)*data->lines_dx;
     samples_per_pixel = STFilterSPS() * seconds_per_line / osc.lines_dx;
     samples_trigger_offset = STFilterSPS() * seconds_trigger_offset;
-
-    if(false)
-    {
-        //Сдвигаем изначальное положение влево
-        //Т.к. типично нас не очень интересует, что происходило до момента триггера
-        int offset_to_left = (half_oscillograph_width - data->lines_dx)*samples_per_pixel;
-        samples_trigger_offset += offset_to_left;
-    }
-
     y_mul = osc.lines_dy / amper_per_line;
 
     data->line_special_x = BufferOffsetToPixel(STTriggerOffset());

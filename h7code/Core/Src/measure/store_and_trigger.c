@@ -3,6 +3,7 @@
 
 #include "circle_buf.h"
 #include "my_filter.h"
+#include "settings.h"
 #include "receive_data.h"
 #include "usb_device.h"
 #include "usbd_cdc_if.h"
@@ -30,7 +31,7 @@ void STInit()
     cb_capture_completed = false;
     cb_trigger_rising = true;
     cb_trigger_triggered = false;
-    cb_trigger_level = 10e-6f;//10 uA
+    cb_trigger_level = TriggerLevelAmpers();
 }
 
 void OnFilterNextSampleCircleBuffer(float current, float voltage)
@@ -62,6 +63,7 @@ void OnFilterNextSampleCircleBuffer(float current, float voltage)
 
 void STCaptureStart()
 {
+    cb_trigger_level = TriggerLevelAmpers();
     cb_capture_started = true;
     cb_capture_completed = false;
     cb_trigger_triggered = false;

@@ -8,13 +8,18 @@ typedef struct Settings
     //Предполагаем, что их можно перекалибровывать достаточно часто
     int32_t offset_adc_I;
     int32_t offset_adc_V;
+
+    //Объединяем uint8 по 4 байта для выравнивания
     uint8_t line2_type;
     uint8_t filterX;
     uint8_t scene_id; //0-microampermeter, 1-histogramm, 2-oscilloscope
     uint8_t sum_histogramm_time; //See menu_time_histogram.c
+
     uint8_t seconds_per_line_idx; //See coeff_seconds_per_line
     uint8_t ampers_per_line_idx; //See coeff_ampers_per_line
     uint8_t oscilloscope_encoder;//See OscilloscopeEncoderEnum
+    uint8_t trigger_level;//See TriggerLevelEnum
+
 } Settings;
 
 
@@ -47,3 +52,5 @@ float GetResistorValueInv(RESISTOR r);
 //Пара констант коэффициентов усиления.
 extern float mul_V_original;
 extern float mul_I_original;
+
+float TriggerLevelAmpers();
