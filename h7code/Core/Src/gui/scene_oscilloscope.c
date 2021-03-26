@@ -118,6 +118,7 @@ static OscilloscopeValue OscilloscopeValueSum(OscilloscopeData* data, int x)
     int istart = PixelToBufferOffset(x);
     int iend = PixelToBufferOffset(x+1);
     istart = MAX(istart, 0);
+    iend = MAX(iend, istart+1);
     iend = MIN(iend, (int)STSamplesCaptured());
 
     STIterate(istart, iend, IterateIntervalCallback, 0);
