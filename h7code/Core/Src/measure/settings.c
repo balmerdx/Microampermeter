@@ -35,6 +35,10 @@ void InitSettings()
     g_settings.ampers_per_line_idx = 0;
     g_settings.oscilloscope_encoder = 0;
     g_settings.trigger_level = TRIGGER_LEVEL_10uA;
+    g_settings.trigger_rising = 1;
+    g_settings.dummy0 = 0;
+    g_settings.dummy1 = 0;
+    g_settings.dummy2 = 0;
 }
 
 void InitSettingsPermanent()

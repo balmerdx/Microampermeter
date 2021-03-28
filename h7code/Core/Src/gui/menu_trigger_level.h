@@ -1,6 +1,6 @@
 #pragma once
 
-enum TriggerLevelEnum
+typedef enum TriggerLevelEnum
 {
     TRIGGER_LEVEL_1uA,
     TRIGGER_LEVEL_2uA,
@@ -16,6 +16,8 @@ enum TriggerLevelEnum
     TRIGGER_LEVEL_5mA,
     TRIGGER_LEVEL_10mA,
     TRIGGER_LEVEL_COUNT,
-};
+} TriggerLevelEnum;
+
+const char* TrigerLevelStr(TriggerLevelEnum v);
 
 void MenuTriggerLevelStart();

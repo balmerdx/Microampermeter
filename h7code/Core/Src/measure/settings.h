@@ -20,6 +20,10 @@ typedef struct Settings
     uint8_t oscilloscope_encoder;//See OscilloscopeEncoderEnum
     uint8_t trigger_level;//See TriggerLevelEnum
 
+    uint8_t trigger_rising;//1 - rising, 0 - falling
+    uint8_t dummy0;
+    uint8_t dummy1;
+    uint8_t dummy2;
 } Settings;
 
 

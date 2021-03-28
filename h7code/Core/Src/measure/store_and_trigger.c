@@ -17,7 +17,12 @@ static volatile bool cb_capture_started;
 static volatile bool cb_capture_completed;
 static volatile bool cb_trigger_triggered;
 static bool cb_trigger_rising;
-static float cb_trigger_level;
+//До начала проверки условия триггера, проыеряем, что например для cb_trigger_rising значение меньше, чем cb_trigger_level_low
+//и только потом проверяем, что выше, чем cb_trigger_level_high
+static bool cb_trigger_before_start;
+//Для некоторого гистерезиса два значения используем
+static float cb_trigger_level_high;
+static float cb_trigger_level_low;
 
 static uint32_t cb_trigger_abs_value;
 static uint32_t cb_end_abs_value;
@@ -29,9 +34,11 @@ void STInit()
     cb_filterX = FilterX_1;
     cb_capture_started = false;
     cb_capture_completed = false;
-    cb_trigger_rising = true;
     cb_trigger_triggered = false;
-    cb_trigger_level = TriggerLevelAmpers();
+    cb_trigger_before_start = false;
+    cb_trigger_level_high =
+    cb_trigger_level_low = 1;
+
 }
 
 void OnFilterNextSampleCircleBuffer(float current, float voltage)
@@ -48,13 +55,22 @@ void OnFilterNextSampleCircleBuffer(float current, float voltage)
         }
     } else
     {
-        bool triggered = (cb_trigger_rising && current >= cb_trigger_level) ||
-                         (!cb_trigger_rising && current < cb_trigger_level);
-        if(triggered)
+        if(cb_trigger_before_start)
         {
-            cb_trigger_triggered = true;
-            cb_trigger_abs_value = CircleBufferGetAbsoluteEndOffset(&circle_buffer);
-            cb_end_abs_value = CircleBufferGetAbsoluteOffset(&circle_buffer, CircleBufferCapacity(&circle_buffer)*3/4);
+            bool triggered = (cb_trigger_rising && current < cb_trigger_level_low) ||
+                             (!cb_trigger_rising && current > cb_trigger_level_high);
+            if(triggered)
+                cb_trigger_before_start = false;
+        } else
+        {
+            bool triggered = (cb_trigger_rising && current > cb_trigger_level_high) ||
+                             (!cb_trigger_rising && current < cb_trigger_level_low);
+            if(triggered)
+            {
+                cb_trigger_triggered = true;
+                cb_trigger_abs_value = CircleBufferGetAbsoluteEndOffset(&circle_buffer);
+                cb_end_abs_value = CircleBufferGetAbsoluteOffset(&circle_buffer, CircleBufferCapacity(&circle_buffer)*3/4);
+            }
         }
     }
 
@@ -63,13 +79,20 @@ void OnFilterNextSampleCircleBuffer(float current, float voltage)
 
 void STCaptureStart()
 {
-    cb_trigger_level = TriggerLevelAmpers();
-    cb_capture_started = true;
+    cb_trigger_rising = g_settings.trigger_rising?true:false;
+    float trigger_level = TriggerLevelAmpers();
+    cb_trigger_level_high = trigger_level*1.05f;
+    cb_trigger_level_low = trigger_level*0.95f;
+
+    cb_trigger_before_start = true;
     cb_capture_completed = false;
     cb_trigger_triggered = false;
 
     cb_filterX = g_filterX;
     CircleBufferClear(&circle_buffer);
+
+    //Последнее, т.к. это реально запускает процесс.
+    cb_capture_started = true;
 }
 
 bool STCaptureStarted()
