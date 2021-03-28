@@ -25,7 +25,6 @@ static float cb_trigger_level_high;
 static float cb_trigger_level_low;
 
 static uint32_t cb_trigger_abs_value;
-static uint32_t cb_end_abs_value;
 
 void STInit()
 {
@@ -48,7 +47,7 @@ void OnFilterNextSampleCircleBuffer(float current, float voltage)
 
     if(cb_trigger_triggered)
     {
-        if(cb_end_abs_value == CircleBufferGetAbsoluteEndOffset(&circle_buffer))
+        if(CircleBufferSamples(&circle_buffer) == CircleBufferCapacity(&circle_buffer))
         {
             cb_capture_completed = true;
             cb_capture_started = false;
@@ -69,7 +68,19 @@ void OnFilterNextSampleCircleBuffer(float current, float voltage)
             {
                 cb_trigger_triggered = true;
                 cb_trigger_abs_value = CircleBufferGetAbsoluteEndOffset(&circle_buffer);
-                cb_end_abs_value = CircleBufferGetAbsoluteOffset(&circle_buffer, CircleBufferCapacity(&circle_buffer)*3/4);
+
+                //Количество сэмплов, которые мы запоминаем до того, как сработал триггер
+                uint32_t preshoot_samples = CircleBufferCapacity(&circle_buffer)/4;
+                if(circle_buffer.samples_stored >= preshoot_samples)
+                {
+                    circle_buffer.first_sample_offset = CircleBufferGetAbsoluteOffset(&circle_buffer, CircleBufferCapacity(&circle_buffer) - preshoot_samples);
+                    circle_buffer.samples_stored = preshoot_samples;
+                } else
+                {
+                    //В буфере слишком мало сэмплов, поэтому до триггера меньшее количество запомним
+                }
+
+                //first_sample_offset после этих операций не меняется
             }
         }
     }
@@ -217,6 +228,5 @@ uint32_t STBufferCapacity()
 void STTestSetCaptureCompleted()
 {
     cb_trigger_abs_value = STBufferCapacity()/4;
-    cb_end_abs_value = 0;
     cb_capture_completed = true;
 }

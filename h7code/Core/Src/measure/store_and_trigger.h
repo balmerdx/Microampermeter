@@ -19,7 +19,9 @@ void STSendData();
 //Сэмплов за секунду в отсэмплированных данных
 float STFilterSPS();
 
-//Общее количество сэмплов
+//Общее количество сэмплов, которые могут поместиться в буффер
+uint32_t STBufferCapacity();
+//Общее количество валидных сэмплов
 uint32_t STSamplesCaptured();
 //Сэмпл на котором сработал триггер.
 uint32_t STTriggerOffset();
@@ -30,5 +32,4 @@ typedef void (*STIterateIntervalCallback)(float sample, void* param);
 bool STIterate(uint32_t istart, uint32_t iend, STIterateIntervalCallback callback, void* param);
 
 void STTestAdd(float current);
-uint32_t STBufferCapacity();
 void STTestSetCaptureCompleted();

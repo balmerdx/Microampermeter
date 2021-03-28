@@ -7,6 +7,7 @@
 
 #include "interface/interface.h"
 #include "interface/statusbar.h"
+#include "interface/progress_bar.h"
 #include "menu_oscilloscope.h"
 #include "gui_settings.h"
 #include "measure/store_and_trigger.h"
@@ -19,12 +20,19 @@
 
 static void SceneOscilloscopeQuant();
 static void OscilloscopeEncoderQuant(int delta);
+static void UpdateTriggerColor();
 
 static RectA r_triggered;
 static RectA r_buffer_samples;
 static RectA r_ampers_per_line;
 static RectA r_seconds_per_line;
 static RectA r_seconds_offset;
+//Два квадрата триггера, которые заливаем цветом.
+//Желтый - триггер не стартовал
+//Зелёный - стартовал
+//Черный - триггер окончил работу
+static RectA r_trigger_left;
+static RectA r_trigger_right;
 static OscilloscopeData osc;
 
 static bool enable_redraw = false;
@@ -41,6 +49,8 @@ static int half_oscillograph_width;
 static float samples_per_pixel;// ось X
 static int samples_trigger_offset;
 static float y_mul; //ampers per pixel
+
+static bool use_progressbar = true;
 
 static void TestFill()
 {
@@ -147,7 +157,6 @@ void SceneOscilloscopeStart()
 
     RectA r_tmp, r_line;
     RectA r_all = R_DisplaySize();
-
     R_SplitY1(&r_all, UTF_Height(), &r_tmp, &r_all);
     R_SplitY2(&r_all, UTF_Height(), &r_all, &r_line);
     R_FillRectBack(&r_all);
@@ -160,12 +169,20 @@ void SceneOscilloscopeStart()
     R_FillRectBack(&r_seconds_offset);
 
 
-    R_SplitY1(&r_all, UTF_Height(), &r_line, &r_all);
+    R_SplitY2(&r_all, UTF_Height(), &r_all, &r_line);
 
-    R_SplitX1(&r_line, UTF_StringWidth("Triggered")+X_MARGIN*2, &r_triggered, &r_line);
-    R_SplitX1(&r_line, UTF_StringWidth("Samples=")+X_MARGIN, &r_tmp, &r_line);
-    R_SplitX1(&r_line, UTF_StringWidth("000000")+X_MARGIN, &r_buffer_samples, &r_line);
-    R_DrawStringJustify(&r_tmp, "Samples=", UTF_RIGHT);
+    if(use_progressbar)
+    {
+        ProgressInit(r_line.x+X_MARGIN, r_line.y+X_MARGIN, r_line.width-X_MARGIN*2, X_MARGIN*2);
+        ProgressSetPos(0);
+        ProgressSetVisible(true);
+    } else
+    {
+        R_SplitX1(&r_line, UTF_StringWidth("Triggered")+X_MARGIN*2, &r_triggered, &r_line);
+        R_SplitX1(&r_line, UTF_StringWidth("Samples=")+X_MARGIN, &r_tmp, &r_line);
+        R_SplitX1(&r_line, UTF_StringWidth("000000")+X_MARGIN, &r_buffer_samples, &r_line);
+        R_DrawStringJustify(&r_tmp, "Samples=", UTF_RIGHT);
+    }
 
     {
         osc.lines_dx = 36;
@@ -176,7 +193,7 @@ void SceneOscilloscopeStart()
             if(first)
             {
                 first = false;
-                TestFill();
+                //TestFill();
             }
         }
 
@@ -188,9 +205,9 @@ void SceneOscilloscopeStart()
         int rest_width2 = (UTFT_getDisplayXSize() - width)/2;
 
         RectA r_osc;
-        R_SplitY1(&r_all, height, &r_osc, &r_all);
-        R_SplitX1(&r_osc, rest_width2, &r_tmp, &r_osc);
-        R_SplitX1(&r_osc, width, &r_osc, &r_tmp);
+        R_SplitY2(&r_all, height, &r_all, &r_osc);
+        R_SplitX1(&r_osc, rest_width2, &r_trigger_left, &r_osc);
+        R_SplitX1(&r_osc, width, &r_osc, &r_trigger_right);
 
         osc.pos = r_osc;
 
@@ -202,6 +219,7 @@ void SceneOscilloscopeStart()
 
 static void SceneOscilloscopeUpdateInfo()
 {
+    UTFT_setColor(VGA_WHITE);
     char str[64];
     r_ampers_per_line.back_color = (g_settings.oscilloscope_encoder==ENCODER_SCALE_CURRENT)?COLOR_BACKGROUND_RED:COLOR_BACKGROUND_BLUE;
     r_seconds_per_line.back_color = (g_settings.oscilloscope_encoder==ENCODER_SCALE_TIME)?COLOR_BACKGROUND_RED:COLOR_BACKGROUND_BLUE;
@@ -243,6 +261,18 @@ static void SceneOscilloscopeQuant()
         OscilloscopeEncoderQuant(EncValueDelta());
     }
 
+    UpdateTriggerColor();
+
+    if(use_progressbar)
+    {
+        if(STCaptureCompleted())
+        {
+            ProgressSetPos((float)(samples_trigger_offset+STTriggerOffset())/(float)STBufferCapacity());
+        } else
+        {
+            ProgressSetPos((float)STSamplesCaptured()/(float)STBufferCapacity());
+        }
+    } else
     {
         char* str = "Off";
         if(STCaptureCompleted())
@@ -253,9 +283,8 @@ static void SceneOscilloscopeQuant()
             str = "Started";
 
         R_DrawStringJustify(&r_triggered, str, UTF_CENTER);
+        R_printNumI(&r_buffer_samples, STSamplesCaptured(), UTF_LEFT);
     }
-
-    R_printNumI(&r_buffer_samples, STSamplesCaptured(), UTF_LEFT);
 }
 
 void SetOscilloscopeEncoder(OscilloscopeEncoderEnum type)
@@ -300,4 +329,24 @@ void OscilloscopeEncoderQuant(int delta)
     SceneOscilloscopeUpdateInfo();
 
     enable_redraw = true;
+}
+
+static void UpdateTriggerColor()
+{
+    int16_t new_color = VGA_BLACK;
+    if(STCaptureCompleted())
+        new_color = VGA_BLACK;
+    else if(STTriggerTriggered())
+        new_color = VGA_GREEN;
+    else if(STCaptureStarted())
+        new_color = VGA_RED;
+
+    if(r_trigger_left.back_color == new_color)
+        return;
+
+    r_trigger_left.back_color = new_color;
+    r_trigger_right.back_color = new_color;
+
+    R_FillRectBack(&r_trigger_left);
+    R_FillRectBack(&r_trigger_right);
 }
