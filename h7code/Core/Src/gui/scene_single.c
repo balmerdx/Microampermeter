@@ -18,12 +18,13 @@
 #include "measure/receive_data.h"
 #include "measure/calculate.h"
 #include "measure/mid_big_interval.h"
+#include "measure/settings.h"
 #include "hardware/vbat.h"
 
 #define COLOR_BACK1 VGA_TEAL
 #define COLOR_BACK2 VGA_NAVY
 
-const bool enable_percent_view = true;
+const bool enable_percent_view = false;
 
 static RectA r_battery;
 static bool battery_is_low;
@@ -307,9 +308,11 @@ void DrawResult()
 
     if(enable_percent_view)
     {
-        float value = fmin(GetPercentInInterrupt(), 99.9f);
-        floatToString(buf, sizeof(buf), value, 1, 0, false);
-        strcat(buf, "%");
+        //float value = fmin(GetPercentInInterrupt(), 99.9f);
+        //floatToString(buf, sizeof(buf), value, 1, 0, false);
+        //strcat(buf, "%");
+        intToString(buf, debug_save_settings_count, 3, NUM_SPACE);
+
         R_DrawStringJustify(&r_percent, buf, UTF_RIGHT);
     }
 

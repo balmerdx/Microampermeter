@@ -46,6 +46,13 @@ void InitSettings();
 bool LoadSettings();
 bool SaveSettings();
 
+//Помечаем для записи. Записываем не очень часто.
+//Через несколько секунд.
+void SaveSettingsLazy();
+void SettingsLazyQuant();
+
+extern int debug_save_settings_count;
+
 void InitSettingsPermanent();
 bool LoadSettingsPermanent();
 bool SaveSettingsPermanent();

@@ -6,6 +6,7 @@
 #include "menu_switch_scene.h"
 #include "scene_single.h"
 #include "scene_histogram.h"
+#include "scene_about.h"
 
 #include "interface/interface.h"
 #include "interface/menu.h"
@@ -25,6 +26,7 @@ enum
     MR_LINE2,
     MR_CHECK_FLASH,
     MR_CALIBRATION,
+    MR_ABOUT,
 };
 
 static int last_menu_index = 0;
@@ -38,6 +40,7 @@ void MenuRootStart()
     MenuAdd("Line2", MR_LINE2);
     //MenuAdd("Check flash", MR_CHECK_FLASH);
     MenuAdd("Calibration", MR_CALIBRATION);
+    MenuAdd("About", MR_ABOUT);
 
     MenuSetIndex(last_menu_index);
     MenuRedraw();
@@ -84,6 +87,12 @@ void MenuRootQuant()
     if(MenuData()==MR_CALIBRATION)
     {
         MenuCalibrationStart();
+        return;
+    }
+
+    if(MenuData()==MR_ABOUT)
+    {
+        SceneAboutStart(MenuRootStart);
         return;
     }
 

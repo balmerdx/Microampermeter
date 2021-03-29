@@ -3,6 +3,7 @@
 #include "menu_bandwidth.h"
 #include "menu_time_histogram.h"
 #include "menu_switch_scene.h"
+#include "scene_about.h"
 
 #include "interface/interface.h"
 #include "interface/menu.h"
@@ -18,6 +19,7 @@ enum
     MR_SWITCH_TO,
     MR_BANDWIDTH,
     MR_SUM_TIME,
+    MR_ABOUT,
 };
 
 static int last_menu_index = 0;
@@ -29,6 +31,7 @@ void MenuRootHistogramStart()
     MenuAdd("Switch to...", MR_SWITCH_TO);
     MenuAdd("Bandwidth", MR_BANDWIDTH);
     MenuAdd("Sum time", MR_SUM_TIME);
+    MenuAdd("About", MR_ABOUT);
     MenuSetIndex(last_menu_index);
     MenuRedraw();
     InterfaceGoto(MenuRootHistogramQuant);
@@ -63,6 +66,12 @@ void MenuRootHistogramQuant()
     if(MenuData()==MR_SUM_TIME)
     {
         MenuTimeHistogramStart();
+        return;
+    }
+
+    if(MenuData()==MR_ABOUT)
+    {
+        SceneAboutStart(MenuRootHistogramStart);
         return;
     }
 }

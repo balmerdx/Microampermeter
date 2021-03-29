@@ -38,6 +38,7 @@ Core/Src/gui/menu_switch_scene.c
 Core/Src/gui/menu_time_histogram.c
 Core/Src/gui/menu_trigger_level.c
 Core/Src/gui/mul_coeff_per_line.c
+Core/Src/gui/scene_about.c
 Core/Src/gui/scene_histogram.c
 Core/Src/gui/scene_oscilloscope.c
 Core/Src/gui/scene_single.c
@@ -111,6 +112,7 @@ Core/Src/hardware/vbat.h
 Core/Src/histogram/histogram_data.h
 Core/Src/histogram/histogram_plot.h
 Core/Src/oscilloscope/oscilloscope.h
+Core/Src/images/balmer.h
 Core/Src/images/batery_empty.h
 Core/Src/images/batery_full.h
 Core/Src/images/images.h
@@ -137,6 +139,7 @@ Core/Src/gui/menu_switch_scene.h
 Core/Src/gui/menu_time_histogram.h
 Core/Src/gui/menu_trigger_level.h
 Core/Src/gui/mul_coeff_per_line.h
+Core/Src/gui/scene_about.h
 Core/Src/gui/scene_histogram.h
 Core/Src/gui/scene_oscilloscope.h
 Core/Src/gui/scene_single.h

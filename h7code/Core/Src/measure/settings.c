@@ -14,6 +14,9 @@ enum
 
 Settings g_settings;
 SettingsPermanent g_settings_permanent;
+bool g_settings_is_changed = false;
+uint32_t g_settings_last_change_or_save_time = 0;
+int debug_save_settings_count = 0;
 
 float mul_V_original;
 float mul_I_original;
@@ -81,6 +84,10 @@ bool LoadSettings()
 
 bool SaveSettings()
 {
+    g_settings_is_changed = false;
+    g_settings_last_change_or_save_time = TimeMs();
+    debug_save_settings_count++;
+
     g_settings.line2_type = line2_type;
     g_settings.filterX = g_filterX;
     return SpiFlashWriteToFlash(SETTINGS_SECTOR, sizeof(g_settings), &g_settings);
@@ -167,4 +174,22 @@ float TriggerLevelAmpers()
     }
 
     return 10e-6f;
+}
+
+void SaveSettingsLazy()
+{
+    g_settings_is_changed = true;
+    g_settings_last_change_or_save_time = TimeMs();
+}
+
+void SettingsLazyQuant()
+{
+    if(!g_settings_is_changed)
+        return;
+
+    uint32_t dt = TimeMs()-g_settings_last_change_or_save_time;
+    if(dt < 3000)
+        return;
+
+    SaveSettings();
 }

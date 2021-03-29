@@ -32,13 +32,12 @@ void MenuOscilloscopeStart()
     char str[32];
     MenuReset("Oscilloscope menu");
     MenuAdd("Switch to...", MO_SWITCH_TO);
-    MenuAdd("Bandwidth", MO_BANDWIDTH);
     MenuAdd("Trigger start", MO_TRIGGER_START);
-
     strcpy(str, "Trigger level - ");
     strcat(str, TrigerLevelStr(g_settings.trigger_level));
     MenuAdd(str, MO_TRIGGER_LEVEL);
     MenuAdd(g_settings.trigger_rising?"Trigger rising":"Trigger falling", MO_TRIGGER_RISING);
+    MenuAdd("Bandwidth", MO_BANDWIDTH);
     MenuAdd("Encoder scale current", MO_ENCODER_SCALE_CURRENT);
     MenuAdd("Encoder scale time", MO_ENCODER_SCALE_TIME);
     MenuAdd("Encoder offset time", MO_ENCODER_OFFSET_TIME);
@@ -55,7 +54,7 @@ void MenuOscilloscopeQuant()
         return;
     last_menu_index = MenuIndex();
 
-    if(MenuIndex()==MO_SWITCH_TO)
+    if(MenuData()==MO_SWITCH_TO)
     {
         MenuSwitchSceneStart();
         return;
@@ -67,41 +66,42 @@ void MenuOscilloscopeQuant()
         return;
     }
 
-    if(MenuIndex()==MO_TRIGGER_START)
+    if(MenuData()==MO_TRIGGER_START)
     {
         OscilloscopeTriggerStart();
         SceneOscilloscopeStart();
         return;
     }
 
-    if(MenuIndex()==MO_TRIGGER_LEVEL)
+    if(MenuData()==MO_TRIGGER_LEVEL)
     {
         MenuTriggerLevelStart();
         return;
     }
 
-    if(MenuIndex()==MO_TRIGGER_RISING)
+    if(MenuData()==MO_TRIGGER_RISING)
     {
         g_settings.trigger_rising = g_settings.trigger_rising ? 0 : 1;
+        SaveSettings();
         MenuOscilloscopeStart();
         return;
     }
 
-    if(MenuIndex()==MO_ENCODER_SCALE_CURRENT)
+    if(MenuData()==MO_ENCODER_SCALE_CURRENT)
     {
         SetOscilloscopeEncoder(ENCODER_SCALE_CURRENT);
         SceneOscilloscopeStart();
         return;
     }
 
-    if(MenuIndex()==MO_ENCODER_SCALE_TIME)
+    if(MenuData()==MO_ENCODER_SCALE_TIME)
     {
         SetOscilloscopeEncoder(ENCODER_SCALE_TIME);
         SceneOscilloscopeStart();
         return;
     }
 
-    if(MenuIndex()==MO_ENCODER_OFFSET_TIME)
+    if(MenuData()==MO_ENCODER_OFFSET_TIME)
     {
         SetOscilloscopeEncoder(ENCODER_OFFSET_TIME);
         SceneOscilloscopeStart();

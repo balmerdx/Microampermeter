@@ -318,6 +318,7 @@ void SetOscilloscopeEncoder(OscilloscopeEncoderEnum type)
 {
     g_settings.oscilloscope_encoder = type;
     enable_redraw = true;
+    SaveSettingsLazy();
 }
 
 void OscilloscopeEncoderQuant(int delta)
@@ -327,6 +328,7 @@ void OscilloscopeEncoderQuant(int delta)
         int value = g_settings.ampers_per_line_idx;
         AddSaturated(&value, delta, AmperPerLineCount());
         g_settings.ampers_per_line_idx = value;
+        SaveSettingsLazy();
     }
 
     if(g_settings.oscilloscope_encoder==ENCODER_SCALE_TIME)
@@ -334,6 +336,7 @@ void OscilloscopeEncoderQuant(int delta)
         int value = g_settings.seconds_per_line_idx;
         AddSaturated(&value, delta, SecondsPerLineCount());
         g_settings.seconds_per_line_idx = value;
+        SaveSettingsLazy();
     }
 
     if(g_settings.oscilloscope_encoder==ENCODER_OFFSET_TIME)

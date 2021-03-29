@@ -112,6 +112,7 @@ int main(void)
     {
         InterfaceQuant();
         UsbCommandsQuant();
+        SettingsLazyQuant();
         DelayMs(1);
     }
 }
