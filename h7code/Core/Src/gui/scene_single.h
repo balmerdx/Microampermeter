@@ -14,7 +14,8 @@ extern LINE2_TYPE line2_type;
 //ток или сопротивление. И кучу дебаговой информации по краям.
 void SceneSingleStart();
 
-void UpdateVbatLow(RectA* r);
-
 char* CurrentSuffix(float current, float* mul);
 void catFloatFixed(char* outstr, int outstr_size, float value, int digits);
+
+void UpdateVbatLow();
+void DrawHeaderAndGetVbatRect(const char* header_name, RectA* r_screen);

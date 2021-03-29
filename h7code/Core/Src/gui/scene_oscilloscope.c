@@ -14,6 +14,7 @@
 #include "measure/receive_data.h"
 #include "measure/settings.h"
 #include "oscilloscope/oscilloscope.h"
+#include "scene_single.h"
 
 #include <string.h>
 #include <sys/param.h>
@@ -162,13 +163,8 @@ void OscilloscopeTriggerStart()
 
 void SceneOscilloscopeStart()
 {
-    HeaderSetTextAndRedraw("Oscilloscope");
-    //StatusbarSetTextAndRedraw("Statusbar");
-    UTF_SetFont(g_default_font);
-
-    RectA r_tmp, r_line;
-    RectA r_all = R_DisplaySize();
-    R_SplitY1(&r_all, UTF_Height(), &r_tmp, &r_all);
+    RectA r_all, r_tmp, r_line;
+    DrawHeaderAndGetVbatRect("Oscilloscope", &r_all);
     R_SplitY2(&r_all, UTF_Height(), &r_all, &r_line);
     R_FillRectBack(&r_all);
 
@@ -314,6 +310,8 @@ static void SceneOscilloscopeQuant()
         R_DrawStringJustify(&r_triggered, str, UTF_CENTER);
         R_printNumI(&r_buffer_samples, STSamplesCaptured(), UTF_LEFT);
     }
+
+    UpdateVbatLow();
 }
 
 void SetOscilloscopeEncoder(OscilloscopeEncoderEnum type)

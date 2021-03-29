@@ -20,7 +20,6 @@
 
 static void SceneHistogramQuant();
 
-static RectA r_battery;
 static RectA r_current;
 static RectA r_voltage;
 
@@ -63,37 +62,17 @@ void SceneHistogramStart()
         samples_to_complete = lroundf(FilterSPS() * sum_time);
     }
 
-    RectA r_tmp = R_DisplaySize();
+    RectA r_tmp;
     RectA r_hist;
-    RectA r_top, r_bottom;
-    R_SplitY1(&r_tmp, UTF_Height(), &r_top, &r_tmp);
+    RectA r_bottom;
+    DrawHeaderAndGetVbatRect("Histogram", &r_tmp);
+
     R_SplitY2(&r_tmp, UTF_Height(), &r_hist, &r_bottom);
-
-    UTF_SetFont(g_default_font);
-    {
-        RectA r_header;
-        RectA r_bandwidth;
-        int width = 0;
-        for(int i=FilterX_1; i<=FilterX_1024 ;i++)
-        {
-            width = MAX(width, UTF_StringWidth(FilterXBandwidth(i))+X_MARGIN*2);
-        }
-
-        r_top.back_color = STATUSBAR_BACKGROUND;
-        R_SplitX2(&r_top, batery_full_img.width, &r_top, &r_battery);
-        R_SplitX2(&r_top, width, &r_header, &r_bandwidth);
-
-        UTFT_setColor(VGA_WHITE);
-        R_DrawStringJustify(&r_header, "Histogram", UTF_CENTER);
-
-        R_DrawStringJustify(&r_bandwidth, FilterXBandwidth(g_filterX), UTF_CENTER);
-    }
-
     R_SplitX1(&r_bottom, r_bottom.width/2, &r_current, &r_voltage);
 
     R_DrawStringJustify(&r_current, "Current", UTF_CENTER);
     R_DrawStringJustify(&r_voltage, "Voltage", UTF_CENTER);
-    UpdateVbatLow(&r_battery);
+    UpdateVbatLow();
 
     HistogramPlotInit(&r_hist, HISTOGRAMM_BASKETS);
     HistogramSetAxisY(ymin, ymax);
@@ -151,5 +130,5 @@ void SceneHistogramQuant()
         DrawMid();
     }
 
-    UpdateVbatLow(&r_battery);
+    UpdateVbatLow();
 }

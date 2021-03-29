@@ -2,6 +2,7 @@
 #include "menu_oscilloscope.h"
 #include "menu_switch_scene.h"
 #include "menu_trigger_level.h"
+#include "menu_bandwidth.h"
 #include "scene_oscilloscope.h"
 
 #include "interface/interface.h"
@@ -13,6 +14,7 @@
 enum
 {
     MO_SWITCH_TO,
+    MO_BANDWIDTH,
     MO_TRIGGER_START,
     MO_TRIGGER_LEVEL,
     MO_TRIGGER_RISING,
@@ -30,6 +32,7 @@ void MenuOscilloscopeStart()
     char str[32];
     MenuReset("Oscilloscope menu");
     MenuAdd("Switch to...", MO_SWITCH_TO);
+    MenuAdd("Bandwidth", MO_BANDWIDTH);
     MenuAdd("Trigger start", MO_TRIGGER_START);
 
     strcpy(str, "Trigger level - ");
@@ -55,6 +58,12 @@ void MenuOscilloscopeQuant()
     if(MenuIndex()==MO_SWITCH_TO)
     {
         MenuSwitchSceneStart();
+        return;
+    }
+
+    if(MenuData()==MO_BANDWIDTH)
+    {
+        MenuBandwidthStart();
         return;
     }
 

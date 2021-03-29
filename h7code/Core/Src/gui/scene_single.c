@@ -26,6 +26,7 @@
 const bool enable_percent_view = true;
 
 static RectA r_battery;
+static bool battery_is_low;
 
 LINE2_TYPE line2_type = LINE2_CURRENT_MIN_MAX;//LINE2_RESISTANCE;
 
@@ -54,29 +55,8 @@ void SceneSingleStart()
     UTFT_setColor(VGA_WHITE);
     UTF_SetFont(g_default_font);
 
-    RectA r_tmp = R_DisplaySize();
-    RectA r_top;
-    R_SplitY1(&r_tmp, UTF_Height(), &r_top, &r_tmp);
-
-    {
-        RectA r_header;
-        RectA r_bandwidth;
-        int width = 0;
-        for(int i=FilterX_1; i<=FilterX_1024 ;i++)
-        {
-            width = MAX(width, UTF_StringWidth(FilterXBandwidth(i))+X_MARGIN*2);
-        }
-
-        r_top.back_color = STATUSBAR_BACKGROUND;
-        R_SplitX2(&r_top, batery_full_img.width, &r_top, &r_battery);
-        R_SplitX2(&r_top, width, &r_header, &r_bandwidth);
-
-        UTFT_setColor(VGA_WHITE);
-        R_DrawStringJustify(&r_header, "Microampermeter", UTF_CENTER);
-
-        //r_bandwidth.back_color = COLOR_BACK1;
-        R_DrawStringJustify(&r_bandwidth, FilterXBandwidth(g_filterX), UTF_CENTER);
-    }
+    RectA r_tmp;
+    DrawHeaderAndGetVbatRect("Microampermeter", &r_tmp);
 
     {
         //Нижняя строка.
@@ -167,8 +147,6 @@ void SceneSingleStart()
             R_FillRectBack(&r_current_max);
         }
     }
-
-    UpdateVbatLow(&r_battery);
 
     prev_draw_time = TimeMs();
     InterfaceGoto(SceneSingleQuant);
@@ -335,7 +313,7 @@ void DrawResult()
         R_DrawStringJustify(&r_percent, buf, UTF_RIGHT);
     }
 
-    UpdateVbatLow(&r_battery);
+    UpdateVbatLow();
 }
 
 void SceneSingleQuant()
@@ -355,7 +333,44 @@ void SceneSingleQuant()
     }
 }
 
-void UpdateVbatLow(RectA* r)
+static void UpdateVbatLowInternal(bool redraw)
 {
-    UTFT_drawBitmap4(r->x, r->y, VBatIsLow()?&batery_empty_img:&batery_full_img);
+    bool is_low = VBatIsLow();
+    if(!redraw && battery_is_low == is_low)
+        return;
+    battery_is_low = is_low;
+    UTFT_drawBitmap4(r_battery.x, r_battery.y, battery_is_low?&batery_empty_img:&batery_full_img);
+}
+
+void UpdateVbatLow()
+{
+    UpdateVbatLowInternal(false);
+}
+
+void DrawHeaderAndGetVbatRect(const char *header_name, RectA *r_screen)
+{
+    UTF_SetFont(g_default_font);
+    RectA r_tmp = R_DisplaySize();
+    RectA r_top;
+    R_SplitY1(&r_tmp, UTF_Height(), &r_top, r_screen);
+
+    RectA r_header;
+    RectA r_bandwidth;
+    int width = 0;
+    for(int i=FilterX_1; i<=FilterX_1024 ;i++)
+    {
+        width = MAX(width, UTF_StringWidth(FilterXBandwidth(i))+X_MARGIN*2);
+    }
+
+    r_top.back_color = STATUSBAR_BACKGROUND;
+    R_SplitX2(&r_top, batery_full_img.width, &r_top, &r_battery);
+    R_SplitX2(&r_top, width, &r_header, &r_bandwidth);
+
+    UTFT_setColor(VGA_WHITE);
+    R_DrawStringJustify(&r_header, header_name, UTF_CENTER);
+
+    //r_bandwidth.back_color = COLOR_BACK1;
+    R_DrawStringJustify(&r_bandwidth, FilterXBandwidth(g_filterX), UTF_CENTER);
+
+    UpdateVbatLowInternal(true);
 }
