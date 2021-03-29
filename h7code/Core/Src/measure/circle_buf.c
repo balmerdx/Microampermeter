@@ -61,7 +61,6 @@ bool CircleBufferGetSample(CircleBuffer* buffer, uint32_t index, void* sample)
     return true;
 }
 
-
 uint32_t CircleBufferGetAbsoluteOffset(CircleBuffer* buffer, uint32_t index)
 {
     return (buffer->first_sample_offset/buffer->sample_size + index) % buffer->data_size_in_samples;

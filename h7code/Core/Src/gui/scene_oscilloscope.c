@@ -36,19 +36,18 @@ static RectA r_trigger_right;
 static OscilloscopeData osc;
 
 static bool enable_redraw = false;
+static bool completed_redrawed = true;
 
-//Коэффициент масштабирования по оси X (секунд на lines_dx)
-static float seconds_per_line = 1e-2f;
 //Коэффициент масштабирования по оси Y (ампер на lines_dy)
 static float amper_per_line = 1e-3f;
 //Сдвиг графика по времени относительно времени срабатывения триггера.
 static float seconds_trigger_offset = 0;
 
 
-static int half_oscillograph_width;
-static float samples_per_pixel;// ось X
-static int samples_trigger_offset;
-static float y_mul; //ampers per pixel
+static int half_oscillograph_width = 1;
+static float samples_per_pixel = 1;// ось X
+static int samples_trigger_offset = 1;
+static float y_mul = 1; //ampers per pixel
 
 static bool use_progressbar = true;
 
@@ -73,13 +72,24 @@ static int BufferOffsetToPixel(int offs)
     return (offs - samples_trigger_offset - (int)STTriggerOffset())/samples_per_pixel + half_oscillograph_width;
 }
 
+static float CalcSecondsPerPixel()
+{
+    //Коэффициент масштабирования по оси X (секунд на lines_dx)
+    float seconds_per_line = SecondsPerLineCurrent(g_settings.seconds_per_line_idx);
+    return seconds_per_line / osc.lines_dx;
+}
+
+static float CalcSamplesPerPixel()
+{
+    return STFilterSPS() * CalcSecondsPerPixel();
+}
+
 static void OscilloscopeStartSum(OscilloscopeData* data)
 {
-    seconds_per_line = SecondsPerLineCurrent(g_settings.seconds_per_line_idx);
     amper_per_line = AmperPerLineCurrent(g_settings.ampers_per_line_idx);
 
     half_oscillograph_width = (data->pos.width/data->lines_dx/2)*data->lines_dx;
-    samples_per_pixel = STFilterSPS() * seconds_per_line / osc.lines_dx;
+    samples_per_pixel = CalcSamplesPerPixel();
     samples_trigger_offset = STFilterSPS() * seconds_trigger_offset;
     y_mul = osc.lines_dy / amper_per_line;
 
@@ -147,6 +157,7 @@ void OscilloscopeTriggerStart()
     STCaptureStart();
     EnableCapturingTrigger(); //test
     enable_redraw = true;
+    completed_redrawed = false;
 }
 
 void SceneOscilloscopeStart()
@@ -242,13 +253,31 @@ static void SceneOscilloscopeUpdateInfo()
 
 static void SceneOscilloscopeQuant()
 {
-    if(enable_redraw && STCaptureCompleted())
+
+    if(enable_redraw)
     {
-        enable_redraw = false;
-        OscilloscopeDraw(&osc);
-        SceneOscilloscopeUpdateInfo();
+        bool enable = STCaptureCompleted();
+        if(!enable && STTriggerTriggered())
+        {
+            float samples_per_pixel = CalcSamplesPerPixel();
+            uint32_t half_samples = samples_per_pixel * osc.pos.width/2;
+            if(STTriggerOffset() + half_samples < STSamplesCaptured())
+                enable = true;
+        }
+
+        if(enable)
+        {
+            enable_redraw = false;
+            OscilloscopeDraw(&osc);
+            SceneOscilloscopeUpdateInfo();
+        }
     }
 
+    if(STCaptureCompleted() && !completed_redrawed)
+    {
+        enable_redraw = true;
+        completed_redrawed = true;
+    }
 
     if(EncButtonPressed())
     {
@@ -311,14 +340,17 @@ void OscilloscopeEncoderQuant(int delta)
 
     if(g_settings.oscilloscope_encoder==ENCODER_OFFSET_TIME)
     {
-        float seconds_border_left = half_oscillograph_width/osc.lines_dx*seconds_per_line;
-        float seconds_border_right = osc.pos.width/osc.lines_dx*seconds_per_line;
+        float seconds_per_pixel = CalcSecondsPerPixel();
+        float seconds_border_left = half_oscillograph_width*seconds_per_pixel;
+        float seconds_border_right = osc.pos.width*seconds_per_pixel;
         float seconds_min = -(float)STTriggerOffset() / STFilterSPS() + seconds_border_left;
+        seconds_min = MIN(seconds_min, 0);
         float seconds_max = seconds_min + STSamplesCaptured() / STFilterSPS() -  seconds_border_right;
+        seconds_max = MAX(seconds_max, 0);
 
         if(seconds_min < seconds_max)
         {
-            seconds_trigger_offset += delta * seconds_per_line;
+            seconds_trigger_offset += delta * seconds_per_pixel * osc.lines_dx;
             if(seconds_trigger_offset < seconds_min)
                 seconds_trigger_offset = seconds_min;
             if(seconds_trigger_offset > seconds_max)

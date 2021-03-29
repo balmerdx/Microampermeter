@@ -28,15 +28,18 @@ static uint32_t cb_trigger_abs_value;
 
 void STInit()
 {
+    memset(store_buffer, 0, sizeof(store_buffer));
     CircleBufferInit(&circle_buffer, store_buffer, sizeof(store_buffer), 4);
 
     cb_filterX = FilterX_1;
     cb_capture_started = false;
     cb_capture_completed = false;
     cb_trigger_triggered = false;
+    cb_trigger_rising = true;
     cb_trigger_before_start = false;
     cb_trigger_level_high =
     cb_trigger_level_low = 1;
+    cb_trigger_abs_value = 0;
 
 }
 
@@ -100,6 +103,7 @@ void STCaptureStart()
     cb_trigger_triggered = false;
 
     cb_filterX = g_filterX;
+
     CircleBufferClear(&circle_buffer);
 
     //Последнее, т.к. это реально запускает процесс.
@@ -195,7 +199,7 @@ void STSendData()
 
 bool STIterate(uint32_t istart, uint32_t iend, STIterateIntervalCallback callback, void* param)
 {
-    if(!cb_capture_completed)
+    if(!cb_trigger_triggered)
         return false;
     if(iend > CircleBufferSamples(&circle_buffer))
         return false;

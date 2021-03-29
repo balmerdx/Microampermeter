@@ -2,6 +2,8 @@
 /* Хранит данные о токе (и возможно напряжении).
  * Хранит g_filterX с которым данные сэмплироваться начали.
  * Хранит момент срабатывания триггера и условия окончания сэмплинга.
+ * После того, как STCaptureStarted == true, перестаёт меняться CircleBuffer::first_sample_offset и STTriggerOffset
+ * Это означает, что CircleBufferGetSample, STIterate выдают валидные значения в пределах 0..STSamplesCaptured
  */
 
 void STInit();
