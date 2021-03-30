@@ -20,7 +20,7 @@ void SceneAboutStart(ReturnSceneFunction func)
     UTF_SetFont(g_default_font);
 
     HeaderSetTextAndRedraw("About");
-    StatusbarSetTextAndRedraw("BalmerDX 2020");
+    StatusbarSetTextAndRedraw("BalmerDX 2021");
 
     RectA r_all = R_DisplaySizeWithoutHeaderAndStatusbar();
     R_FillRectBack(&r_all);

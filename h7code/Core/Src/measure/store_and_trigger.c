@@ -76,7 +76,8 @@ void OnFilterNextSampleCircleBuffer(float current, float voltage)
                 uint32_t preshoot_samples = CircleBufferCapacity(&circle_buffer)/4;
                 if(circle_buffer.samples_stored >= preshoot_samples)
                 {
-                    circle_buffer.first_sample_offset = CircleBufferGetAbsoluteOffset(&circle_buffer, CircleBufferCapacity(&circle_buffer) - preshoot_samples);
+                    circle_buffer.first_sample_offset = ((cb_trigger_abs_value + circle_buffer.data_size_in_samples - preshoot_samples)%circle_buffer.data_size_in_samples)
+                                                *circle_buffer.sample_size;
                     circle_buffer.samples_stored = preshoot_samples;
                 } else
                 {
